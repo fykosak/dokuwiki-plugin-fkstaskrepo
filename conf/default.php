@@ -8,3 +8,5 @@
 
 $conf['taskrepo'] = 'data/pages/ulohy/year@Y@/serie@S@/';
 $conf['solutionrepo'] = 'data/pages/ulohy/year@Y@/serie@S@/';
+$conf['taskfile'] = 'task@P@';
+$conf['solutionfile'] = 'solution@P@';

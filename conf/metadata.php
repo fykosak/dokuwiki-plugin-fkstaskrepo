@@ -2,11 +2,13 @@
 /**
  * Options for the fksdbexport plugin
  *
- * @author Michal Koutný <michal@fykos.cz>
+ * @author
  */
 
 
 $meta['taskrepo'] = array('string');
 $meta['solutionrepo'] = array('string');
+$conf['taskfile'] = array('string');
+$conf['solutionfile'] = array('string');
 
 
