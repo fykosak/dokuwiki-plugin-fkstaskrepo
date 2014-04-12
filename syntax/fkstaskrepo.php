@@ -26,7 +26,7 @@ class syntax_plugin_fksproblems_fkstaskrepo extends DokuWiki_Syntax_Plugin {
     }
 
     public function connectTo($mode) {
-        $this->Lexer->addSpecialPattern('\{\{fkstaskrepo>.+?\}\}', $mode, 'plugin_fksproblems_fkstaskrepo');
+        $this->Lexer->addSpecialPattern('\{\{<fkstaskrepo>.+?\}\}', $mode, 'plugin_fksproblems_fkstaskrepo');
     }
 
     /**
