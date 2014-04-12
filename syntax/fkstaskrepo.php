@@ -26,7 +26,7 @@ class syntax_plugin_fksproblems_fkstaskrepo extends DokuWiki_Syntax_Plugin {
     }
 
     public function connectTo($mode) {
-        $this->Lexer->addSpecialPattern('\{\{<fkstaskrepo>.+?\}\}', $mode, 'plugin_fksproblems_fkstaskrepo');
+        $this->Lexer->addSpecialPattern('\{\{fkstaskrepo>.+?\}\}', $mode, 'plugin_fksproblems_fkstaskrepo');
     }
 
     /**
@@ -34,18 +34,13 @@ class syntax_plugin_fksproblems_fkstaskrepo extends DokuWiki_Syntax_Plugin {
      */
     public function handle($match, $state, $pos, Doku_Handler &$handler) {
         $probsno = array();
-        $probsno = preg_split('/-/', substr($match, 15, -2));
-        $to_page.=$match;
-        $taskfileurl = str_replace('@Y@', $probsno[0], $conf['taskrepo']);
+        $probsno = preg_split('/-/', substr($match, 14, -2));
+        $taskfileurl = str_replace('@Y@', $probsno[0], $this->getConf('taskrepo'));
         $taskfileurl = str_replace('@S@', $probsno[1], $taskfileurl);
-        //$probtasksall = io_readFile($taskfileurl, FALSE);
-        //$probssolutionall = io_readFile("data/pages/ulohy/year" . $probsno[0] . "/solution" . $probsno[1] . ".txt", FALSE);
-        $probstask = preg_split('/===/', io_readFile($taskfileurl, FALSE));
-        //$probssolution = preg_split('/===/', $probssolutionall);
-        //for ($i = 1; $i < 22; $i++) {
-        //if ($i % 2) {
+        $probstask = preg_split('/===/', io_readFile("$taskfileurl.txt", FALSE));
         $to_page.='<div>';
-        $to_page.=p_render("xhtml", p_get_instructions('==== ' . $probstask[2 * $probsno[2]] . ' ==== \n ' . $probstask[2 * $probsno[2] + 1]), $info);
+        $to_page.=p_render("xhtml", p_get_instructions('==== ' . $probstask[2 * $probsno[2] - 1] . ' ==== '), $info);
+        $to_page.=p_render("xhtml", p_get_instructions($probstask[2]), $info);
         $to_page.='</div>';
         /* } else {
           $to_page.='<div class="fksprobtask" id="fksprobtask'.$i/2 .'">';
@@ -61,7 +56,7 @@ class syntax_plugin_fksproblems_fkstaskrepo extends DokuWiki_Syntax_Plugin {
 
           $to_page.='</div>';
           } */
-        
+
         return array($state, array($to_page));
     }
 
@@ -77,4 +72,3 @@ class syntax_plugin_fksproblems_fkstaskrepo extends DokuWiki_Syntax_Plugin {
     }
 
 }
-
