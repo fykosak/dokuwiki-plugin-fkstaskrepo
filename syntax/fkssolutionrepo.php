@@ -38,8 +38,7 @@ class syntax_plugin_fksproblems_fkssolutionrepo extends DokuWiki_Syntax_Plugin {
         $solutionfileurl = str_replace('@Y@', $probsno[0], $this->getConf('solutionrepo'));
         $solutionfileurl = str_replace('@S@', $probsno[1], $solutionfileurl);
         $probssolution = preg_split('/===/', io_readFile("$solutionfileurl.txt", FALSE));
-        //$to_page.='<div>';
-        $to_page.= '<h3 onclick="viewsolution(' . $probsno[2] . ')"> zobraz riešenie </h3>';
+        $to_page.= '<h3 onclick="viewsolution(' . $probsno[2] . ')"> '.$this->getLang('viewsolution').' </h3>';
         $to_page.='<div class="fksprobsol" id="fksprobsol' . $probsno[2] . '" style="display:none">';
         if (!$probssolution[2*$probsno[2]-1] == NUll) {
             $to_page.=p_render("xhtml", p_get_instructions('==== ' . $probssolution[2 * $probsno[2] - 1] . ' ==== '), $info);
@@ -49,22 +48,6 @@ class syntax_plugin_fksproblems_fkssolutionrepo extends DokuWiki_Syntax_Plugin {
             $to_page.= 'Rešení ešte nebolo nahrané';
         }
         $to_page.='</div>';
-
-        /* } else {
-          $to_page.='<div class="fksprobtask" id="fksprobtask'.$i/2 .'">';
-          $to_page.=p_render("xhtml", p_get_instructions($probstask[$i]), $info);
-          $to_page.='</div>';
-          $to_page.= '<h3 onclick="viewsolution('.$i/2 .')"> zobraz riešenie </h3>';
-          $to_page.='<div class="fksprobsol" id="fksprobsol'.$i/2 .'" style="display:none">';
-          if(!$probssolution[$i]==NUll){
-          $to_page.= p_render("xhtml", p_get_instructions($probssolution[$i]), $info);
-          }else{
-          $to_page.= 'Rešení ešte nebolo nahrané';
-          }
-
-          $to_page.='</div>';
-          } */
-
         return array($state, array($to_page));
     }
 

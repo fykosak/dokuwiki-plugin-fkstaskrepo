@@ -24,6 +24,7 @@ $lang['file']            = 'Súbor:';
 $lang['size']            = 'Velkosť:';
 $lang['type']            = 'Typ:';
 $lang['filecoment']      = 'názov suboru s koncovkou *.dat';
+$lang['viewsolution']    = 'Zobraz riešenie';
 
 
 //Setup VIM: ex: et ts=2 enc=utf-8 :
