@@ -9,7 +9,7 @@
 // must be run within Dokuwiki
 if (!defined('DOKU_INC')) die();
 
-class syntax_plugin_fkstaskrepo extends DokuWiki_Syntax_Plugin {
+class syntax_plugin_fkstaskrepo_inline extends DokuWiki_Syntax_Plugin {
     /**
      * @return string Syntax mode type
      */
@@ -35,12 +35,12 @@ class syntax_plugin_fkstaskrepo extends DokuWiki_Syntax_Plugin {
      * @param string $mode Parser mode
      */
     public function connectTo($mode) {
-        $this->Lexer->addSpecialPattern('<FIXME>',$mode,'plugin_fkstaskrepo');
-//        $this->Lexer->addEntryPattern('<FIXME>',$mode,'plugin_fkstaskrepo');
+        $this->Lexer->addSpecialPattern('<FIXME>',$mode,'plugin_fkstaskrepo_inline');
+//        $this->Lexer->addEntryPattern('<FIXME>',$mode,'plugin_fkstaskrepo_inline');
     }
 
 //    public function postConnect() {
-//        $this->Lexer->addExitPattern('</FIXME>','plugin_fkstaskrepo');
+//        $this->Lexer->addExitPattern('</FIXME>','plugin_fkstaskrepo_inline');
 //    }
 
     /**

@@ -6,5 +6,5 @@
  */
 
 
-//$meta['fixme'] = array('string');
+$meta['path_mask'] = array('string');
 
