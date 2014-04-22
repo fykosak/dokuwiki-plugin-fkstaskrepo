@@ -1,12 +1,8 @@
 <?php
 /**
- * Options for the fksdbexport plugin
+ * Default settings for the fkstaskrepo plugin
  *
- * @author Michal KoutnÃ½ <michal@fykos.cz>
+ * @author Michal Koutný <michal@fykos.cz>
  */
 
-
-$conf['taskrepo'] = 'data/pages/ulohy/year@Y@/task@S@';
-$conf['solutionrepo'] = 'data/pages/ulohy/year@Y@/solution@S@';
-$conf['taskfile'] = 'task@P@';
-$conf['solutionfile'] = 'solution@P@';
+//$conf['fixme']    = 'FIXME';

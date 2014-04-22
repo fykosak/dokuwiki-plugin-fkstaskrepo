@@ -1,12 +1,7 @@
-base   fksproblems
-<<<<<<< HEAD
-author Michal Červňák
-email  miso@fykos.com
-=======
-author Michal Červňák, Radka Štefaníková
-email  miso@fykos.cz
->>>>>>> 862048d61632ef517d40e4b47faac606a2763e7e
-date   2014-04-04
-name   fksproblems
-desc   Upload problems from datafile
-url    FIXME
+base   fkstaskrepo
+author Michal Koutn�
+email  michal@fykos.cz
+date   2014-04-22
+name   fkstaskrepo plugin
+desc   Management of problems (data, inspired by 'data' plugin).
+url    http://git@fykos.cz:dokuwiki/plugin-fkstaskrepo.git

@@ -1,14 +1,10 @@
 <?php
 /**
- * Options for the fksdbexport plugin
+ * Options for the fkstaskrepo plugin
  *
- * @author
+ * @author Michal Koutný <michal@fykos.cz>
  */
 
 
-$meta['taskrepo'] = array('string');
-$meta['solutionrepo'] = array('string');
-$conf['taskfile'] = array('string');
-$conf['solutionfile'] = array('string');
-
+//$meta['fixme'] = array('string');
 
