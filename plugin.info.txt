@@ -1,5 +1,5 @@
 base   fkstaskrepo
-author Michal Koutný
+author Michal KoutnÃ½
 email  michal@fykos.cz
 date   2014-04-22
 name   fkstaskrepo plugin
