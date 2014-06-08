@@ -70,34 +70,11 @@ class syntax_plugin_fkstaskrepo extends DokuWiki_Syntax_Plugin {
     public function handle($match, $state, $pos, Doku_Handler &$handler) {
         $parameters = self::extractParameters($match, $this);
 
-        // download
-        $path = $this->helper->getPath($parameters['year'], $parameters['series']);
-        $data = $this->downloader->downloadWebServer(helper_plugin_fksdownloader::EXPIRATION_NEVER, $path);
-
-        if ($data) {
-            // parse
-            $problems = simplexml_load_string($data);
-            $problemData = null;
-            foreach ($problems as $problem) {
-                if ($problem->label == $parameters['problem']) {
-                    $problemData = $problem;
-                    break;
-                }
-            }
-        }
-
-        $data = array();
-        if ($problemData) {
-            foreach ($problemData as $key => $value) {
-                $data[$key] = (string) $value;
-            }
-        }
-        
-        // TODO load overload from metadata
-
-
-        return $data + array('bytepos_start' => $pos,
-            'bytepos_end' => $pos + strlen($match));
+        return array(
+            'parameters' => $parameters,
+            'bytepos_start' => $pos,
+            'bytepos_end' => $pos + strlen($match)
+        );
     }
 
     /**
@@ -109,28 +86,60 @@ class syntax_plugin_fkstaskrepo extends DokuWiki_Syntax_Plugin {
      * @return bool If rendering was successful.
      */
     public function render($mode, Doku_Renderer &$renderer, $data) {
-        if ($mode != 'xhtml') {
-            return false;
+        $parameters = $data['parameters'];
+        if ($mode == 'xhtml') {            
+            // obtain problem data
+            $problemData = $this->helper->getProblemData($parameters['year'], $parameters['series'], $parameters['problem']);
+
+
+            $editLabel = $this->getLang('problem') . ' ' . $problemData['name'];
+            $class = $renderer->startSectionEdit($data['bytepos_start'], 'plugin_fkstaskrepo', $editLabel);
+
+            $renderer->doc .= '<div class="' . $class . '">';
+            $renderer->doc .= p_render($mode, $this->prepareContent($problemData), $info);
+            $renderer->doc .= '</div>';
+            
+            $renderer->finishSectionEdit($data['bytepos_end']);
+            return true;
+        } else if ($mode == 'metadata') {
+            $templateFile = wikiFN($this->getConf('task_template'));
+            $problemFile = $this->helper->getProblemFile($parameters['year'], $parameters['series'], $parameters['problem']);
+            $this->addDependencies($renderer, array($templateFile, $problemFile));
+            return true;
         }
 
-        // TODO set problem name instead of AHA
-        $editLabel = $this->getLang('problem') . ' ' . $data['name'];
-        $class = $renderer->startSectionEdit($data['bytepos_start'], 'plugin_fkstaskrepo', $editLabel);
-        $renderer->doc .= '<div class="' . $class . '">';
-
-        $renderer->doc .= $data['name'];
-
-        $renderer->doc .= '</div>';
-
-        $renderer->finishSectionEdit($data['bytepos_end']);
-
-
-        return true;
+        return false;
     }
 
     public static function extractParameters($match, $plugin) {
         $parameterString = substr($match, 13, -2); // strip markup (including space after "<fkstaskrepo ")
         return self::parseParameters($parameterString, $plugin);
+    }
+
+    private function addDependencies(Doku_Renderer &$renderer, $files) {
+        $name = $this->getPluginName();
+        if (isset($renderer->meta['relation'][$name])) {
+            foreach ($files as $file) {
+                if (!in_array($file, $renderer->meta['relation'][$name])) {
+                    $renderer->meta['relation'][$name][] = $file;
+                }
+            }
+        } else {
+            $renderer->meta['relation'][$name] = $files;
+        }
+    }
+
+    private function prepareContent($data) {
+        $templatePage = $this->getConf('task_template');
+        $templateFile = wikiFN($templatePage);
+        $templateString = io_readFile($templateFile);
+        $needles = array_map(function($it) {
+                    return "@$it@";
+                }, array_keys($data));
+        $replacements = array_values($data);
+
+        $problemText = str_replace($needles, $replacements, $templateString);
+        return p_get_instructions($problemText);
     }
 
     /**
