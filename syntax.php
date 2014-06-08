@@ -10,7 +10,7 @@
 if (!defined('DOKU_INC'))
     die();
 
-class syntax_plugin_fkstaskrepo_block extends DokuWiki_Syntax_Plugin {
+class syntax_plugin_fkstaskrepo extends DokuWiki_Syntax_Plugin {
 
     /**
      * @var helper_plugin_fksdownloader
@@ -55,8 +55,7 @@ class syntax_plugin_fkstaskrepo_block extends DokuWiki_Syntax_Plugin {
      * @param string $mode Parser mode
      */
     public function connectTo($mode) {
-        $this->Lexer->addSpecialPattern('<fkstaskrepo\b.*?>.+?</fkstaskrepo>', $mode, 'plugin_fkstaskrepo_block');
-        $this->Lexer->addSpecialPattern('<fkstaskrepo\b.*?/>', $mode, 'plugin_fkstaskrepo_block');
+        $this->Lexer->addSpecialPattern('<fkstaskrepo\b.*?/>', $mode, 'plugin_fkstaskrepo');
     }
 
     /**
@@ -69,36 +68,36 @@ class syntax_plugin_fkstaskrepo_block extends DokuWiki_Syntax_Plugin {
      * @return array Data for the renderer
      */
     public function handle($match, $state, $pos, Doku_Handler &$handler) {
-        if (substr($match, -2) == '/>') {
-            $parameterString = substr($match, 13, -2); // strip markup (including space after "<fkstaskrepo ")
-            $innerString = null;
-        } else {
-            $submatch = substr($match, 13, -14);              // strip markup (including space after "<fkstaskrepo ")
-            list($parameterString, $innerString) = preg_split('/>/u', $submatch, 2);
-        }
+        $parameters = self::extractParameters($match, $this);
 
-        $parameters = $this->parseParameters($parameterString);
-
+        // download
         $path = $this->helper->getPath($parameters['year'], $parameters['series']);
         $data = $this->downloader->downloadWebServer(helper_plugin_fksdownloader::EXPIRATION_NEVER, $path);
-        $problems = simplexml_load_string($data);
-        $problemData = null;
-        foreach ($problems as $problem) {
-            if ($problem->label == $parameters['problem']) {
-                $problemData = $problem;
-                break;
+
+        if ($data) {
+            // parse
+            $problems = simplexml_load_string($data);
+            $problemData = null;
+            foreach ($problems as $problem) {
+                if ($problem->label == $parameters['problem']) {
+                    $problemData = $problem;
+                    break;
+                }
             }
         }
 
-        $template = $this->getConf('task_template');
-        $extended = $template;
-        foreach ($problem as $attribute => $value) {
-            $extended = str_replace('@@' . $attribute . '@@', $value, $extended);
+        $data = array();
+        if ($problemData) {
+            foreach ($problemData as $key => $value) {
+                $data[$key] = (string) $value;
+            }
         }
+        
+        // TODO load overload from metadata
 
-        return array(
-            p_get_instructions($extended),
-        );
+
+        return $data + array('bytepos_start' => $pos,
+            'bytepos_end' => $pos + strlen($match));
     }
 
     /**
@@ -114,17 +113,30 @@ class syntax_plugin_fkstaskrepo_block extends DokuWiki_Syntax_Plugin {
             return false;
         }
 
-        list($instructions) = $data;
+        // TODO set problem name instead of AHA
+        $editLabel = $this->getLang('problem') . ' ' . $data['name'];
+        $class = $renderer->startSectionEdit($data['bytepos_start'], 'plugin_fkstaskrepo', $editLabel);
+        $renderer->doc .= '<div class="' . $class . '">';
 
-        $renderer->doc .= p_render($mode, $instructions, $info);
+        $renderer->doc .= $data['name'];
+
+        $renderer->doc .= '</div>';
+
+        $renderer->finishSectionEdit($data['bytepos_end']);
+
 
         return true;
+    }
+
+    public static function extractParameters($match, $plugin) {
+        $parameterString = substr($match, 13, -2); // strip markup (including space after "<fkstaskrepo ")
+        return self::parseParameters($parameterString, $plugin);
     }
 
     /**
      * @param string $parameterString
      */
-    private function parseParameters($parameterString) {
+    private static function parseParameters($parameterString, $plugin) {
         //----- default parameter settings
         $params = array(
             'year' => null,
@@ -150,7 +162,7 @@ class syntax_plugin_fkstaskrepo_block extends DokuWiki_Syntax_Plugin {
                     }
                 }
                 if (!$found) {
-                    msg(sprintf($this->getLang('unexpected_value'), $name), -1);
+                    msg(sprintf($plugin->getLang('unexpected_value'), $name), -1);
                 }
             }
         }

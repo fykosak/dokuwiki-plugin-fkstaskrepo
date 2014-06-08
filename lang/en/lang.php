@@ -9,7 +9,11 @@
 // $lang['menu'] = 'Your menu entry';
 
 // custom language strings for the plugin
+$lang['name'] = 'Name';
+$lang['origin'] = 'Origin';
+$lang['problem'] = 'Problem';
+$lang['series'] = 'Series';
 $lang['unexpected_value'] = 'Unexpected value \'%s\'.';
-
+$lang['year'] = 'Year';
 
 //Setup VIM: ex: et ts=4 :
