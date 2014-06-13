@@ -10,6 +10,8 @@
 if (!defined('DOKU_INC'))
     die();
 
+require_once 'tex_preproc.php';
+
 class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
 
     /**
@@ -17,8 +19,15 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
      */
     private $downloader;
 
+    /**
+     *
+     * @var fkstaskrepo_tex_preproc;
+     */
+    private $texPreproc;
+
     public function __construct() {
         $this->downloader = $this->loadHelper('fksdownloader');
+        $this->texPreproc = new fkstaskrepo_tex_preproc();
     }
 
     /**
@@ -80,6 +89,9 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         $result = array();
         if ($problemData) {
             foreach ($problemData as $key => $value) {
+                if ($key == 'task') {
+                    $value = $this->texPreproc->preproc((string) $value);
+                }
                 $result[$key] = (string) $value;
             }
         }
