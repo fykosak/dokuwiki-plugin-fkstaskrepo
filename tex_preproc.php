@@ -75,16 +75,85 @@ class fkstaskrepo_tex_lexer implements Iterator {
 
 }
 
+/**
+ * Macro -- control sequence in text neglecting arguments
+ * Variant -- control sequence with particular no. of arguments
+ */
 class fkstaskrepo_tex_preproc {
 
+    private static $macros = array(
+        '\eq m' => '$$\1$$',
+        '\eq' => '$\1$',
+        '\par' => "\n\n",
+        '\footnote' => '((\1))',
+        '\begin compactenum ' => 'f:startList',
+        '\begin compactenum' => 'f:startList',
+        '\end compactenum' => 'f:endList',
+        '\item' => 'f:listItem',
+        '\textit' => '//\1//',
+    );
+    private $variantArity = array();
+    private $maxMaskArity = array();
+    private $macroMasks = array();
+    private $macroVariants = array();
+
+    public function __construct() {
+        foreach (self::$macros as $pattern => $replacement) {
+            $variant = $pattern;
+            // replacement arity
+            if (substr($replacement, 0, 2) == 'f:') {
+                $this->variantArity[$variant] = 0;
+            } else {
+                preg_match_all('/\\\([0-9])/', $replacement, $matches);
+                $this->variantArity[$variant] = count($matches[1]) ? max($matches[1]) : 0;
+            }
+
+            // mask arity
+            $parts = explode(' ', $pattern);
+            $macro = $parts[0];
+            $maskArity = count($parts) - 1;
+
+            if (!isset($this->maxMaskArity[$macro])) {
+                $this->maxMaskArity[$macro] = 0;
+            }
+            $this->maxMaskArity[$macro] = ($maskArity > $this->maxMaskArity[$macro]) ? $maskArity : $this->maxMaskArity[$macro];
+
+            // macro masks
+            if (!isset($this->macroMasks[$macro])) {
+                $this->macroMasks[$macro] = array();
+            }
+            $this->macroMasks[$macro][$variant] = array_slice($parts, 1);
+        }
+
+        $this->macroVariants = self::$macros;
+    }
+
     public function preproc($text) {
+        $text = str_replace(array('[m]'), array('{m}'), $text); // simple solution
+
         $ast = $this->parse($text);
         return $this->process($ast);
     }
 
-    /**
-     * @todo Refactor
-     */
+    private function chooseVariant($sequence, $toMatch) {
+        foreach ($this->macroMasks[$sequence] as $variant => $mask) { //assert: must be sorted in decreasing mask length
+            $matching = true;
+            $matchLength = 0;
+            for ($i = 0; $i < count($mask); ++$i) {
+                if ($mask[$i] == $toMatch[$i] || ($mask[$i] == '' && preg_match('/\s/', $toMatch[$i]))) { // empty mask string means whitespace
+                    $matchLength = $i + 1;
+                } else {
+                    $matching = false;
+                    break;
+                }
+            }
+            if ($matching) {
+                return array($variant, $matchLength);
+            }
+        }
+        return array(null, 0);
+    }
+
     private function process($ast) {
         $result = '';
         reset($ast);
@@ -92,45 +161,35 @@ class fkstaskrepo_tex_preproc {
             if (is_array($it)) { // group
                 $result .= '{' . $this->process($it) . '}';
             } else {
-                switch (strtolower(trim($it))) {
-                    case '\eq':
-                        $result .= '$' . $this->process(next($ast)) . '$';
-                        break;
-                    case '\par':
-                        $result .= "\n\n";
-                        break;
-                    case '\footnote':
-                        $result .= '((' . $this->process(next($ast)) . '))';
-                        break;
-                    case '\begin':
-                        if ($this->nodeToText(next($ast)) == 'compactenum') {
-                            if ($this->nodeToText(next($ast)) == '\item') {
-                                prev($ast);
-                            }
-                            $result .= "\n\n";
-                        } else {
-                            prev($ast);
-                        }
-                        break;
-                    case '\end':
-                        if ($this->nodeToText(next($ast)) == 'compactenum') {
-                            $result .= "\n\n";
-                        } else {
-                            prev($ast);
-                        }
-                        break;
-                    case '\item':
-                        $result .= "\n  * ";
-                        break;
-                    case '\textit':
-                        $result .= '//' . $this->process(next($ast)) . '//';
-                        break;
-                    default:
-                        $result .= $it;
-                        break;
+                $sequence = strtolower(trim($it));
+                if (isset($this->maxMaskArity[$sequence])) {
+                    $toMatch = array();
+                    for ($i = 0; $i < $this->maxMaskArity[$sequence]; ++$i) {
+                        $toMatch[] = $this->nodeToText(next($ast));
+                    }
+                    list($variant, $matchLength) = $this->chooseVariant($sequence, $toMatch);
+
+                    $rest = $this->maxMaskArity[$sequence] - $matchLength;
+                    for ($i = 0; $i < $rest; ++$i) {
+                        prev($ast);
+                    }
+
+                    $arguments = array();
+                    for ($i = 0; $i < $this->variantArity[$variant]; ++$i) {
+                        $arguments[] = $this->process(next($ast));
+                    }
+
+                    if (substr($this->macroVariants[$variant], 0, 2) == 'f:') {
+                        $result .= call_user_func(array($this, substr($this->macroVariants[$variant], 2)));
+                    } else {
+                        $result .= preg_replace_callback('/\\\([0-9])/', function($match) use($arguments) {
+                                    return $arguments[$match[1] - 1];
+                                }, $this->macroVariants[$variant]);
+                    }
+                } else {
+                    $result .= $it;
                 }
             }
-
             next($ast);
         }
         return $result;
@@ -138,7 +197,11 @@ class fkstaskrepo_tex_preproc {
 
     private function nodeToText($node) {
         if (is_array($node)) {
-            return implode('', $node);
+            $result = '';
+            foreach ($node as $it) {
+                $result .= $this->nodeToText($it);
+            }
+            return $result;
         } else {
             return (string) $node;
         }
@@ -168,6 +231,26 @@ class fkstaskrepo_tex_preproc {
         return $current;
     }
 
+    /*     * **************
+     * Replacement callbacks
+     */
+
+    private function startList() {
+        return "\n";
+    }
+
+    private function endList() {
+        return "\n";
+    }
+
+    private function listItem() {
+        return "  * ";
+    }
+
 }
 
 // vim:ts=4:sw=4:et:
+
+//$text = file_get_contents('tex.in');
+//$preproc = new fkstaskrepo_tex_preproc();
+//echo $preproc->preproc($text);
