@@ -87,24 +87,29 @@ class syntax_plugin_fkstaskrepo extends DokuWiki_Syntax_Plugin {
      */
     public function render($mode, Doku_Renderer &$renderer, $data) {
         $parameters = $data['parameters'];
-        if ($mode == 'xhtml') {            
+        $seriesFile = $this->helper->getSeriesFilename($parameters['year'], $parameters['series']);
+        if ($mode == 'xhtml') {
             // obtain problem data
             $problemData = $this->helper->getProblemData($parameters['year'], $parameters['series'], $parameters['problem']);
 
-
+            $classes = array();
+            if (isset($problemData['taskTS']) && filemtime($seriesFile) > $problemData['taskTS']) {
+                $classes[] = 'outdated';
+            }
+            
             $editLabel = $this->getLang('problem') . ' ' . $problemData['name'];
-            $class = $renderer->startSectionEdit($data['bytepos_start'], 'plugin_fkstaskrepo', $editLabel);
+            $classes[] = $renderer->startSectionEdit($data['bytepos_start'], 'plugin_fkstaskrepo', $editLabel);
 
-            $renderer->doc .= '<div class="' . $class . '">';
+            $renderer->doc .= '<div class="' . implode(' ', $classes) . '">';
             $renderer->doc .= p_render($mode, $this->prepareContent($problemData), $info);
             $renderer->doc .= '</div>';
-            
+
             $renderer->finishSectionEdit($data['bytepos_end']);
             return true;
         } else if ($mode == 'metadata') {
             $templateFile = wikiFN($this->getConf('task_template'));
             $problemFile = $this->helper->getProblemFile($parameters['year'], $parameters['series'], $parameters['problem']);
-            $this->addDependencies($renderer, array($templateFile, $problemFile));
+            $this->addDependencies($renderer, array($templateFile, $problemFile, $seriesFile));
             return true;
         }
 

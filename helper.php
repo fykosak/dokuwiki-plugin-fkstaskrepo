@@ -55,7 +55,17 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
 
     public function updateProblemData($data, $year, $series, $problem) {
         $globalData = $this->extractProblem($this->getSeriesData($year, $series), $problem);
+
+        // empty task text -- revert original
+        if (array_key_exists('task', $data) && $data['task'] == '') {
+            unset($data['task']);
+        }
+
         $toStore = array_diff($data, $globalData);
+
+        if (array_key_exists('task', $toStore)) {
+            $toStore['taskTS'] = time();
+        }
 
         $filename = $this->getProblemFile($year, $series, $problem);
         io_saveFile($filename, serialize($toStore));
@@ -69,6 +79,10 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
     public function getSeriesData($year, $series, $expiration = helper_plugin_fksdownloader::EXPIRATION_NEVER) {
         $path = $this->getPath($year, $series);
         return $this->downloader->downloadWebServer($expiration, $path);
+    }
+
+    public function getSeriesFilename($year, $series) {
+        return $this->downloader->getCacheFilename($this->downloader->getWebServerFilename($this->getPath($year, $series)));
     }
 
     private function getLocalData($year, $series, $problem) {

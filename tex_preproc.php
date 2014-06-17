@@ -86,11 +86,13 @@ class fkstaskrepo_tex_preproc {
         '\eq' => '$\1$',
         '\par' => "\n\n",
         '\footnote' => '((\1))',
-        '\begin compactenum ' => 'f:startList',
+        '\begin compactenum \s*' => 'f:startList',
         '\begin compactenum' => 'f:startList',
         '\end compactenum' => 'f:endList',
         '\item' => 'f:listItem',
         '\textit' => '//\1//',
+        '\vspace:1' => '',
+        '\illfigi:6' => '',
     );
     private $variantArity = array();
     private $maxMaskArity = array();
@@ -100,8 +102,14 @@ class fkstaskrepo_tex_preproc {
     public function __construct() {
         foreach (self::$macros as $pattern => $replacement) {
             $variant = $pattern;
+            $parts = explode(' ', $pattern);
+            $macro = $parts[0];
+            $macroParts = explode(':', $macro);
             // replacement arity
-            if (substr($replacement, 0, 2) == 'f:') {
+            if (count($macroParts) > 1) {
+                $this->variantArity[$variant] = $macroParts[1];
+                $macro = $macroParts[0];
+            } else if (substr($replacement, 0, 2) == 'f:') {
                 $this->variantArity[$variant] = 0;
             } else {
                 preg_match_all('/\\\([0-9])/', $replacement, $matches);
@@ -109,8 +117,6 @@ class fkstaskrepo_tex_preproc {
             }
 
             // mask arity
-            $parts = explode(' ', $pattern);
-            $macro = $parts[0];
             $maskArity = count($parts) - 1;
 
             if (!isset($this->maxMaskArity[$macro])) {
@@ -129,7 +135,7 @@ class fkstaskrepo_tex_preproc {
     }
 
     public function preproc($text) {
-        $text = str_replace(array('[m]'), array('{m}'), $text); // simple solution
+        $text = str_replace(array('[m]', '[i]', '[o]'), array('{m}', '{i}', '{o}'), $text); // simple solution
 
         $ast = $this->parse($text);
         return $this->process($ast);
@@ -140,6 +146,7 @@ class fkstaskrepo_tex_preproc {
             $matching = true;
             $matchLength = 0;
             for ($i = 0; $i < count($mask); ++$i) {
+                //if (preg_match('/' . $mask[$i] . '/', $toMatch[$i])) {
                 if ($mask[$i] == $toMatch[$i] || ($mask[$i] == '' && preg_match('/\s/', $toMatch[$i]))) { // empty mask string means whitespace
                     $matchLength = $i + 1;
                 } else {

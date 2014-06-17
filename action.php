@@ -92,7 +92,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         foreach ($this->modFields as $field) {
             $attr = $globAttr;
             if ($field == 'task') {
-                $form->addElement(form_makeWikiText($data[$field], $attr));
+                $form->addElement(form_makeWikiText(cleanText($data[$field]), $attr));
             } else {
                 $form->addElement(form_makeTextField($field, $data[$field], $this->getLang($field), $field, null, $attr));
             }
@@ -102,7 +102,10 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
     }
 
     public function handle_action_act_preprocess(Doku_Event &$event, $param) {
-        if (!isset($_POST[reset($this->detFields)])) {
+        if (!isset($_POST['do']) || !isset($_POST[reset($this->detFields)])) {
+            return;
+        }
+        if (!isset($_POST['do']['save'])) {
             return;
         }
         global $TEXT;
@@ -112,7 +115,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         $data = array();
         foreach ($this->modFields as $field) {
             if ($field == 'task') {
-                $data[$field] = $_POST['wikitext'];
+                $data[$field] = cleanText($_POST['wikitext']);
             } else {
                 $data[$field] = $_POST[$field];
             }
