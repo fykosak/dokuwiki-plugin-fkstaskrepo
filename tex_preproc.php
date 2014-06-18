@@ -43,8 +43,10 @@ class fkstaskrepo_tex_lexer implements Iterator {
         while (!($match = $this->findMatch()) && $this->offset < strlen($this->text)) {
             $text .= $this->text[$this->offset++];
         }
-        if ($text) {
-            $this->offset -= strlen($match['text']);
+        if (!$match && !$text) {
+            $this->offset++; // to invalidate ourselves
+        } else if ($text) {
+            $this->offset -= $match ? strlen($match['text']) : 0;
             $this->current = array('type' => self::TOKEN_TEXT, 'text' => $text);
         } else {
             $this->current = $match;
@@ -56,7 +58,7 @@ class fkstaskrepo_tex_lexer implements Iterator {
     }
 
     public function valid() {
-        return $this->offset < strlen($this->text);
+        return $this->offset <= strlen($this->text);
     }
 
     private function findMatch() {
