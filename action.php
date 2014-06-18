@@ -55,6 +55,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
 
     public function handle_html_edit_formselection(Doku_Event &$event, $param) {
         global $TEXT;
+        global $INPUT;
         if ($event->data['target'] !== 'plugin_fkstaskrepo') {
             return;
         }
@@ -71,7 +72,14 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
 
         $form = $event->data['form'];
 
-        $parameters = syntax_plugin_fkstaskrepo::extractParameters($TEXT, $this);
+        if (array_key_exists('wikitext', $_POST)) {
+            foreach ($this->detFields as $field) {
+                $parameters[$field] = $_POST[$field];
+            }
+        } else {
+            $parameters = syntax_plugin_fkstaskrepo::extractParameters($TEXT, $this);
+        }
+
         $data = $this->helper->getProblemData($parameters['year'], $parameters['series'], $parameters['problem']);
         $data = array_merge($data, $parameters);
 
@@ -85,16 +93,19 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         foreach ($this->detFields as $field) {
             $attr = $globAttr;
             $attr['readonly'] = 'readonly';
-            $form->addElement(form_makeTextField($field, $data[$field], $this->getLang($field), $field, null, $attr));
+            $value = $INPUT->post->str($field, $data[$field]);
+            $form->addElement(form_makeTextField($field, $value, $this->getLang($field), $field, null, $attr));
         }
 
         // editable fields
         foreach ($this->modFields as $field) {
             $attr = $globAttr;
             if ($field == 'task') {
-                $form->addElement(form_makeWikiText(cleanText($data[$field]), $attr));
+                $value = $INPUT->post->str('wikitext', $data[$field]);
+                $form->addElement(form_makeWikiText(cleanText($value), $attr));
             } else {
-                $form->addElement(form_makeTextField($field, $data[$field], $this->getLang($field), $field, null, $attr));
+                $value = $INPUT->post->str($field, $data[$field]);
+                $form->addElement(form_makeTextField($field, $value, $this->getLang($field), $field, null, $attr));
             }
         }
 
