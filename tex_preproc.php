@@ -21,7 +21,7 @@ class fkstaskrepo_tex_lexer implements Iterator {
     private $offset;
     private $current;
     static private $patterns = array(
-        self::TOKEN_SEQ => '\\\[a-z]+\s*',
+        self::TOKEN_SEQ => '\\\([a-z]+|[^\s])\s*',
         self::TOKEN_LBRACE => '{',
         self::TOKEN_RBRACE => '}',
     );
@@ -84,11 +84,12 @@ class fkstaskrepo_tex_lexer implements Iterator {
 class fkstaskrepo_tex_preproc {
 
     private static $macros = array(
-        '\eq m' => "\n$$\\begin{align*}\n    \\1\n\\end {align*}$$\n", // NOTE: space as it breaks Dokuwiki parser
-        '\eq s' => "\n$$\\begin{equation*}\n    \\1\n\\end {equation*}$$\n",
-        '\eq' => "\n$$\\begin{equation*}\n    \\1\n\\end {equation*}$$\n",
-        '\par' => 'f:paragraph',
-        '\footnote' => '((\1))',
+        // equations
+        '\eq m' => "\n\\[\\begin{align*}\n    \\1\n\\end {align*}\\]\n", // NOTE: space as it breaks Dokuwiki parser
+        '\eq s' => "\n\\[\\begin{equation*}\n    \\1\n\\end {equation*}\\]\n",
+        '\eq' => "\n\\[\\begin{equation*}\n    \\1\n\\end {equation*}\\]\n",
+        '\eqref:1' => '\eqref{\1}',
+        // lists
         '\begin compactenum ' => 'f:startOList',
         '\begin compactenum' => 'f:startOList',
         '\end compactenum' => 'f:endOList',
@@ -96,10 +97,29 @@ class fkstaskrepo_tex_preproc {
         '\begin compactitem' => 'f:startUList',
         '\end compactitem' => 'f:endUList',
         '\item' => 'f:listItem',
+        // text style & typography
+        '\emph' => '//\1//',
+        '\footnote' => '((\1))',
+        '\par' => 'f:paragraph',
         '\textit' => '//\1//',
+        '\url:1' => '[[\1]]',
+        '\uv:1' => '„\1“',
+        '\,' => ' ', // Unicode
+        '\\' => '\\\\',
+        // figures
+        '\illfigi:5 i' => '',
+        '\illfigi:5 o' => '',
+        '\illfigi:5' => '',
+        '\illfig:4' => '',
+        '\fullfig:3' => '',
+        // /dev/null
+        '\hfill' => '',
+        '\mbox:1' => '\1',
+        '\noindent' => '',
+        '\quad' => ' ',
+        '\ref:1' => '', // TODO figures?
+        '\smallskip' => '',
         '\vspace:1' => '',
-        '\illfigi:6' => '',
-        '\eqref:1' => '\eqref{\1}',
     );
     private $variantArity = array();
     private $maxMaskArity = array();
@@ -144,17 +164,18 @@ class fkstaskrepo_tex_preproc {
     public function preproc($text) {
         $text = str_replace(array('[m]', '[i]', '[o]', '~'), array('{m}', '{i}', '{o}', ' '), $text); // simple solution
         // units macro
-        $text = preg_replace_callback('#"(([+-]?[0-9\\\,]+(\.[0-9\\\,]+)?)(e([+-]?[0-9]+))?)(\s+([^"]+))?"#', function($matches) {
+        $text = preg_replace_callback('#"(([+-]?[0-9\\\,]+(\.[0-9\\\,]+)?)(e([+-]?[0-9]+))?)((\s*)([^"]+))?"#', function($matches) {
                     $mantissa = $matches[2];
                     $exp = $matches[5];
-                    $unit = $matches[7];
+                    $unit = $matches[8];
+                    $space = $matches[7];
                     if ($exp) {
                         $num = "$mantissa \cdot 10^{{$exp}}";
                     } else {
                         $num = $mantissa;
                     }
                     $num = str_replace('.', '{,}', $num);
-                    if ($unit) {
+                    if ($unit && $space != '') {
                         $unit = '\,\mathrm{' . str_replace('.', '\cdot ', $unit) . '}';
                     }
                     return "$num$unit";

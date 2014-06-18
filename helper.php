@@ -94,6 +94,9 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
     private function extractProblem($data, $problemLabel) {
         $problems = simplexml_load_string($data);
         $problemData = null;
+        if(!$problems){
+            return array();
+        }
         foreach ($problems as $problem) {
             if ((string) $problem->label == $problemLabel) {
                 $problemData = $problem;
