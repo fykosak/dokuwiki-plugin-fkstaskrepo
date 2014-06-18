@@ -136,6 +136,21 @@ class fkstaskrepo_tex_preproc {
 
     public function preproc($text) {
         $text = str_replace(array('[m]', '[i]', '[o]'), array('{m}', '{i}', '{o}'), $text); // simple solution
+        $text = preg_replace_callback('#"(([+-]?[0-9\\\,]+(\.[0-9\\\,]+)?)(e([+-]?[0-9]+))?)(\s+([^"]+))?"#', function($matches) {
+                    $mantissa = $matches[2];
+                    $exp = $matches[5];
+                    $unit = $matches[7];
+                    if ($exp) {
+                        $num = "$mantissa \cdot 10^{{$exp}}";
+                    } else {
+                        $num = $mantissa;
+                    }
+                    $num = str_replace('.', '{,}', $num);
+                    if ($unit) {
+                        $unit = '\,\mathrm{' . str_replace('.', '\cdot ', $unit) . '}';
+                    }
+                    return "$num$unit";
+                }, $text);
 
         $ast = $this->parse($text);
         return $this->process($ast);
@@ -212,6 +227,12 @@ class fkstaskrepo_tex_preproc {
         } else {
             return (string) $node;
         }
+    }
+
+    private function processText($text) {
+        var_dump($text);
+
+        return $text;
     }
 
     private function parse($text) {
