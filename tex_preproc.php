@@ -85,11 +85,14 @@ class fkstaskrepo_tex_preproc {
         '\eq m' => "\n$$\\begin{align*}\n    \\1\n\\end {align*}$$\n", // NOTE: space as it breaks Dokuwiki parser
         '\eq s' => "\n$$\\begin{equation*}\n    \\1\n\\end {equation*}$$\n",
         '\eq' => "\n$$\\begin{equation*}\n    \\1\n\\end {equation*}$$\n",
-        '\par' => "\n\n",
+        '\par' => 'f:paragraph',
         '\footnote' => '((\1))',
-        '\begin compactenum ' => 'f:startList',
-        '\begin compactenum' => 'f:startList',
-        '\end compactenum' => 'f:endList',
+        '\begin compactenum ' => 'f:startOList',
+        '\begin compactenum' => 'f:startOList',
+        '\end compactenum' => 'f:endOList',
+        '\begin compacitem ' => 'f:startUList',
+        '\begin compactitem' => 'f:startUList',
+        '\end compactitem' => 'f:endUList',
         '\item' => 'f:listItem',
         '\textit' => '//\1//',
         '\vspace:1' => '',
@@ -266,16 +269,40 @@ class fkstaskrepo_tex_preproc {
      * Replacement callbacks
      */
 
-    private function startList() {
+    private $listStack = array();
+
+    private function startOList() {
+        array_push($this->listStack, 'O');
         return "\n";
     }
 
-    private function endList() {
+    private function endOList() {
+        array_pop($this->listStack);
+        return "\n";
+    }
+
+    private function startUList() {
+        array_push($this->listStack, 'U');
+        return "\n";
+    }
+
+    private function endUList() {
+        array_pop($this->listStack);
         return "\n";
     }
 
     private function listItem() {
-        return "  * ";
+        $char = end($this->listStack) == 'U' ? '*' : '-';
+        $level = count($this->listStack);
+        return "\n" . str_repeat('  ', $level) . $char . ' ';
+    }
+
+    private function paragraph() {
+        if (count($this->listStack)) {
+            return '\\\\ ';
+        } else {
+            return "\n\n";
+        }
     }
 
 }
