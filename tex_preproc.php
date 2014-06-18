@@ -82,17 +82,19 @@ class fkstaskrepo_tex_lexer implements Iterator {
 class fkstaskrepo_tex_preproc {
 
     private static $macros = array(
-        '\eq m' => '$$\1$$',
-        '\eq' => '$\1$',
+        '\eq m' => "\n$$\\begin{align*}\n    \\1\n\\end {align*}$$\n", // NOTE: space as it breaks Dokuwiki parser
+        '\eq s' => "\n$$\\begin{equation*}\n    \\1\n\\end {equation*}$$\n",
+        '\eq' => "\n$$\\begin{equation*}\n    \\1\n\\end {equation*}$$\n",
         '\par' => "\n\n",
         '\footnote' => '((\1))',
-        '\begin compactenum \s*' => 'f:startList',
+        '\begin compactenum ' => 'f:startList',
         '\begin compactenum' => 'f:startList',
         '\end compactenum' => 'f:endList',
         '\item' => 'f:listItem',
         '\textit' => '//\1//',
         '\vspace:1' => '',
         '\illfigi:6' => '',
+        '\eqref:1' => '\eqref{\1}',
     );
     private $variantArity = array();
     private $maxMaskArity = array();
@@ -135,7 +137,8 @@ class fkstaskrepo_tex_preproc {
     }
 
     public function preproc($text) {
-        $text = str_replace(array('[m]', '[i]', '[o]'), array('{m}', '{i}', '{o}'), $text); // simple solution
+        $text = str_replace(array('[m]', '[i]', '[o]', '~'), array('{m}', '{i}', '{o}', ' '), $text); // simple solution
+        // units macro
         $text = preg_replace_callback('#"(([+-]?[0-9\\\,]+(\.[0-9\\\,]+)?)(e([+-]?[0-9]+))?)(\s+([^"]+))?"#', function($matches) {
                     $mantissa = $matches[2];
                     $exp = $matches[5];
