@@ -77,7 +77,7 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
 
         if ($year && $series && $language) {
             // obtain file
-            if ($_FILES['xml_file']) {
+            if ($_FILES['xml_file'] && $_FILES['xml_file']['name']) {
                 if ($_FILES['xml_file']['error'] > 0) {
                     msg('Upload failed.', -1);
                     return;
