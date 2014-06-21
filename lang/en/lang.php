@@ -12,6 +12,7 @@
 $lang['name'] = 'Name';
 $lang['origin'] = 'Origin';
 $lang['problem'] = 'Problem';
+$lang['tags'] = 'Tags';
 $lang['series'] = 'Series';
 $lang['unexpected_value'] = 'Unexpected value \'%s\'.';
 $lang['year'] = 'Year';

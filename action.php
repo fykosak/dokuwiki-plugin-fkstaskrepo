@@ -13,7 +13,7 @@ if (!defined('DOKU_INC'))
 class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
 
     private $detFields = array('year', 'series', 'problem');
-    private $modFields = array('name', 'origin', 'task');
+    private $modFields = array('name', 'origin', 'tags', 'task');
 
     /**
      * @var helper_plugin_fkstaskrepo
@@ -77,7 +77,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
                 $parameters[$field] = $_POST[$field];
             }
         } else {
-            $parameters = syntax_plugin_fkstaskrepo::extractParameters($TEXT, $this);
+            $parameters = syntax_plugin_fkstaskrepo_entry::extractParameters($TEXT, $this);
         }
 
         $data = $this->helper->getProblemData($parameters['year'], $parameters['series'], $parameters['problem']);
@@ -103,6 +103,9 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
             if ($field == 'task') {
                 $value = $INPUT->post->str('wikitext', $data[$field]);
                 $form->addElement(form_makeWikiText(cleanText($value), $attr));
+            } else if ($field == 'tags') {
+                $value = $INPUT->post->str($field, implode(', ', $data[$field]));
+                $form->addElement(form_makeTextField($field, $value, $this->getLang($field), $field, null, $attr));
             } else {
                 $value = $INPUT->post->str($field, $data[$field]);
                 $form->addElement(form_makeTextField($field, $value, $this->getLang($field), $field, null, $attr));
@@ -132,7 +135,6 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
             }
         }
         $this->helper->updateProblemData($data, $_POST['year'], $_POST['series'], $_POST['problem']);
-        // TODO and invalidate original page (source doesn't change) or put dependency on metadata
     }
 
     public function handle_parser_cache_use(Doku_Event &$event, $param) {

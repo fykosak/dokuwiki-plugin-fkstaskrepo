@@ -20,14 +20,30 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
     private $downloader;
 
     /**
-     *
      * @var fkstaskrepo_tex_preproc;
      */
     private $texPreproc;
 
+    /**
+     * @var helper_plugin_sqlite
+     */
+    private $sqlite;
+
     public function __construct() {
         $this->downloader = $this->loadHelper('fksdownloader');
         $this->texPreproc = new fkstaskrepo_tex_preproc();
+
+        // initialize sqlite
+        $this->sqlite = $this->loadHelper('sqlite', false);
+        $pluginName = $this->getPluginName();
+        if (!$this->sqlite) {
+            msg($pluginName . ': This plugin requires the sqlite plugin. Please install it.');
+            return;
+        }
+        if (!$this->sqlite->init($pluginName, DOKU_PLUGIN . $pluginName . DIRECTORY_SEPARATOR . 'db' . DIRECTORY_SEPARATOR)) {
+            msg($pluginName . ': Cannot initialize database.');
+            return;
+        }
     }
 
     /**
@@ -39,11 +55,6 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         return array(
                 //TODO
         );
-    }
-
-    private function getPath($year, $series) {
-        $mask = $this->getConf('path_mask');
-        return sprintf($mask, $year, $series);
     }
 
     public function getProblemData($year, $series, $problem) {
@@ -60,6 +71,16 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         if (array_key_exists('task', $data) && $data['task'] == '') {
             unset($data['task']);
         }
+        if (array_key_exists('tags', $data)) {
+            if (!is_array($data['tags'])) {
+                $tags = array_map(function($it) {
+                            return trim($it);
+                        }, explode(',', $data['tags']));
+            } else {
+                $tags = $data['tags'];
+            }
+            $this->storeTags($year, $series, $problem, $tags);
+        }
 
         $toStore = array_diff($data, $globalData);
 
@@ -69,6 +90,28 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
 
         $filename = $this->getProblemFile($year, $series, $problem);
         io_saveFile($filename, serialize($toStore));
+    }
+
+    private function getLocalData($year, $series, $problem) {
+        $filename = $this->getProblemFile($year, $series, $problem);
+        $content = io_readFile($filename, false);
+        if ($content) {
+            $data = unserialize($content);
+        } else {
+            $data = array();
+        }
+        $tags = $this->loadTags($year, $series, $problem);
+        $data['tags'] = $tags;
+        return $data;
+    }
+
+    /*     * **************
+     * XML data
+     */
+
+    private function getPath($year, $series) {
+        $mask = $this->getConf('path_mask');
+        return sprintf($mask, $year, $series);
     }
 
     public function getProblemFile($year, $series, $problem) {
@@ -85,16 +128,10 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         return $this->downloader->getCacheFilename($this->downloader->getWebServerFilename($this->getPath($year, $series)));
     }
 
-    private function getLocalData($year, $series, $problem) {
-        $filename = $this->getProblemFile($year, $series, $problem);
-        $content = io_readFile($filename, false);
-        return !empty($content) ? unserialize($content) : array();
-    }
-
     private function extractProblem($data, $problemLabel) {
         $problems = simplexml_load_string($data);
         $problemData = null;
-        if(!$problems){
+        if (!$problems) {
             return array();
         }
         foreach ($problems as $problem) {
@@ -113,6 +150,84 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
             }
         }
         return $result;
+    }
+
+    /*     * **************
+     * Tags
+     */
+
+    private function storeTags($year, $series, $problem, $tags) {
+        // allocate problem ID
+        $sql = 'select problem_id from problem where year = ? and series = ? and problem = ?';
+        $res = $this->sqlite->query($sql, $year, $series, $problem);
+        $problemId = $this->sqlite->res2single($res);
+        if (!$problemId) {
+            $this->sqlite->query('insert into problem (year, series, problem) values(?, ?, ?)', $year, $series, $problem);
+            $res = $this->sqlite->query($sql, $year, $series, $problem);
+            $problemId = $this->sqlite->res2single($res);
+        }
+
+        // flush and insert tags
+        $this->sqlite->query('begin transaction');
+        $this->sqlite->query('delete from problem_tag where problem_id = ?', $problemId);
+        foreach ($tags as $tag) {
+            // allocate tag ID
+            $sql = 'select tag_id from tag where tag_cs = ?';
+            $res = $this->sqlite->query($sql, $tag);
+            $tagId = $this->sqlite->res2single($res);
+            if (!$tagId) {
+                $this->sqlite->query('insert into tag (tag_cs) values(?)', $tag);
+                $res = $this->sqlite->query($sql, $tag);
+                $tagId = $this->sqlite->res2single($res);
+            }
+
+            $this->sqlite->query('insert into problem_tag (problem_id, tag_id) values(?, ?)', $problemId, $tagId);
+        }
+
+        $this->sqlite->query('delete from tag where tag_id not in (select tag_id from problem_tag)'); // garbage collection
+        $this->sqlite->query('commit transaction');
+    }
+
+    private function loadTags($year, $series, $problem) {
+        $sql = 'select problem_id from problem where year = ? and series = ? and problem = ?';
+        $res = $this->sqlite->query($sql, $year, $series, $problem);
+        $problemId = $this->sqlite->res2single($res);
+        if (!$problemId) {
+            return array();
+        }
+
+        $res = $this->sqlite->query('select t.tag_cs from tag t left join problem_tag pt on pt.tag_id = t.tag_id where pt.problem_id =?', $problemId);
+        $result = array();
+        foreach ($this->sqlite->res2arr($res) as $row) {
+            $result[] = $row['tag_cs'];
+        }
+        return $result;
+    }
+
+    public function getTags($lang = 'cs') {
+        $sql = 'select t.tag_' . $lang . ' as tag, count(pt.problem_id) as count from tag t left join problem_tag pt on pt.tag_id = t.tag_id group by t.tag_id order by 1';
+        $res = $this->sqlite->query($sql);
+        return $this->sqlite->res2arr($res);
+    }
+
+    public function getProblems($tag, $lang = 'cs') {
+        $sql = 'select tag_id from tag where tag_' . $lang . ' = ?';
+        $res = $this->sqlite->query($sql, $tag);
+        $tagId = $this->sqlite->res2single($res);
+        if (!$tagId) {
+            return array();
+        }
+
+        $res = $this->sqlite->query('select distinct p.year, p.series, p.problem from problem p left join problem_tag pt on pt.problem_id = p.problem_id where pt.tag_id = ? order by 1 desc, 2 desc, 3 asc', $tagId);
+        $result = array();
+        foreach ($this->sqlite->res2arr($res) as $row) {
+            $result[] = array($row['year'], $row['series'], $row['problem']);
+        }
+        return $result;
+    }
+
+    private function getTagsKey($year, $series, $problem) {
+        return "$year-$series-$problem";
     }
 
 }

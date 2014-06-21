@@ -10,7 +10,7 @@
 if (!defined('DOKU_INC'))
     die();
 
-class syntax_plugin_fkstaskrepo extends DokuWiki_Syntax_Plugin {
+class syntax_plugin_fkstaskrepo_entry extends DokuWiki_Syntax_Plugin {
 
     /**
      * @var helper_plugin_fksdownloader
@@ -55,7 +55,7 @@ class syntax_plugin_fkstaskrepo extends DokuWiki_Syntax_Plugin {
      * @param string $mode Parser mode
      */
     public function connectTo($mode) {
-        $this->Lexer->addSpecialPattern('<fkstaskrepo\b.*?/>', $mode, 'plugin_fkstaskrepo');
+        $this->Lexer->addSpecialPattern('<fkstaskrepo\b.*?/>', $mode, 'plugin_fkstaskrepo_entry');
     }
 
     /**
@@ -96,16 +96,21 @@ class syntax_plugin_fkstaskrepo extends DokuWiki_Syntax_Plugin {
             if (isset($problemData['taskTS']) && filemtime($seriesFile) > $problemData['taskTS']) {
                 $classes[] = 'outdated';
             }
-            
+
             $editLabel = $this->getLang('problem') . ' ' . $problemData['name'];
             $classes[] = $renderer->startSectionEdit($data['bytepos_start'], 'plugin_fkstaskrepo', $editLabel);
 
             $renderer->doc .= '<div class="' . implode(' ', $classes) . '">';
-            $renderer->doc .= p_render($mode, $this->prepareContent($problemData), $info);
+            $renderer->doc .= p_render($mode, self::prepareContent($problemData, $this->getConf('task_template')), $info);
             $renderer->doc .= '</div>';
 
             $renderer->finishSectionEdit($data['bytepos_end']);
             return true;
+        } else if ($mode == 'text') {
+            $problemData = $this->helper->getProblemData($parameters['year'], $parameters['series'], $parameters['problem']);
+            foreach ($problemData as $key => $value) {
+                $renderer->doc .= "$key: $value\n";
+            }
         } else if ($mode == 'metadata') {
             $templateFile = wikiFN($this->getConf('task_template'));
             $problemFile = $this->helper->getProblemFile($parameters['year'], $parameters['series'], $parameters['problem']);
@@ -134,8 +139,7 @@ class syntax_plugin_fkstaskrepo extends DokuWiki_Syntax_Plugin {
         }
     }
 
-    private function prepareContent($data) {
-        $templatePage = $this->getConf('task_template');
+    public static function prepareContent($data, $templatePage) {
         $templateFile = wikiFN($templatePage);
         $templateString = io_readFile($templateFile);
         $needles = array_map(function($it) {
