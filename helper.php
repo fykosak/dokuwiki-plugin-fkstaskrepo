@@ -72,14 +72,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
             unset($data['task']);
         }
         if (array_key_exists('tags', $data)) {
-            if (!is_array($data['tags'])) {
-                $tags = array_map(function($it) {
-                            return trim($it);
-                        }, explode(',', $data['tags']));
-            } else {
-                $tags = $data['tags'];
-            }
-            $this->storeTags($year, $series, $problem, $tags);
+            $this->storeTags($year, $series, $problem, $data['tags']);
         }
 
         $toStore = array_diff($data, $globalData);

@@ -105,7 +105,12 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
                 $form->addElement(form_makeWikiText(cleanText($value), $attr));
             } else if ($field == 'tags') {
                 $value = $INPUT->post->str($field, implode(', ', $data[$field]));
-                $form->addElement(form_makeTextField($field, $value, $this->getLang($field), $field, null, $attr));
+                $tags = array_map(function($it) {
+                            return $it['tag'];
+                        }, $this->helper->getTags()); // TODO default lang
+
+                $attr['data-tags'] = json_encode($tags);
+                $form->addElement(form_makeTextField($field, $value, $this->getLang($field), $this->getPluginName() . '-' . $field, null, $attr));
             } else {
                 $value = $INPUT->post->str($field, $data[$field]);
                 $form->addElement(form_makeTextField($field, $value, $this->getLang($field), $field, null, $attr));
@@ -130,6 +135,10 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         foreach ($this->modFields as $field) {
             if ($field == 'task') {
                 $data[$field] = cleanText($_POST['wikitext']);
+            } else if ($field == 'tags') {
+                $data[$field] = array_filter(array_map(function($it) {
+                                    return trim($it);
+                                }, explode(',', $_POST[$field])));
             } else {
                 $data[$field] = $_POST[$field];
             }
