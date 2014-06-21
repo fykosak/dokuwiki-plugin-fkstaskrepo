@@ -37,3 +37,8 @@ p.fkstaskrepo-tagcloud a.size10 {
     font-size: 150%;
 }
 
+form.fkstaskrepo span[title] {
+    border-bottom: 1px dotted __text__;
+    cursor: help;
+}
+

@@ -103,7 +103,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
      */
 
     private function getPath($year, $series) {
-        $mask = $this->getConf('path_mask');
+        $mask = $this->getConf('remote_path_mask');
         return sprintf($mask, $year, $series);
     }
 
@@ -112,12 +112,12 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         return metaFN($id, '.dat');
     }
 
-    public function getSeriesData($year, $series, $expiration = helper_plugin_fksdownloader::EXPIRATION_NEVER) {
+    public function getSeriesData($year, $series, $lang = 'cs', $expiration = helper_plugin_fksdownloader::EXPIRATION_NEVER) {
         $path = $this->getPath($year, $series);
         return $this->downloader->downloadWebServer($expiration, $path);
     }
 
-    public function getSeriesFilename($year, $series) {
+    public function getSeriesFilename($year, $series, $lang = 'cs') {
         return $this->downloader->getCacheFilename($this->downloader->getWebServerFilename($this->getPath($year, $series)));
     }
 
