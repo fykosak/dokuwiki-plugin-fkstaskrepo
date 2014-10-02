@@ -128,20 +128,23 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
             return array();
         }
         foreach ($problems as $problem) {
-            if ((string) $problem->label == $problemLabel) {
+            if (isset($problem->label) && (string) $problem->label == $problemLabel) {
                 $problemData = $problem;
                 break;
             }
         }
-        $result = array();
-        if ($problemData) {
-            foreach ($problemData as $key => $value) {
-                if ($key == 'task') {
-                    $value = $this->texPreproc->preproc((string) $value);
-                }
-                $result[$key] = (string) $value;
-            }
+
+        if ($problemData == null) {
+            throw new fkstaskrepo_exception(sprintf($this->getLang('problem_not_found'), $problemLabel), -1);
         }
+        $result = array();
+        foreach ($problemData as $key => $value) {
+            if ($key == 'task') {
+                $value = $this->texPreproc->preproc((string) $value);
+            }
+            $result[$key] = (string) $value;
+        }
+
         return $result;
     }
 
@@ -223,6 +226,10 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         return "$year-$series-$problem";
     }
 
+}
+
+class fkstaskrepo_exception extends RuntimeException {
+    
 }
 
 // vim:ts=4:sw=4:et:

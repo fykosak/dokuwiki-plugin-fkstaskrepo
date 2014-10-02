@@ -110,13 +110,9 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
             'deadline-post' => (string) $seriesXML['deadline-post']
         );
 
-        $needles = array_map(function($it) {
-                    return "@$it@";
-                }, array_keys($parameters));
-        $replacements = array_values($parameters);
-
-        $pageContent = str_replace($needles, $replacements, $pageTemplate);
-        $pageContent = preg_replace_callback('/--\s*problem\s--(.*)--\s*endproblem\s*--/is', function($match) use($seriesXML) {
+        $pageContent = $this->replaceVariables($parameters, $pageTemplate);
+        $that = $this;
+        $pageContent = preg_replace_callback('/--\s*problem\s--(.*)--\s*endproblem\s*--/is', function($match) use($seriesXML, $that) {
                     $result = '';
                     $problemTemplate = $match[1];
                     foreach ($seriesXML as $problem) {
@@ -125,12 +121,7 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
                             $parameters[$field] = (string) $value;
                         }
 
-                        $needles = array_map(function($it) {
-                                    return "@$it@";
-                                }, array_keys($parameters));
-                        $replacements = array_values($parameters);
-
-                        $result .= str_replace($needles, $replacements, $problemTemplate);
+                        $result .= $that->replaceVariables($parameters, $problemTemplate);
                     }
                     return $result;
                 }, $pageContent);
@@ -138,6 +129,20 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
         io_saveFile(wikiFN($pagePath), $pageContent);
 
         msg(sprintf('Updated <a href="%s">%s</a>.', wl($pagePath), $pagePath));
+    }
+
+    private function replaceVariables($parameters, $template) {
+        $that = $this;
+        $result = preg_replace_callback('/@([^@]+)@/', function($match) use($parameters, $that) {
+                    $key = $match[1];
+                    if (!isset($parameters[$key])) {
+                        msg(sprintf($that->getLang('undefined_template_variable'), $key));
+                        return '';
+                    } else {
+                        return $parameters[$key];
+                    }
+                }, $template);
+        return $result;
     }
 
 }

@@ -89,27 +89,39 @@ class syntax_plugin_fkstaskrepo_entry extends DokuWiki_Syntax_Plugin {
         $parameters = $data['parameters'];
         $seriesFile = $this->helper->getSeriesFilename($parameters['year'], $parameters['series']);
         if ($mode == 'xhtml') {
-            // obtain problem data
-            $problemData = $this->helper->getProblemData($parameters['year'], $parameters['series'], $parameters['problem']);
 
-            $classes = array();
-            if (isset($problemData['taskTS']) && filemtime($seriesFile) > $problemData['taskTS']) {
-                $classes[] = 'outdated';
+            try {
+                // obtain problem data
+                $problemData = $this->helper->getProblemData($parameters['year'], $parameters['series'], $parameters['problem']);
+
+                $classes = array();
+                if (isset($problemData['taskTS']) && filemtime($seriesFile) > $problemData['taskTS']) {
+                    $classes[] = 'outdated';
+                }
+
+                $editLabel = $this->getLang('problem') . ' ' . $problemData['name'];
+                $classes[] = $renderer->startSectionEdit($data['bytepos_start'], 'plugin_fkstaskrepo', $editLabel);
+
+                $renderer->doc .= '<div class="' . implode(' ', $classes) . '">';
+                $renderer->doc .= p_render($mode, self::prepareContent($problemData, $this->getConf('task_template')), $info);
+                $renderer->doc .= '</div>';
+
+                $renderer->finishSectionEdit($data['bytepos_end']);
+            } catch (fkstaskrepo_exception $e) {
+                $renderer->nocache();
+                msg($e->getMessage(), -1);
             }
-
-            $editLabel = $this->getLang('problem') . ' ' . $problemData['name'];
-            $classes[] = $renderer->startSectionEdit($data['bytepos_start'], 'plugin_fkstaskrepo', $editLabel);
-
-            $renderer->doc .= '<div class="' . implode(' ', $classes) . '">';
-            $renderer->doc .= p_render($mode, self::prepareContent($problemData, $this->getConf('task_template')), $info);
-            $renderer->doc .= '</div>';
-
-            $renderer->finishSectionEdit($data['bytepos_end']);
             return true;
         } else if ($mode == 'text') {
-            $problemData = $this->helper->getProblemData($parameters['year'], $parameters['series'], $parameters['problem']);
-            foreach ($problemData as $key => $value) {
-                $renderer->doc .= "$key: $value\n";
+            try {
+                // obtain problem data
+                $problemData = $this->helper->getProblemData($parameters['year'], $parameters['series'], $parameters['problem']);
+                foreach ($problemData as $key => $value) {
+                    $renderer->doc .= "$key: $value\n";
+                }
+            } catch (fkstaskrepo_exception $e) {
+                $renderer->nocache();
+                msg($e->getMessage(), -1);
             }
         } else if ($mode == 'metadata') {
             $templateFile = wikiFN($this->getConf('task_template'));

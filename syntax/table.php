@@ -137,8 +137,12 @@ class syntax_plugin_fkstaskrepo_table extends DokuWiki_Syntax_Plugin {
             $problems = $this->helper->getProblems($tag); // TODO lang
             foreach ($problems as $problemDet) {
                 list($year, $series, $problem) = $problemDet;
-                $data = $this->helper->getProblemData($year, $series, $problem);
-                $R->doc .= p_render('xhtml', syntax_plugin_fkstaskrepo_entry::prepareContent($data, $this->getConf('task_template_search')), $info);
+                try {
+                    $data = $this->helper->getProblemData($year, $series, $problem);
+                    $R->doc .= p_render('xhtml', syntax_plugin_fkstaskrepo_entry::prepareContent($data, $this->getConf('task_template_search')), $info);
+                } catch (fkstaskrepo_exception $e) {
+                    msg($e->getMessage(), -1);
+                }
             }
         }
     }
