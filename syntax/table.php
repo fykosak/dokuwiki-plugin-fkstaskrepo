@@ -57,7 +57,7 @@ class syntax_plugin_fkstaskrepo_table extends DokuWiki_Syntax_Plugin {
      * @param string $mode Parser mode
      */
     public function connectTo($mode) {
-        $this->Lexer->addSpecialPattern('<fkstaskrepo-table\b.*?/>', $mode, 'plugin_fkstaskrepo_table');
+        $this->Lexer->addSpecialPattern('<fkstaskrepotable\b.*?/>', $mode, 'plugin_fkstaskrepo_table');
     }
 
     /**
