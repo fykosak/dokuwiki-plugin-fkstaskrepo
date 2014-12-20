@@ -52,9 +52,9 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
         global $ID;
         global $INPUT;
 
-        $year = $INPUT->post->int('year');
-        $series = $INPUT->post->int('series');
-        $language = $INPUT->post->str('language');
+        $year = $INPUT->post->int('year', null);
+        $series = $INPUT->post->int('series', null);
+        $language = $INPUT->post->str('language', null);
 
         ptln('<h1>' . $this->getLang('menu') . '</h1>');
 
@@ -75,7 +75,7 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
         $form->endFieldset();
         $form->printForm();
 
-        if ($year && $series && $language) {
+        if ($year !== null && $series !== null && $language !== null) {
             // obtain file
             if ($_FILES['xml_file'] && $_FILES['xml_file']['name']) {
                 if ($_FILES['xml_file']['error'] > 0) {
@@ -107,7 +107,8 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
             'series' => $series,
             'language' => $language,
             'deadline' => (string) $seriesXML['deadline'],
-            'deadline-post' => (string) $seriesXML['deadline-post']
+            'deadline-post' => (string) $seriesXML['deadline-post'],
+            'label' => '@label@', // workaround so that we do not overwrite the placeholder with an empty string (before second replacement)
         );
 
         $pageContent = $this->replaceVariables($parameters, $pageTemplate);
@@ -116,12 +117,12 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
                     $result = '';
                     $problemTemplate = $match[1];
                     foreach ($seriesXML as $problem) {
-                        $parameters = array();
+                        $problemParameters = array();
                         foreach ($problem as $field => $value) {
-                            $parameters[$field] = (string) $value;
+                            $problemParameters[$field] = (string) $value;
                         }
 
-                        $result .= $that->replaceVariables($parameters, $problemTemplate);
+                        $result .= $that->replaceVariables($problemParameters, $problemTemplate);
                     }
                     return $result;
                 }, $pageContent);
