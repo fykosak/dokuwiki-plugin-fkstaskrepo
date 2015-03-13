@@ -39,7 +39,7 @@ class syntax_plugin_fkstaskrepo_entry extends DokuWiki_Syntax_Plugin {
      * @return string Paragraph type
      */
     public function getPType() {
-        return 'normal';
+        return 'block';
     }
 
     /**

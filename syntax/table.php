@@ -41,14 +41,14 @@ class syntax_plugin_fkstaskrepo_table extends DokuWiki_Syntax_Plugin {
      * @return string Paragraph type
      */
     public function getPType() {
-        return 'normal';
+        return 'block';
     }
 
     /**
      * @return int Sort order - Low numbers go before high numbers
      */
     public function getSort() {
-        return 166; // whatever
+        return 165; // whatever
     }
 
     /**
