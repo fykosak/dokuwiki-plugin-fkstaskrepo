@@ -21,7 +21,7 @@ class fkstaskrepo_tex_lexer implements Iterator {
     private $offset;
     private $current;
     static private $patterns = array(
-        self::TOKEN_SEQ => '\\\([a-z]+|[^\s])\s*',
+        self::TOKEN_SEQ => '\\\([a-z]+|[^\s])\s*\*?',
         self::TOKEN_LBRACE => '{',
         self::TOKEN_RBRACE => '}',
     );
@@ -83,6 +83,7 @@ class fkstaskrepo_tex_lexer implements Iterator {
  */
 class fkstaskrepo_tex_preproc {
 
+    const SAFETY_LIMIT = 10000;
     private static $macros = array(
         // equations
         '\eq m' => "\n\\[\\begin{align*}\n    \\1\n\\end {align*}\\]\n", // NOTE: space as it breaks Dokuwiki parser
@@ -120,6 +121,7 @@ class fkstaskrepo_tex_preproc {
         '\ref:1' => '', // TODO figures?
         '\smallskip' => '',
         '\vspace:1' => '',
+        '\vspace*:1' => '',
     );
     private $variantArity = array();
     private $maxMaskArity = array();
@@ -206,9 +208,13 @@ class fkstaskrepo_tex_preproc {
     }
 
     private function process($ast) {
+        $safety_counter = 0;
         $result = '';
         reset($ast);
         while (($it = current($ast)) !== false) {
+            if (++$safety_counter > self::SAFETY_LIMIT) {
+                throw new fkstaskrepo_exception('Infinite loop in parser.', -1);
+            }
             if (is_array($it)) { // group
                 $result .= '{' . $this->process($it) . '}';
             } else {
@@ -279,6 +285,10 @@ class fkstaskrepo_tex_preproc {
                     $content = array_pop($stack);
                     $current = & $stack[count($stack) - 1];
                     $current[] = $content;
+                    break;
+                case fkstaskrepo_tex_lexer::TOKEN_SEQ:
+                    $sequence = preg_replace('/\s+\*/', '*', $token['text']);
+                    $current[] = $sequence;
                     break;
                 default:
                     $current[] = $token['text'];
