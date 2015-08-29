@@ -91,6 +91,7 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
         $renderer->doc.='<h4>'.'Výběr série'.'</h4>';
 
         $renderer->doc.='<select id="FKS_taskrepo_select" class="edit" >';
+        $renderer->doc.='<option>--Výběr série--</option>';
         foreach ($yaers as $year => $batchs) {
             $renderer->doc.=' <option value="'.$year.'">'.$this->getLang('year').' '.$year.'</option>';
         }
