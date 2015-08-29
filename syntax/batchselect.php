@@ -86,20 +86,20 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
      * @return bool If rendering was successful.
      */
     public function render($mode,Doku_Renderer &$renderer,$data) {
-        list($yaers) = $data;
+        list($years) = $data;
         $renderer->doc.='<div class="FKS_taskrepo select">';
         $renderer->doc.='<h4>'.'Výběr série'.'</h4>';
 
         $renderer->doc.='<select id="FKS_taskrepo_select" class="edit" >';
-        foreach ($yaers as $year => $batchs) {
+        foreach ($years as $year => $batchs) {
             $renderer->doc.=' <option value="'.$year.'">'.$this->getLang('year').' '.$year.'</option>';
         }
         $renderer->doc.='</select>';
 
 
-        foreach ($yaers as $year => $batchs) {
+        foreach ($years as $year => $batchs) {
 
-            $renderer->doc.='<div class="yaer" style="display:none" data-year="'.$year.'">';
+            $renderer->doc.='<div class="year" style="display:none" data-year="'.$year.'">';
             foreach ($batchs as $batch => $b) {
                
                 
