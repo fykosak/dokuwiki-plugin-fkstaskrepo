@@ -91,6 +91,7 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
         $renderer->doc.='<h4>'.'Výběr série'.'</h4>';
 
         $renderer->doc.='<select id="FKS_taskrepo_select" class="edit" >';
+        $renderer->doc.='<option>--Výběr série--</option>';
         foreach ($years as $year => $batchs) {
             $renderer->doc.=' <option value="'.$year.'">'.$this->getLang('year').' '.$year.'</option>';
         }
@@ -99,15 +100,15 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
 
         foreach ($years as $year => $batchs) {
 
-            $renderer->doc.='<div class="year" style="display:none" data-year="'.$year.'">';
+            $renderer->doc.='<div class="year" style="display:none" data-year="'.$year.'"><ul>';
             foreach ($batchs as $batch => $b) {
                
                 
                 if($b){
-                    $renderer->doc.=' <a href="'.wl( sprintf($this->getConf('page_path_mask'),$year,$batch)).'" >'.$this->getLang('series').' '.$batch.'</a>';
+                    $renderer->doc.=' <li><a href="'.wl( sprintf($this->getConf('page_path_mask'),$year,$batch)).'" >'.$this->getLang('series').' '.$batch.'</a></li>';
                 }
             }
-            $renderer->doc.='</div>';
+            $renderer->doc.='</ul></div>';
         }
 
         $renderer->doc.='</div>';
