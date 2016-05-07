@@ -215,6 +215,7 @@ class fkstaskrepo_tex_preproc {
             if (++$safety_counter > self::SAFETY_LIMIT) {
                 throw new fkstaskrepo_exception('Infinite loop in parser.', -1);
             }
+           
             if (is_array($it)) { // group
                 $result .= '{' . $this->process($it) . '}';
             } else {

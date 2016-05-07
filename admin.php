@@ -7,8 +7,7 @@
  * @author  Michal Koutný <michal@fykos.cz>
  */
 // must be run within Dokuwiki
-if (!defined('DOKU_INC'))
-    die();
+if(!defined('DOKU_INC')) die();
 
 class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
 
@@ -52,98 +51,172 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
         global $ID;
         global $INPUT;
 
-        $year = $INPUT->post->int('year', null);
-        $series = $INPUT->post->int('series', null);
-        $language = $INPUT->post->str('language', null);
+        $year = $INPUT->post->int('year',null);
+        $series = $INPUT->post->int('series',null);
+        $language = $INPUT->post->str('language',null);
 
-        ptln('<h1>' . $this->getLang('menu') . '</h1>');
+        ptln('<h1>'.$this->getLang('menu').'</h1>');
 
-        $form = new Doku_Form(array('class' => $this->getPluginName(), 'enctype' => 'multipart/form-data'));
+        $form = new Doku_Form(array('class' => $this->getPluginName(),'enctype' => 'multipart/form-data'));
         $form->startFieldset($this->getLang('update'));
-        $form->addHidden('id', $ID);
-        $form->addHidden('do', 'admin');
-        //$form->addHidden('page', 'sqlite'); TODO
-        //$form->addHidden('db', $_REQUEST['db']); TODO
-        //$form->addHidden('version', $_REQUEST['version']); TODO
+        $form->addHidden('id',$ID);
+        $form->addHidden('do','admin');
+    
+        $form->addElement(form_makeTextField('year',$year,$this->getLang('year')));
+        $form->addElement(form_makeTextField('series',$series,$this->getLang('series')));
+        $form->addElement(form_makeMenuField('language',array('ALL','cs','en'),'ALL',$this->getLang('language')));
 
-        $form->addElement(form_makeTextField('year', $year, $this->getLang('year')));
-        $form->addElement(form_makeTextField('series', $series, $this->getLang('series')));
-        $form->addElement(form_makeMenuField('language', array('cs', 'en'), $language, $this->getLang('language')));
-        $form->addElement(form_makeFileField('xml_file', '<span title="' . $this->getLang('xml_source_help') . '">' . $this->getLang('xml_file') . '</span>'));
-
-        $form->addElement(form_makeButton('submit', 'admin', $this->getLang('update')));
+        $form->addElement(form_makeFileField('xml_file','<span title="'.$this->getLang('xml_source_help').'">'.$this->getLang('xml_file').'</span>'));
+        $form->addElement(form_makeCheckboxField('hard','1',$this->getLang('hard_upload')));
+        $form->addElement(form_makeButton('submit','admin',$this->getLang('update')));
         $form->endFieldset();
         $form->printForm();
 
-        if ($year !== null && $series !== null && $language !== null) {
-            // obtain file
-            if ($_FILES['xml_file'] && $_FILES['xml_file']['name']) {
-                if ($_FILES['xml_file']['error'] > 0) {
-                    msg('Upload failed.', -1);
+        if($year !== null && $series !== null && $language !== null){
+            if($language == "ALL"){
+                $language = null;
+            }
+            if($_FILES['xml_file'] && $_FILES['xml_file']['name']){
+                if($_FILES['xml_file']['error'] > 0){
+                    msg('Upload failed.',-1);
                     return;
                 }
-                $dst = $this->helper->getSeriesFilename($year, $series, $language);
-                move_uploaded_file($_FILES['xml_file']['tmp_name'], $dst);
+                $dst = $this->helper->getSeriesFilename($year,$series);
+                move_uploaded_file($_FILES['xml_file']['tmp_name'],$dst);
                 $content = file_get_contents($dst);
-            } else {
-                $content = $this->helper->getSeriesData($year, $series, $language, helper_plugin_fksdownloader::EXPIRATION_FRESH);
-                if (!$content) {
+            }else{
+                $content = $this->helper->getSeriesData($year,$series,helper_plugin_fksdownloader::EXPIRATION_FRESH);
+                if(!$content){
                     return;
                 }
             }
-
-            $this->processSeries($content, $year, $series, $language);
+            $this->processSeries($content,$year,$series,$language);
         }
     }
 
-    private function processSeries($content, $year, $series, $language) {
-        $pagePath = sprintf($this->getConf('page_path_mask'), $year, $series);
-        $pageTemplate = io_readFile(wikiFN($this->getConf('series_template')));
+    private function processSeries($content,$year,$series,$language) {
+        global $INPUT;
 
         // series template
         $seriesXML = simplexml_load_string($content);
-        $parameters = array(
-            'year' => $year,
-            'series' => $series,
-            'language' => $language,
-            'deadline' => (string) $seriesXML['deadline'],
-            'deadline-post' => (string) $seriesXML['deadline-post'],
-            'label' => '@label@', // workaround so that we do not overwrite the placeholder with an empty string (before second replacement)
-        );
+        $deadline = $seriesXML->deadline;
+        $dedline_post = $seriesXML->{'deadline-post'};
 
-        $pageContent = $this->replaceVariables($parameters, $pageTemplate);
-        $that = $this;
-        $pageContent = preg_replace_callback('/--\s*problem\s--(.*)--\s*endproblem\s*--/is', function($match) use($seriesXML, $that) {
-                    $result = '';
-                    $problemTemplate = $match[1];
-                    foreach ($seriesXML as $problem) {
-                        $problemParameters = array();
-                        foreach ($problem as $field => $value) {
-                            $problemParameters[$field] = (string) $value;
+        if($INPUT->int('hard') == 0){
+        
+            if((int)$seriesXML->number != $series){
+                 msg('Series mus be same as in XML',-1);
+              return;  
+            }
+            if((string)$seriesXML->year != $year){
+                msg('Year mus be same as in XML',-1);
+                return;
+            }
+        }
+
+        $langs = $this->getLanguages($seriesXML);
+
+        foreach ($langs as $lang) {
+
+            if($language && $lang != $language){
+                continue;
+            }
+
+            $parameters = array(
+                'human-year' => $year.'. '.$this->getSpecLang('years',$lang),
+                'human-series' => $series.'. '.$this->getSpecLang('series',$lang),
+                'label' => '@label@',
+                'human-deadline' => $this->getSpecLang('deadline',$lang).': '.date($this->helper->getSpecLang('deadline-format',$lang),strtotime($deadline)),
+                'human-deadline-post' => $this->getSpecLang('deadline-post',$lang).': '.date($this->helper->getSpecLang('deadline-post-format',$lang),strtotime($dedline_post))
+            );
+
+            $pagePath = sprintf($this->getConf('page_path_mask_'.$lang),$year,$series);
+
+            if($pagePath == ""){
+                msg('No page path defined for language '.$lang,-1);
+                continue;
+            }
+            $pageTemplate = io_readFile(wikiFN($this->getConf('series_template')));
+
+
+
+            $parameters['lang'] = $lang;
+            $parameters ['year'] = $year;
+            $parameters['series'] = $series;
+            $pageContent = $this->replaceVariables($parameters,$pageTemplate);
+
+
+
+            $that = $this;
+            $pageContent = preg_replace_callback('/--\s*problem\s--(.*)--\s*endproblem\s*--/is',function($match) use($seriesXML,$that,$parameters,$year,$series,$lang) {
+                $result = '';
+                $problemTemplate = $match[1];
+
+
+                foreach ($seriesXML->problems->children() as $problem) {
+                    if((string) $problem->figure != ""){
+                        foreach ($problem->figure as $figure) {
+
+                            if($lang == (string) $figure->attributes('http://www.w3.org/XML/1998/namespace')->lang){
+                                $name = $that->helper->getImagePath($year,$series,(string) $problem->number,$lang);
+
+                                io_saveFile(mediaFN($name),(string) trim($figure));
+                            }
                         }
-
-                        $result .= $that->replaceVariables($problemParameters, $problemTemplate);
                     }
-                    return $result;
-                }, $pageContent);
 
-        io_saveFile(wikiFN($pagePath), $pageContent);
+                    $this->helper->storeTags($year,$series,$problem->number,$problem->topics->topic);
+                    $parameters['label'] = (string) $problem->label;
+                    $result .= $that->replaceVariables($parameters,$problemTemplate);
+                }
+                return $result;
+            },$pageContent);
 
-        msg(sprintf('Updated <a href="%s">%s</a>.', wl($pagePath), $pagePath));
+
+            io_saveFile(wikiFN($pagePath),$pageContent);
+
+            msg(sprintf('Updated <a href="%s">%s</a>.',wl($pagePath),$pagePath));
+        }
     }
 
-    private function replaceVariables($parameters, $template) {
+    private function getLanguages(SimpleXMLElement $seriesXML) {
+        $langs = array();
+        foreach ($seriesXML->xpath('problems/problem/*[@xml:lang]') as $e) {
+            $l = (string) $e->attributes('http://www.w3.org/XML/1998/namespace')->lang;
+            if(!in_array($l,$langs)){
+                $langs[] = $l;
+            }
+        }
+        return $langs;
+    }
+
+    private function replaceVariables($parameters,$template) {
         $that = $this;
-        $result = preg_replace_callback('/@([^@]+)@/', function($match) use($parameters, $that) {
-                    $key = $match[1];
-                    if (!isset($parameters[$key])) {
-                        msg(sprintf($that->getLang('undefined_template_variable'), $key));
-                        return '';
-                    } else {
-                        return $parameters[$key];
-                    }
-                }, $template);
+
+        $result = preg_replace_callback('/@([^@]+)@/',function($match) use($parameters,$that) {
+            $key = $match[1];
+            if(!isset($parameters[$key])){
+                msg(sprintf($that->getLang('undefined_template_variable'),$key));
+                return '';
+            }else{
+                return $parameters[$key];
+            }
+        },$template);
         return $result;
+    }
+
+    final private function getSpecLang($id,$lang = null) {
+        global $conf;
+        if(!$lang || $lang == $conf['lang']){
+            return $this->getLang($id);
+        }
+
+        $this->localised = false;
+        $confLang = $conf['lang'];
+        $conf['lang'] = $lang;
+        $l = $this->getLang($id);
+        $conf['lang'] = $confLang;
+        return $l;
     }
 
 }

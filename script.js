@@ -46,7 +46,7 @@ jQuery(function() {
             $('.FKS_taskrepo.select div.yaer').each(function(){
                 $(this).css({display:'none'});
             });
-            $('.FKS_taskrepo.select div.yaer[data-year='+year+']').css({display:'block'});
+            $('.FKS_taskrepo.select div.yaer[data-year='+Number(year)+']').css({display:'block'});
         });
     });
 });

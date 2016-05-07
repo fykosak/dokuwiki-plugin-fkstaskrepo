@@ -22,6 +22,24 @@ $lang['update'] = 'Update';
 $lang['xml_file'] = 'XML soubor';
 $lang['xml_source_help'] = 'Nechej prázdné pro download souboru z přednastaveného serveru (Astrid).';
 $lang['year'] = 'Ročník';
+$lang['years'] = 'Ročníku';
+
+
+$lang['deadline'] = "Termín uploadu";
+$lang['deadline-post'] = "Termín odeslání poštou";
+
+
+$lang['deadline-format']="jS F Y";
+$lang['deadline-post-format']="jS F Y h:i:s A";
+
+$lang['test'] = "TEST CS";
+
+
+$lang['points-N-SG_vote']="bod";
+$lang['points-N-PL_vote']="body";
+$lang['points-G-PL_vote']="bodů";
+
+$lang['task']='Úloha';
 
 
 //Setup VIM: ex: et ts=4 :
