@@ -43,10 +43,13 @@ jQuery(function() {
         $(this).find('option:selected').each(function(){
             var year= $(this).val();
             console.log($('.FKS_taskrepo.select div[data-year='+year+']'));
-            $('.FKS_taskrepo.select div.yaer').each(function(){
+            $('.FKS_taskrepo.select div.year').each(function(){
                 $(this).css({display:'none'});
             });
-            $('.FKS_taskrepo.select div.yaer[data-year='+Number(year)+']').css({display:'block'});
+
+            $('.FKS_taskrepo.select div.yaer[data-year='+year+']').css({display:'block'});
+
+
         });
     });
 });
