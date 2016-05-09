@@ -21,7 +21,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
     /**
      * @var fkstaskrepo_tex_preproc;
      */
-    private $texPreproc;
+    public $texPreproc;
 
     /**
      * @var helper_plugin_sqlite
@@ -57,6 +57,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
     }
 
     public function getProblemData($year,$series,$problem,$lang) {
+
         $localData = $this->getLocalData($year,$series,$problem,$lang);
 
         $globalData = $this->extractProblem($this->getSeriesData($year,$series),$problem,$lang);
@@ -74,7 +75,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         if(array_key_exists('task',$data) && $data['task'] == ''){
             unset($data['task']);
         }
-        
+
 
         $toStore = array_diff($data,$globalData);
 
@@ -115,7 +116,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
 
     public function getSeriesData($year,$series,$expiration = helper_plugin_fksdownloader::EXPIRATION_NEVER) {
         $path = $this->getPath($year,$series);
-          return $this->downloader->downloadWebServer($expiration,$path);
+        return $this->downloader->downloadWebServer($expiration,$path);
     }
 
     public function getSeriesFilename($year,$series) {
@@ -155,26 +156,15 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
                     }
                     $problemData[$k] = (string) $child;
                 }
-                
-               
+
+
                 break;
             }
         }
+ 
 
-        if($problemData == null){
-            throw new fkstaskrepo_exception(sprintf($this->getLang('problem_not_found'),$problemLabel),-1);
-        }
-        $result = array();
-        foreach ($problemData as $key => $value) {
-            if($key == 'task'){
-                $value = $this->texPreproc->preproc((string) $value);
-            }elseif($key == 'image'){
-                
-            }
-            $result[$key] = (string) $value;
-        }
 
-        return $result;
+        return $problemData;
     }
 
     /*     * **************
@@ -217,6 +207,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         $sql = 'select problem_id from problem where year = ? and series = ? and problem = ?';
         $res = $this->sqlite->query($sql,$year,$series,$problem);
         $problemId = $this->sqlite->res2single($res);
+
         if(!$problemId){
             return array();
         }
@@ -230,13 +221,13 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
     }
 
     public function getTags($lang = 'cs') {
-        $sql = 'select t.tag_'.$lang.' as tag, count(pt.problem_id) as count from tag t left join problem_tag pt on pt.tag_id = t.tag_id group by t.tag_id order by 1';
+        $sql = 'select t.tag_cs as tag, count(pt.problem_id) as count from tag t left join problem_tag pt on pt.tag_id = t.tag_id group by t.tag_id order by 1';
         $res = $this->sqlite->query($sql);
         return $this->sqlite->res2arr($res);
     }
 
-    public function getProblems($tag,$lang = 'cs') {
-        $sql = 'select tag_id from tag where tag_'.$lang.' = ?';
+    public function getProblemsByTag($tag,$lang = 'cs') {
+        $sql = 'select tag_id from tag where tag_cs = ?';
         $res = $this->sqlite->query($sql,$tag);
         $tagId = $this->sqlite->res2single($res);
         if(!$tagId){
@@ -251,10 +242,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         return $result;
     }
 
-    private function getTagsKey($year,$series,$problem) {
-        return "$year-$series-$problem";
-    }
-     final public function getSpecLang($id,$lang = null) {
+    final public function getSpecLang($id,$lang = null) {
         global $conf;
         if(!$lang || $lang == $conf['lang']){
             return $this->getLang($id);
@@ -265,10 +253,67 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         $conf['lang'] = $lang;
         $l = $this->getLang($id);
         $conf['lang'] = $confLang;
+        $this->localised = false;
         return $l;
     }
-    public function getImagePath($year,$series,$problem,$lang){
-         return  $this->getPluginName().':figure:year'.$year.'_series'.$series.'_'.$problem.'_'.$lang.'.svg';
+
+    public function getImagePath($year,$series,$problem,$lang,$type=null) {
+        if($type){
+            return $this->getPluginName().':figure:year'.$year.'_series'.$series.'_'.$problem.'_'.$lang.'.'.$type;
+        }
+        return $this->getPluginName().':figure:year'.$year.'_series'.$series.'_'.$problem.'_'.$lang;
+    }
+
+    public function prepareContent($data,$templatePage) {
+        global $ID;
+
+        $templateFile = wikiFN($templatePage);
+        $templateString = io_readFile($templateFile);
+        foreach ($data as $key => $value) {
+
+            switch ($key) {
+
+                case 'points':
+                    if($value == 1){
+                        $l = $this->getSpecLang('points-N-SG_vote',$data['lang']);
+                    }elseif($value > 0 && $value < 5){
+                        $l = $this->getSpecLang('points-N-PL_vote',$data['lang']);
+                    }else{
+                        $l = $this->getSpecLang('points-G-PL_vote',$data['lang']);
+                    }
+                    $value = $value." ".$l;
+                    break;
+
+                case 'label':
+                    $templateString = str_replace("@human-$key@",$this->getSpecLang($key,$data['lang']).' '.$value,$templateString);
+                    break;
+                case 'series':
+                case 'year':
+                    $s = ($key == 'year') ? 's' : "";
+                    $templateString = str_replace("@human-$key@",$value.'. '.$this->getSpecLang($key.$s,$data['lang']),$templateString);
+                    break;
+
+
+                case 'figure':
+
+                    $value = '{{'.$this->getImagePath($data['year'],$data['series'],$data['number'],$data['lang']).' |}}';
+                    break;
+
+                default :
+                    break;
+            }
+            $templateString = str_replace("@$key@",$value,$templateString);
+        }
+        $tags = $this->loadTags($data['year'],$data['series'],$data['label']);
+        $t = "";
+        foreach ($tags as $tag) {
+            $t.= '[['.wl($ID,array(syntax_plugin_fkstaskrepo_table::URL_PARAM => $tag)).'|'.hsc($this->getSpecLang('tag__'.$tag,$data['lang'])).']] ';
+        }
+        $templateString = str_replace("@tags@",$t,$templateString);
+        $templateString = str_replace("@figure@","",$templateString);
+
+
+        return p_get_instructions($templateString);
     }
 
 }

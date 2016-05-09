@@ -104,7 +104,7 @@ class syntax_plugin_fkstaskrepo_entry extends DokuWiki_Syntax_Plugin {
             $classes[] = $renderer->startSectionEdit($data['bytepos_start'],'plugin_fkstaskrepo',$editLabel);
             $renderer->doc .='<div class="taskrepo_task">';
             $renderer->doc .= '<div class="'.implode(' ',$classes).'">';
-            $renderer->doc .= p_render($mode,$this->prepareContent($problemData,$this->getConf('task_template')),$info);
+            $renderer->doc .= p_render($mode,$this->helper->prepareContent($problemData,$this->getConf('task_template')),$info);
             $renderer->doc .= '</div>';
             $renderer->doc .= '</div>';
 
@@ -155,45 +155,6 @@ class syntax_plugin_fkstaskrepo_entry extends DokuWiki_Syntax_Plugin {
         }
     }
 
-    public function prepareContent($data,$templatePage) {
-        $templateFile = wikiFN($templatePage);
-        $templateString = io_readFile($templateFile);
-
-
-
-        foreach ($data as $key => $value) {
-           
-            switch ($key) {
-
-                case 'points':
-                    if($value == 1){
-                        $l = $this->helper->getSpecLang('points-N-SG_vote',$data['lang']);
-                    }elseif($value > 0 && $value < 5){
-                        $l = $this->helper->getSpecLang('points-N-PL_vote',$data['lang']);
-                    }else{
-                        $l = $this->helper->getSpecLang('points-G-PL_vote',$data['lang']);
-                    }
-                    $value = $value." ".$l;
-                    break;
-                case 'label':
-                    $value = $this->helper->getSpecLang('task',$data['lang'])." ".$value;
-                    break;
-                case 'figure':
-
-                    $value = '{{'.$this->helper->getImagePath($data['year'],$data['series'],$data['number'],$data['lang']).' |}}';
-                    break;
-
-                default :
-                    break;
-            }
-            $templateString = str_replace("@$key@",$value,$templateString);
-        }
-        $templateString = str_replace("@figure@","",$templateString);
-      
-
-
-        return p_get_instructions($templateString);
-    }
 
     /**
      * @param string $parameterString

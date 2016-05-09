@@ -28,12 +28,11 @@ $lang['years'] = 'Ročníku';
 $lang['deadline'] = "Termín uploadu";
 $lang['deadline-post'] = "Termín odeslání poštou";
 
-
 $lang['deadline-format']="jS F Y";
 $lang['deadline-post-format']="jS F Y h:i:s A";
 
 $lang['test'] = "TEST CS";
-
+$lang['label']=$lang['problem'];
 
 $lang['points-N-SG_vote']="bod";
 $lang['points-N-PL_vote']="body";
@@ -41,5 +40,7 @@ $lang['points-G-PL_vote']="bodů";
 
 $lang['task']='Úloha';
 
+$lang['hard_update']='Tvrdý upadte';
 
+$lang['batch_select']='Výběr série';
 //Setup VIM: ex: et ts=4 :

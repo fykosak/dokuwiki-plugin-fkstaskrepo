@@ -70,8 +70,11 @@ class syntax_plugin_fkstaskrepo_table extends DokuWiki_Syntax_Plugin {
      * @return array Data for the renderer
      */
     public function handle($match, $state, $pos, Doku_Handler &$handler) {
-        // TODO parameters?
-        return array();
+       
+        preg_match('/lang="([a-z]+)"/',substr($match,18,-2),$m);
+        $lang = $m[1];
+       
+        return array($lang);
     }
 
     /**
@@ -83,11 +86,15 @@ class syntax_plugin_fkstaskrepo_table extends DokuWiki_Syntax_Plugin {
      * @return bool If rendering was successful.
      */
     public function render($mode, Doku_Renderer &$renderer, $data) {
+        list($lang) = $data;
+ 
+  
         if ($mode == 'xhtml') {
             $renderer->nocache();
-            $this->showMainSearch($renderer, $data);
-            $this->showTagSearch($renderer, $data);
-            $this->showResults($renderer, $data);
+            
+            $this->showMainSearch($renderer, null,$lang);
+            $this->showTagSearch($renderer, null,$lang);
+            $this->showResults($renderer, null,$lang);
             return true;
         } else if ($mode == 'metadata') {
             return true;
@@ -96,7 +103,7 @@ class syntax_plugin_fkstaskrepo_table extends DokuWiki_Syntax_Plugin {
         return false;
     }
 
-    private function showMainSearch(&$R, $data) {
+    private function showMainSearch(Doku_Renderer &$R, $data,$lang) {
         global $ID, $lang;
         if (substr($ID, -1, 1) == 's') {
             $searchNS = substr($ID, 0, -1);
@@ -113,11 +120,11 @@ class syntax_plugin_fkstaskrepo_table extends DokuWiki_Syntax_Plugin {
         $R->doc .= '</div></form>' . NL;
     }
 
-    private function showTagSearch(&$R, $data) {
+    private function showTagSearch(&$R, $data,$lang) {
         global $ID;
         $R->doc .= '<p class="fkstaskrepo-tagcloud">';
 
-        $tags = $this->helper->getTags(); // TODO lang
+        $tags = $this->helper->getTags($lang); // TODO lang
         $max = 0;
         foreach ($tags as $row) {
             $max = $row['count'] > $max ? $row['count'] : $max;
@@ -125,24 +132,25 @@ class syntax_plugin_fkstaskrepo_table extends DokuWiki_Syntax_Plugin {
 
         foreach ($tags as $row) {
             $size = ceil(10 * $row['count'] / $max);
-            $R->doc .= '<a href="' . wl($ID, array(self::URL_PARAM => $row['tag'])) . '" class="size' . $size . '">' . hsc($row['tag']) . '</a> ';
+            $R->doc .= '<a href="' . wl($ID, array(self::URL_PARAM => $row['tag'])) . '" class="size' . $size . '">' . hsc($this->helper->getSpecLang('tag__'.$row['tag'],$lang)) . '</a> ';
         }
     }
 
-    private function showResults(&$R, $data) {
+    private function showResults(&$R, $data,$lang) {
         global $INPUT;
 
         $tag = $INPUT->get->str(self::URL_PARAM);
         if ($tag) {
-            $problems = $this->helper->getProblems($tag); // TODO lang
+            $problems = $this->helper->getProblemsByTag($tag,$lang); // TODO lang
+           
             foreach ($problems as $problemDet) {
+           
                 list($year, $series, $problem) = $problemDet;
-                try {
-                    $data = $this->helper->getProblemData($year, $series, $problem);
-                    $R->doc .= p_render('xhtml', syntax_plugin_fkstaskrepo_entry::prepareContent($data, $this->getConf('task_template_search')), $info);
-                } catch (fkstaskrepo_exception $e) {
-                    msg($e->getMessage(), -1);
-                }
+                
+                    $data = $this->helper->getProblemData($year, $series, $problem,$lang);
+                   $data['lang']=$lang;           
+                    $R->doc .= p_render('xhtml', $this->helper->prepareContent($data, $this->getConf('task_template_search')), $info);
+               
             }
         }
     }

@@ -61,13 +61,13 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
         $form->startFieldset($this->getLang('update'));
         $form->addHidden('id',$ID);
         $form->addHidden('do','admin');
-    
+
         $form->addElement(form_makeTextField('year',$year,$this->getLang('year')));
         $form->addElement(form_makeTextField('series',$series,$this->getLang('series')));
         $form->addElement(form_makeMenuField('language',array('ALL','cs','en'),'ALL',$this->getLang('language')));
 
         $form->addElement(form_makeFileField('xml_file','<span title="'.$this->getLang('xml_source_help').'">'.$this->getLang('xml_file').'</span>'));
-        $form->addElement(form_makeCheckboxField('hard','1',$this->getLang('hard_upload')));
+        $form->addElement(form_makeCheckboxField('hard','1',$this->getLang('hard_update')));
         $form->addElement(form_makeButton('submit','admin',$this->getLang('update')));
         $form->endFieldset();
         $form->printForm();
@@ -103,12 +103,12 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
         $dedline_post = $seriesXML->{'deadline-post'};
 
         if($INPUT->int('hard') == 0){
-        
-            if((int)$seriesXML->number != $series){
-                 msg('Series mus be same as in XML',-1);
-              return;  
+
+            if((int) $seriesXML->number != $series){
+                msg('Series mus be same as in XML',-1);
+                return;
             }
-            if((string)$seriesXML->year != $year){
+            if((string) $seriesXML->year != $year){
                 msg('Year mus be same as in XML',-1);
                 return;
             }
@@ -154,18 +154,34 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
 
 
                 foreach ($seriesXML->problems->children() as $problem) {
-                    if((string) $problem->figure != ""){
-                        foreach ($problem->figure as $figure) {
+                    var_dump($problem->figures);
+                    if((string) $problem->figures != ""){
+                        
+                        foreach ($problem->figures->figure as $figure) {
+                            if($this->isActualLang($figure,$lang)){
+                                $type = $figure->attributes()->extension;
+                                if(!$type){
+                                   msg('invalid or empty extenson figure: '.$type,-1); 
+                                   continue;
+                                }
+                                $name = $that->helper->getImagePath($year,$series,(string) $problem->number,$lang,$type);
 
-                            if($lang == (string) $figure->attributes('http://www.w3.org/XML/1998/namespace')->lang){
-                                $name = $that->helper->getImagePath($year,$series,(string) $problem->number,$lang);
-
-                                io_saveFile(mediaFN($name),(string) trim($figure));
+                                if(io_saveFile(mediaFN($name),(string) trim($figure))){
+                                       msg('image: '.$name.' for language '.$lang.' has been saved',1);
+                                }
+                             
                             }
                         }
                     }
+                    /*
+                      foreach ($problem->task as $task) {
+                      if($this->isActualLang($task,$lang)){
+                      var_dump($task);
+                      var_dump($this->helper->texPreproc->preproc((string) $task));
+                      }
+                      } */
 
-                    $this->helper->storeTags($year,$series,$problem->number,$problem->topics->topic);
+                    $this->helper->storeTags($year,$series,$problem->label,$problem->topics->topic);
                     $parameters['label'] = (string) $problem->label;
                     $result .= $that->replaceVariables($parameters,$problemTemplate);
                 }
@@ -177,6 +193,10 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
 
             msg(sprintf('Updated <a href="%s">%s</a>.',wl($pagePath),$pagePath));
         }
+    }
+
+    private function isActualLang(SimpleXMLElement $e,$lang) {
+        return (($lang == (string) $e->attributes('http://www.w3.org/XML/1998/namespace')->lang));
     }
 
     private function getLanguages(SimpleXMLElement $seriesXML) {

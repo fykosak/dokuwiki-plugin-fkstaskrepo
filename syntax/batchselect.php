@@ -51,7 +51,7 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
      * @param string $mode Parser mode
      */
     public function connectTo($mode) {
-        $this->Lexer->addSpecialPattern('<fkstaskreposelect/>',$mode,'plugin_fkstaskrepo_batchselect');
+        $this->Lexer->addSpecialPattern('<fkstaskreposelect\s.*?/>',$mode,'plugin_fkstaskrepo_batchselect');
     }
 
     /**
@@ -64,17 +64,33 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
      * @return array Data for the renderer
      */
     public function handle($match,$state,$pos,Doku_Handler &$handler) {
+        global $conf;
+
+        preg_match('/lang="([a-z]+)"/',substr($match,19,-2),$m);
+        $lang = $m[1];
+        // var_dump($conf);
+        $path = preg_replace('/%[0-9]\$s/','([0-9]+)',$this->getConf('page_path_mask_cs'));
+
+        search($data,$conf['datadir'],'search_allpages',array(),"",-1);
+
+        $data = array_filter($data,function($a)use ($path) {
+            return preg_match('/'.$path.'/',$a['id']);
+        });
+        $data = array_map(function($a)use ($path) {
+            preg_match('/'.$path.'/',$a['id'],$m);
+            $a['year'] = $m[1];
+            $a['series'] = $m[2];
+            return $a;
+        },$data);
+
         $pages = array();
-        for ($year = 1; $year < 40; $year++) {
-            for ($series = 1; $series <= 10; $series++) {
-                $patch = wikiFN(sprintf($this->getConf('page_path_mask'),$year,$series));
-                if(file_exists($patch)){
-                    $pages[$year][$series] = true;
-                }
-            }
+        foreach ($data as $page) {
+            $pages[$page['year']][$page['series']] = $page['id'];
         }
 
-        return array($pages);
+
+
+        return array($pages,$lang);
     }
 
     /**
@@ -86,27 +102,24 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
      * @return bool If rendering was successful.
      */
     public function render($mode,Doku_Renderer &$renderer,$data) {
-        list($years) = $data;
+        list($pages,$lang) = $data;
         $renderer->doc.='<div class="FKS_taskrepo select">';
-        $renderer->doc.='<h4>'.'Výběr série'.'</h4>';
+        $renderer->doc.='<h4>'.$this->helper->getSpecLang('batch_select',$lang).'</h4>';
 
         $renderer->doc.='<select id="FKS_taskrepo_select" class="edit" >';
-        $renderer->doc.='<option>--Výběr série--</option>';
-        foreach ($years as $year => $batchs) {
-            $renderer->doc.=' <option value="'.$year.'">'.$this->getLang('year').' '.$year.'</option>';
+        $renderer->doc.='<option>--'.$this->helper->getSpecLang('batch_select',$lang).'--</option>';
+        foreach ($pages as $year => $batchs) {
+            $renderer->doc.=' <option value="'.$year.'">'.$this->helper->getSpecLang('year',$lang).' '.$year.'</option>';
         }
         $renderer->doc.='</select>';
 
 
-        foreach ($years as $year => $batchs) {
+        foreach ($pages as $year => $batchs) {
+
 
             $renderer->doc.='<div class="year" style="display:none" data-year="'.$year.'"><ul>';
-            foreach ($batchs as $batch => $b) {
-               
-                
-                if($b){
-                    $renderer->doc.=' <li><a href="'.wl( sprintf($this->getConf('page_path_mask'),$year,$batch)).'" >'.$this->getLang('series').' '.$batch.'</a></li>';
-                }
+            foreach ($batchs as $batch => $page) {
+                $renderer->doc.=' <li><a href="'.wl($page).'" >'.$this->helper->getSpecLang('series',$lang).' '.$batch.'</a></li>';
             }
             $renderer->doc.='</ul></div>';
         }

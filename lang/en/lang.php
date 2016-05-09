@@ -31,7 +31,7 @@ $lang['deadline-format']="jS F Y";
 $lang['deadline-post-format']="jS F Y h:i:s A";
 
 $lang['test'] ="TEST EN";
-
+$lang['label']=$lang['problem'];
 
 
 $lang['points-N-SG_vote']="point";
@@ -39,4 +39,12 @@ $lang['points-N-PL_vote']="points";
 $lang['points-G-PL_vote']="points";
 
 $lang['task']='Task';
+
+$lang['hard_update']='Hard upadte';
+
+$lang['batch_select']='Select year';
+
+$lang['tag__termoDyn']="thermodynamics";
+$lang['tag__mechHmBodu']="thermodynamics";
+$lang['tag__termoDyn']="thermodynamics";
 //Setup VIM: ex: et ts=4 :

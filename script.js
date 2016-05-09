@@ -1,4 +1,4 @@
-jQuery(function() {
+jQuery(function () {
     function split(val) {
         return val.split(/,\s*/);
     }
@@ -9,24 +9,24 @@ jQuery(function() {
     if (!$tags) {
         return;
     }
-    
+
     var availableTags = $tags.data('tags');
 
-    $tags.bind("keydown", function(event) {
+    $tags.bind("keydown", function (event) {
         if (event.keyCode === jQuery.ui.keyCode.TAB &&
                 jQuery(this).data("ui-autocomplete").menu.active) {
             event.preventDefault();
         }
     }).autocomplete({
         minLength: 2,
-        source: function(request, response) {
+        source: function (request, response) {
             response(jQuery.ui.autocomplete.filter(
                     availableTags, extractLast(request.term)));
         },
-        focus: function() {
+        focus: function () {
             return false;
         },
-        select: function(event, ui) {
+        select: function (event, ui) {
             var terms = split(this.value);
             terms.pop();
             terms.push(ui.item.value);
@@ -35,22 +35,32 @@ jQuery(function() {
             return false;
         }
     });
-    
-    
+
     var $ = jQuery;
-    
-    $('#FKS_taskrepo_select').change(function(){
-        $(this).find('option:selected').each(function(){
-            var year= $(this).val();
-            console.log($('.FKS_taskrepo.select div[data-year='+year+']'));
-            $('.FKS_taskrepo.select div.year').each(function(){
-                $(this).css({display:'none'});
-            });
-
-            $('.FKS_taskrepo.select div.yaer[data-year='+year+']').css({display:'block'});
-
-
-        });
+    $('#FKS_taskrepo_select').change(function (e) {
+        var $sel = $(this);
+        $sel.parent('.FKS_taskrepo').find('div.year').hide();
+        var year = $sel.find('option:selected').val();
+        $sel.parent('.FKS_taskrepo').find(' div[data-year="' + year + '"]').show();
     });
+
+    $('.FKS_taskrepo.probfig img').click(function (event) {
+        this.srcSet = "srcset";
+        this.zoomClass = "zoomed";
+        var $probfig = $(this).parents('.probfig');
+        var $source = $probfig.find('picture source[data-full]');   
+        if ($source.length) {
+            if ($probfig.hasClass(zoomClass)) {
+                var d = $source.attr(srcSet);
+                $source.removeAttr(srcSet);
+                $source.data(srcSet, d);
+            } else {
+                var d = $source.data(srcSet);
+                $source.attr(srcSet, d);
+            }
+        }
+        $probfig.toggleClass(zoomClass);
+    });
+
 });
 
