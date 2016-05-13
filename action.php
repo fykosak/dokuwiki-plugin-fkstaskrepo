@@ -34,6 +34,51 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         $controller->register_hook('HTML_EDIT_FORMSELECTION','BEFORE',$this,'handle_html_edit_formselection');
         $controller->register_hook('ACTION_ACT_PREPROCESS','BEFORE',$this,'handle_action_act_preprocess');
         $controller->register_hook('PARSER_CACHE_USE','BEFORE',$this,'handle_parser_cache_use');
+        $controller->register_hook('FETCH_MEDIA_STATUS','BEFORE',$this,'fetch_media_svg2png');
+    }
+
+    public function fetch_media_svg2png(Doku_Event &$event,$param) {
+        global $conf;
+        if($event->data['ext'] != 'svg'){
+            return;
+        }
+        if($event->data['width'] == 0 && $event->data['height'] == 0){
+            return;
+        }
+        $svg = file_get_contents($event->data['file']);
+
+        $xml = simplexml_load_file($event->data['file']);
+
+        $w = $xml->attributes()->width;
+        $h = $xml->attributes()->height;
+        $v = $xml->attributes()->viewBox;
+
+        if(!is_numeric($w) || !is_numeric($h)){
+            preg_match('/([0-9]+)\s([0-9]+)\s([0-9]+)\s([0-9]+)/',$v,$m);
+            $w = $m[3];
+            $h = $m[4];
+        }
+
+
+
+        if(!$event->data['height']){
+            $height = round(($event->data['width'] * $h) / $w);
+        }else{
+            $height = $event->data['height'];
+        }
+       
+
+        $local = getCacheName($event->data['file'],'.media.'.$event->data['width'].'x'.$height.'.'.$event->data['ext'].'.png');
+        $mtime = @filemtime($local);
+
+        if($mtime < filemtime($event->data['file'])){
+            media_resize_imageIM($event->data['ext'],$event->data['file'],null,null,$local,$event->data['width'],$height);
+        }
+        if(!empty($conf['fperm'])){
+            @chmod($local,$conf['fperm']);
+        }
+
+        sendFile($local,'image/png',$event->data['download'],$event->data['cache'],$event->data['ispublic'],$event->data['orig']);
     }
 
     /**
@@ -112,9 +157,9 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
     }
 
     public function handle_action_act_preprocess(Doku_Event &$event,$param) {
-    
+
         global $INPUT;
-        
+
         if($INPUT->str('target') != 'plugin_fkstaskrepo'){
             return;
         }
