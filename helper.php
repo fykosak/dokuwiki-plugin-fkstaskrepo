@@ -59,7 +59,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
     public function getProblemData($year,$series,$problem,$lang) {
 
         $localData = $this->getLocalData($year,$series,$problem,$lang);
-
+    
         $globalData = $this->extractProblem($this->getSeriesData($year,$series),$problem,$lang);
 
 
@@ -126,6 +126,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
     public function extractProblem($data,$problemLabel,$lang = 'cs') {
 
         $series = simplexml_load_string($data);
+       
 
         $problems = $series->problems;
 
@@ -138,30 +139,29 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         foreach ($problems->problem as $problem) {
 
             if(isset($problem->label) && (string) $problem->label == $problemLabel){
-
+                $f = $this->extractFigure($problem,$lang);
+                $problemData['figure']['caption'] = $f['caption'];
                 foreach ($problem->children() as $k => $child) {
-                    if((string) $child->attributes('http://www.w3.org/XML/1998/namespace')->lang != ""){
-                        if($lang == (string) $child->attributes('http://www.w3.org/XML/1998/namespace')->lang){
-                            $problemData[$k] = (string) $child;
-                        }
-                        continue;
+                    if($this->isActualLang($child,$lang) && (trim((string) $child) != "")){
+                        $problemData[$k] = (string) $child;
                     }
-
-
+                    /* is array? */
                     if(count($child) > 1){
                         foreach ($child->children() as $ch) {
-                            $problemData[$k] = (array) $child->children();
+                            if($this->isActualLang($child,$lang)){
+                                $problemData[$k] = (array) $child->children();
+                            }
                         }
                         continue;
                     }
                     $problemData[$k] = (string) $child;
                 }
-
-
+                unset($problemData['figures']);
+               
                 break;
             }
         }
- 
+
 
 
         return $problemData;
@@ -257,7 +257,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         return $l;
     }
 
-    public function getImagePath($year,$series,$problem,$lang,$type=null) {
+    public function getImagePath($year,$series,$problem,$lang,$type = null) {
         if($type){
             return $this->getPluginName().':figure:year'.$year.'_series'.$series.'_'.$problem.'_'.$lang.'.'.$type;
         }
@@ -296,7 +296,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
 
                 case 'figure':
 
-                    $value = '{{'.$this->getImagePath($data['year'],$data['series'],$data['number'],$data['lang']).' |}}';
+                    $value = '{{probfig>'.$this->getImagePath($data['year'],$data['series'],$data['number'],$data['lang']).' |'.$data['figure']['caption'].'}}';
                     break;
 
                 default :
@@ -312,8 +312,28 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         $templateString = str_replace("@tags@",$t,$templateString);
         $templateString = str_replace("@figure@","",$templateString);
 
-
+ 
         return p_get_instructions($templateString);
+    }
+
+    public function isActualLang(SimpleXMLElement $e,$lang) {
+        return (($lang == (string) $e->attributes('http://www.w3.org/XML/1998/namespace')->lang) || (string) $e->attributes('http://www.w3.org/XML/1998/namespace')->lang == "");
+    }
+
+    public function extractFigure(SimpleXMLElement $problem,$lang) {
+        $d = array();
+        if((string) $problem->figures != ""){
+            foreach ($problem->figures->figure as $figure) {
+                if($this->isActualLang($figure,$lang)){
+                    $d['caption'] = (string) $figure->caption;
+                    foreach ($figure->data as $data) {
+                        $type = (string) $data->attributes()->extension;
+                        $d['data'][$type] = trim((string) $data);
+                    }
+                }
+            }
+        }
+        return $d;
     }
 
 }

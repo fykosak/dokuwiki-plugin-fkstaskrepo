@@ -13,6 +13,10 @@ if(!defined('DOKU_INC')){
 
 class syntax_plugin_fkstaskrepo_probfig extends DokuWiki_Syntax_Plugin {
 
+    private static $allowedForamts = array('svg','png','jpg');
+
+    const maxSize = 250;
+
     /**
      *
      * @var helper_plugin_fkstaskrepo
@@ -72,15 +76,17 @@ class syntax_plugin_fkstaskrepo_probfig extends DokuWiki_Syntax_Plugin {
         $ti = str_replace('/',':',trim($i));
 
         search($data,$conf['mediadir'],'search_media',array(),str_replace(":","/",getNS($ti)),-1);
-        $files = array_filter($data,function($a) {
+        $files = array_filter($data,function($a)use($ti) {
             return preg_match('#'.$ti.'#',$a['id']);
         });
 
+        foreach ($files as &$file) {
+            $patch = $conf['mediadir'].'/'.str_replace(':','/',$file['id']);
 
+            $file['size'] = @filesize($patch);
+        }
 
-
-
-        return array($files,$c);
+        return array($files,$c,$state);
     }
 
     /**
@@ -94,40 +100,38 @@ class syntax_plugin_fkstaskrepo_probfig extends DokuWiki_Syntax_Plugin {
     public function render($mode,Doku_Renderer &$renderer,$data) {
         if($mode == 'xhtml'){
 
-            list($files,$c) = $data;
+            list($files,$c,$state) = $data;
             $paths = array();
             foreach ($files as $file) {
                 $p = pathinfo($file['id']);
 
                 $e = $p['extension'];
                 if($e){
+
+
+                    $paths[$e]['size'] = $file['size'];
                     $paths[$e]['full'] = ml($file['id'],null,true);
-                    if($e == "png" || $e = 'jpg'){
-                        $paths[$e]['full'] = ml($file['id'],null,true);
-                        $paths[$e]['small'] = ml($file['id'],array('w' => 250),true);
-                        $paths[$e]['medium'] = ml($file['id'],array('w' => 500),true);
-                    }
+                    $paths[$e]['small'] = ml($file['id'],array('w' => 250),true);
                 }
             }
 
             $renderer->doc.='<div class="FKS_taskrepo probfig">';
             $renderer->doc.='<figure>';
             $renderer->doc.='<picture>';
+            foreach (self::$allowedForamts as $format) {
+                var_dump($format);
+                if(array_key_exists($format,$paths)){
+                    $renderer->doc.='<source data-full data-srcset="'.$paths[$format]['full'].'" />';
+                    if($paths[$format]['size'] > self::maxSize){
+               
+                        $renderer->doc.='<img src="'.$paths[$format]['small'].'" alt="'.hsc($c).'" />';
+                    }else{
+                        $renderer->doc.='<img src="'.$paths[$format]['full'].'" alt="'.hsc($c).'" />';
+                    }
+                    break;
+                }
+            }
 
-            if(!empty($paths['svg'])){
-                $renderer->doc.='<source data-full data-srcset="'.$paths['svg']['full'].'" />';
-            }elseif(!empty($paths['png'])){
-                $renderer->doc.='<source data-full data-srcset="'.$paths['png']['full'].'" />';
-            }
-            if(!empty($paths['png'])){
-                $renderer->doc.='<source media="(min-width: 1200px)" srcset="'.$paths['png']['full'].'" />';
-                $renderer->doc.='<source media="(min-width: 800px)" srcset="'.$paths['png']['medium'].'" />';
-            }
-            if(!empty($paths['png'])){
-                $renderer->doc.='<img  src="'.$paths['png']['small'].'" alt="'.hsc($c).'" />';
-            }elseif(!empty($paths['svg'])){
-                $renderer->doc.='<img src="'.$paths['svg']['full'].'" alt="'.hsc($c).'" />';
-            }
             $renderer->doc.='</picture>';
             $renderer->doc.='<figcaption>'.hsc($c).'</figcaption>';
             $renderer->doc.='</figure>';

@@ -123,11 +123,11 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
             }
 
             $parameters = array(
-                'human-year' => $year.'. '.$this->getSpecLang('years',$lang),
-                'human-series' => $series.'. '.$this->getSpecLang('series',$lang),
+                'human-year' => $year.'. '.$this->helper->getSpecLang('years',$lang),
+                'human-series' => $series.'. '.$this->helper->getSpecLang('series',$lang),
                 'label' => '@label@',
-                'human-deadline' => $this->getSpecLang('deadline',$lang).': '.date($this->helper->getSpecLang('deadline-format',$lang),strtotime($deadline)),
-                'human-deadline-post' => $this->getSpecLang('deadline-post',$lang).': '.date($this->helper->getSpecLang('deadline-post-format',$lang),strtotime($dedline_post))
+                'human-deadline' => $this->helper->getSpecLang('deadline',$lang).': '.date($this->helper->getSpecLang('deadline-format',$lang),strtotime($deadline)),
+                'human-deadline-post' => $this->helper->getSpecLang('deadline-post',$lang).': '.date($this->helper->getSpecLang('deadline-post-format',$lang),strtotime($dedline_post))
             );
 
             $pagePath = sprintf($this->getConf('page_path_mask_'.$lang),$year,$series);
@@ -154,32 +154,34 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
 
 
                 foreach ($seriesXML->problems->children() as $problem) {
-                    var_dump($problem->figures);
-                    if((string) $problem->figures != ""){
-                        
-                        foreach ($problem->figures->figure as $figure) {
-                            if($this->isActualLang($figure,$lang)){
-                                $type = $figure->attributes()->extension;
-                                if(!$type){
-                                   msg('invalid or empty extenson figure: '.$type,-1); 
-                                   continue;
-                                }
-                                $name = $that->helper->getImagePath($year,$series,(string) $problem->number,$lang,$type);
+                    $d = $this->helper->extractFigure($problem,$lang);
+                    if(!empty($d) && !empty($d['data'])){
+                        foreach ($d['data']as $type => $imgContent) {
+                            if(!$type){
+                                msg('invalid or empty extenson figure: '.$type,-1);
+                                continue;
+                            }
+                            $name = $that->helper->getImagePath($year,$series,(string) $problem->number,$lang,$type);
 
-                                if(io_saveFile(mediaFN($name),(string) trim($figure))){
-                                       msg('image: '.$name.' for language '.$lang.' has been saved',1);
-                                }
-                             
+                            if(io_saveFile(mediaFN($name),(string) trim($imgContent))){
+                                msg('image: '.$name.' for language '.$lang.' has been saved',1);
                             }
                         }
                     }
-                    /*
-                      foreach ($problem->task as $task) {
-                      if($this->isActualLang($task,$lang)){
-                      var_dump($task);
-                      var_dump($this->helper->texPreproc->preproc((string) $task));
-                      }
-                      } */
+
+
+
+
+                    foreach ($problem->task as $task) {
+
+                        if($this->isActualLang($task,$lang)){
+                            $text = $this->helper->texPreproc->preproc((string) $task);
+                            if($text){
+                                $this->helper->updateProblemData(array('task' => $text),$year,$series,$problem->label,$lang);
+                            }
+                            break;
+                        }
+                    }
 
                     $this->helper->storeTags($year,$series,$problem->label,$problem->topics->topic);
                     $parameters['label'] = (string) $problem->label;

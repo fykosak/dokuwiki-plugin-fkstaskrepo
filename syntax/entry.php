@@ -94,7 +94,7 @@ class syntax_plugin_fkstaskrepo_entry extends DokuWiki_Syntax_Plugin {
             // obtain problem data
 
             $problemData = $this->helper->getProblemData($parameters['year'],$parameters['series'],$parameters['problem'],$parameters['lang']);
-
+        
             $classes = array();
             if(isset($problemData['taskTS']) && filemtime($seriesFile) > $problemData['taskTS']){
                 $classes[] = 'outdated';

@@ -50,16 +50,16 @@ jQuery(function () {
         var $probfig = $(this).parents('.probfig');
         var $source = $probfig.find('picture source[data-full]');   
         if ($source.length) {
-            if ($probfig.hasClass(zoomClass)) {
-                var d = $source.attr(srcSet);
-                $source.removeAttr(srcSet);
-                $source.data(srcSet, d);
+            if ($probfig.hasClass(this.zoomClass)) {
+                var d = $source.attr(this.srcSet);
+                $source.removeAttr(this.srcSet);
+                $source.data(this.srcSet, d);
             } else {
-                var d = $source.data(srcSet);
-                $source.attr(srcSet, d);
+                var d = $source.data(this.srcSet);
+                $source.attr(this.srcSet, d);
             }
         }
-        $probfig.toggleClass(zoomClass);
+        $probfig.toggleClass(this.zoomClass);
     });
 
 });
