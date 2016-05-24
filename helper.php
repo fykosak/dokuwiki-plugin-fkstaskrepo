@@ -28,6 +28,8 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
      */
     private $sqlite;
 
+    const XMLNamespace = 'http://www.w3.org/XML/1998/namespace';
+
     public function __construct() {
         $this->downloader = $this->loadHelper('fksdownloader');
         $this->texPreproc = new fkstaskrepo_tex_preproc();
@@ -59,7 +61,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
     public function getProblemData($year,$series,$problem,$lang) {
 
         $localData = $this->getLocalData($year,$series,$problem,$lang);
-    
+
         $globalData = $this->extractProblem($this->getSeriesData($year,$series),$problem,$lang);
 
 
@@ -126,7 +128,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
     public function extractProblem($data,$problemLabel,$lang = 'cs') {
 
         $series = simplexml_load_string($data);
-       
+
 
         $problems = $series->problems;
 
@@ -140,7 +142,8 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
 
             if(isset($problem->label) && (string) $problem->label == $problemLabel){
                 $f = $this->extractFigure($problem,$lang);
-                $problemData['figure']['caption'] = $f['caption'];
+
+                $problemData['figure']['caption'] = (!empty($f)) ? $f['caption'] : false;
                 foreach ($problem->children() as $k => $child) {
                     if($this->isActualLang($child,$lang) && (trim((string) $child) != "")){
                         $problemData[$k] = (string) $child;
@@ -157,7 +160,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
                     $problemData[$k] = (string) $child;
                 }
                 unset($problemData['figures']);
-               
+
                 break;
             }
         }
@@ -295,8 +298,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
 
 
                 case 'figure':
-
-                    $value = '{{probfig>'.$this->getImagePath($data['year'],$data['series'],$data['number'],$data['lang']).' |'.$data['figure']['caption'].'}}';
+                    $value = "";
                     break;
 
                 default :
@@ -312,12 +314,18 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         $templateString = str_replace("@tags@",$t,$templateString);
         $templateString = str_replace("@figure@","",$templateString);
 
- 
+
         return p_get_instructions($templateString);
     }
 
+    /**
+     * return true when xml:lang is same as $lang or xml:lang is not set
+     * @param SimpleXMLElement $e element 
+     * @param type $lang
+     * @return bool 
+     */
     public function isActualLang(SimpleXMLElement $e,$lang) {
-        return (($lang == (string) $e->attributes('http://www.w3.org/XML/1998/namespace')->lang) || (string) $e->attributes('http://www.w3.org/XML/1998/namespace')->lang == "");
+        return (($lang == (string) $e->attributes(self::XMLNamespace)->lang) || (string) $e->attributes(self::XMLNamespace)->lang == "");
     }
 
     public function extractFigure(SimpleXMLElement $problem,$lang) {

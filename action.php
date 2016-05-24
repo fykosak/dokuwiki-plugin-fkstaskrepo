@@ -39,13 +39,18 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
 
     public function fetch_media_svg2png(Doku_Event &$event,$param) {
         global $conf;
+        global $INPUT;
         if($event->data['ext'] != 'svg'){
             return;
         }
         if($event->data['width'] == 0 && $event->data['height'] == 0){
             return;
         }
-        $svg = file_get_contents($event->data['file']);
+        if(!$INPUT->has('topng')){
+            return;
+            
+        }
+       
 
         $xml = simplexml_load_file($event->data['file']);
 

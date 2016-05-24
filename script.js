@@ -48,7 +48,7 @@ jQuery(function () {
         this.srcSet = "srcset";
         this.zoomClass = "zoomed";
         var $probfig = $(this).parents('.probfig');
-        var $source = $probfig.find('picture source[data-full]');   
+        var $source = $probfig.find('picture source[data-full]');
         if ($source.length) {
             if ($probfig.hasClass(this.zoomClass)) {
                 var d = $source.attr(this.srcSet);
@@ -61,6 +61,7 @@ jQuery(function () {
         }
         $probfig.toggleClass(this.zoomClass);
     });
+
 
 });
 

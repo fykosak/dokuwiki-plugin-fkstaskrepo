@@ -88,9 +88,24 @@ form.fkstaskrepo span[title] {
         width: 100%;
     }
     figcaption{
-        &:before{
-            content: "fig. ";
+        &.cs{
+            &::before{                      
+                content: "Obr. " counter(probfig) " "; 
+            }
         }
+        &.en{
+            &::before{     
+                content: "Fig. " counter(probfig) " "; 
+            }
+        }
+        &::before{
+            counter-increment: probfig;              
+           
+        }
+
+
+
+
         text-align: center;
     }
     position: relative;
@@ -110,3 +125,8 @@ form.fkstaskrepo span[title] {
 
 
 }
+body {
+    counter-reset: probfig;                    
+}
+
+

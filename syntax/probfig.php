@@ -13,7 +13,11 @@ if(!defined('DOKU_INC')){
 
 class syntax_plugin_fkstaskrepo_probfig extends DokuWiki_Syntax_Plugin {
 
-    private static $allowedForamts = array('svg','png','jpg');
+    /**
+     * Allowed media formats. !!! this is sorted array!!!
+     * @var type 
+     */
+    private static $allowedForamts = array('svg','png','jpg','jpeg');
 
     const maxSize = 250;
 
@@ -50,15 +54,31 @@ class syntax_plugin_fkstaskrepo_probfig extends DokuWiki_Syntax_Plugin {
     }
 
     /**
+     * 
+     * @return type
+     */
+    public function getAllowedTypes() {
+        return array('formatting');
+    }
+
+    /**
      * Connect lookup pattern to lexer.
      *
      * @param string $mode Parser mode
      */
     public function connectTo($mode) {
-        $this->Lexer->addSpecialPattern('{{probfig>.*?}}',$mode,'plugin_fkstaskrepo_probfig');
+        $this->Lexer->addEntryPattern('{{probfig>.*?\|(?=.*?}})',$mode,'plugin_fkstaskrepo_probfig');
     }
 
     /**
+     * 
+     */
+    public function postConnect() {
+
+        $this->Lexer->addExitPattern('}}','plugin_fkstaskrepo_probfig');
+    }
+
+    /*     * figcaption
      * Handle matches of the fkstaskrepo syntax
      *
      * @param string $match The match of the syntax
@@ -67,26 +87,38 @@ class syntax_plugin_fkstaskrepo_probfig extends DokuWiki_Syntax_Plugin {
      * @param Doku_Handler    $handler The handler
      * @return array Data for the renderer
      */
+
     public function handle($match,$state,$pos,Doku_Handler &$handler) {
-        // var_dump($match);
 
-        list($i,$c) = explode('|',substr($match,10,-2));
+        static $e = 0;
+        if($state == DOKU_LEXER_ENTER){
 
-        global $conf;
-        $ti = str_replace('/',':',trim($i));
+            $i = strtolower(trim(substr($match,10,-1)));
 
-        search($data,$conf['mediadir'],'search_media',array(),str_replace(":","/",getNS($ti)),-1);
-        $files = array_filter($data,function($a)use($ti) {
-            return preg_match('#'.$ti.'#',$a['id']);
-        });
+            global $conf;
+            $ti = str_replace('/',':',$i);
+            $data = array();
+            search($data,$conf['mediadir'],'search_media',array(),str_replace(":","/",getNS($ti)),-1);
+            /* punk's not dead -- pointer to $a and add size in one loop /function/ */
 
-        foreach ($files as &$file) {
-            $patch = $conf['mediadir'].'/'.str_replace(':','/',$file['id']);
+            $files = array_filter($data,function(&$a)use($ti,$conf) {
+                $patch = $conf['mediadir'].'/'.str_replace(':','/',$a['id']);
+                $a['size'] = @filesize($patch);
+                return preg_match('#'.$ti.'#',$a['id']);
+            });
+            $e = (!empty($files)) ? true : false;
 
-            $file['size'] = @filesize($patch);
+
+            return array($files,$state);
+        }elseif($state == DOKU_LEXER_UNMATCHED){
+            if($e){
+                return array($match,$state);
+            }
+
+            return array(false,$state);
+        }elseif($state == DOKU_LEXER_EXIT){
+            return array(null,$state);
         }
-
-        return array($files,$c,$state);
     }
 
     /**
@@ -98,53 +130,56 @@ class syntax_plugin_fkstaskrepo_probfig extends DokuWiki_Syntax_Plugin {
      * @return bool If rendering was successful.
      */
     public function render($mode,Doku_Renderer &$renderer,$data) {
+        global $conf;
         if($mode == 'xhtml'){
-
-            list($files,$c,$state) = $data;
-            $paths = array();
-            foreach ($files as $file) {
-                $p = pathinfo($file['id']);
-
-                $e = $p['extension'];
-                if($e){
-
-
-                    $paths[$e]['size'] = $file['size'];
-                    $paths[$e]['full'] = ml($file['id'],null,true);
-                    $paths[$e]['small'] = ml($file['id'],array('w' => 250),true);
-                }
-            }
-
-            $renderer->doc.='<div class="FKS_taskrepo probfig">';
-            $renderer->doc.='<figure>';
-            $renderer->doc.='<picture>';
-            foreach (self::$allowedForamts as $format) {
-                var_dump($format);
-                if(array_key_exists($format,$paths)){
-                    $renderer->doc.='<source data-full data-srcset="'.$paths[$format]['full'].'" />';
-                    if($paths[$format]['size'] > self::maxSize){
-               
-                        $renderer->doc.='<img src="'.$paths[$format]['small'].'" alt="'.hsc($c).'" />';
-                    }else{
-                        $renderer->doc.='<img src="'.$paths[$format]['full'].'" alt="'.hsc($c).'" />';
+            list($data,$state) = $data;
+            switch ($state) {
+                case DOKU_LEXER_ENTER :
+                    $paths = array();
+                    foreach ($data as $file) {
+                        $p = pathinfo($file['id']);
+                        $e = $p['extension'];
+                        if($e){
+                            $paths[$e]['size'] = $file['size'];
+                            $paths[$e]['full'] = ml($file['id'],null,true);
+                            $paths[$e]['small'] = ml($file['id'],array('w' => 250,'topng' => 1),true);
+                        }
                     }
+                    $renderer->doc.='<div class="FKS_taskrepo probfig">';
+                    $renderer->doc.='<figure>';
+                    $renderer->doc.='<picture>';
+                    foreach (self::$allowedForamts as $format) {
+                        if(array_key_exists($format,$paths)){
+                            $renderer->doc.='<source data-full data-srcset="'.$paths[$format]['full'].'" />';
+                            if($paths[$format]['size'] > self::maxSize){
+                                $srcset = $paths[$format]['small'];
+                                $src = $paths[$format]['small'];
+                            }else{
+                                $srcset = $paths[$format]['full'];
+                                $src = $paths[$format]['full'];
+                            }
+                            $renderer->doc.='<source srcset="'.$srcset.'" />';
+                            $renderer->doc.='<img src="'.$src.'" alt="figure" />';
+                            break;
+                        }
+                    }
+                    $renderer->render_text($mode);
+                    $renderer->doc.='</picture>';
+                    $renderer->doc.='<figcaption class="'.$conf['lang'].'">';
                     break;
-                }
+
+                case DOKU_LEXER_UNMATCHED :
+                    $renderer->doc .= $renderer->_xmlEntities($data);
+                    break;
+                case DOKU_LEXER_EXIT :
+                    $renderer->doc.= '</figcaption>';
+                    $renderer->doc.='</figure>';
+                    $renderer->doc.='</div>';
+                    break;
             }
-
-            $renderer->doc.='</picture>';
-            $renderer->doc.='<figcaption>'.hsc($c).'</figcaption>';
-            $renderer->doc.='</figure>';
-
-
-
-            $renderer->doc.='</div>';
         }
 
         return false;
     }
 
 }
-
-// vim:ts=4:sw=4:et:
-

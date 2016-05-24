@@ -67,7 +67,7 @@ class syntax_plugin_fkstaskrepo_entry extends DokuWiki_Syntax_Plugin {
      * @return array Data for the renderer
      */
     public function handle($match,$state,$pos,Doku_Handler &$handler) {
-        $parameters = self::extractParameters($match,$this);
+        $parameters = $this->extractParameters($match,$this);
 
         return array(
             'parameters' => $parameters,
@@ -94,7 +94,7 @@ class syntax_plugin_fkstaskrepo_entry extends DokuWiki_Syntax_Plugin {
             // obtain problem data
 
             $problemData = $this->helper->getProblemData($parameters['year'],$parameters['series'],$parameters['problem'],$parameters['lang']);
-        
+            $problemData['lang'] = $parameters['lang'];
             $classes = array();
             if(isset($problemData['taskTS']) && filemtime($seriesFile) > $problemData['taskTS']){
                 $classes[] = 'outdated';
@@ -137,9 +137,9 @@ class syntax_plugin_fkstaskrepo_entry extends DokuWiki_Syntax_Plugin {
         return false;
     }
 
-    public static function extractParameters($match,$plugin) {
+    private function extractParameters($match,$plugin) {
         $parameterString = substr($match,13,-2); // strip markup (including space after "<fkstaskrepo ")
-        return self::parseParameters($parameterString,$plugin);
+        return $this->parseParameters($parameterString,$plugin);
     }
 
     private function addDependencies(Doku_Renderer &$renderer,$files) {
@@ -155,11 +155,10 @@ class syntax_plugin_fkstaskrepo_entry extends DokuWiki_Syntax_Plugin {
         }
     }
 
-
     /**
      * @param string $parameterString
      */
-    private static function parseParameters($parameterString,$plugin) {
+    private function parseParameters($parameterString,$plugin) {
         //----- default parameter settings
         $params = array(
             'year' => null,

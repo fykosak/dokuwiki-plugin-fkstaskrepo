@@ -108,7 +108,7 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
                 msg('Series mus be same as in XML',-1);
                 return;
             }
-            if((string) $seriesXML->year != $year){
+            if((int) $seriesXML->year != $year){
                 msg('Year mus be same as in XML',-1);
                 return;
             }
@@ -123,6 +123,7 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
             }
 
             $parameters = array(
+                'figure' => '@figure@',
                 'human-year' => $year.'. '.$this->helper->getSpecLang('years',$lang),
                 'human-series' => $series.'. '.$this->helper->getSpecLang('series',$lang),
                 'label' => '@label@',
@@ -154,6 +155,8 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
 
 
                 foreach ($seriesXML->problems->children() as $problem) {
+                    $parameters['figure'] = "";
+                    $parameters['label'] = (string) $problem->label;
                     $d = $this->helper->extractFigure($problem,$lang);
                     if(!empty($d) && !empty($d['data'])){
                         foreach ($d['data']as $type => $imgContent) {
@@ -161,20 +164,17 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
                                 msg('invalid or empty extenson figure: '.$type,-1);
                                 continue;
                             }
-                            $name = $that->helper->getImagePath($year,$series,(string) $problem->number,$lang,$type);
-
+                            $name = $that->helper->getImagePath($year,$series,(string) $problem->label,$lang,$type);
+                            $parameters['figure'] = '{{probfig>'.$this->helper->getImagePath($year,$series,(string) $problem->label,$lang).' |'.$d['caption'].'}}';
+                            
                             if(io_saveFile(mediaFN($name),(string) trim($imgContent))){
                                 msg('image: '.$name.' for language '.$lang.' has been saved',1);
                             }
                         }
                     }
-
-
-
-
                     foreach ($problem->task as $task) {
 
-                        if($this->isActualLang($task,$lang)){
+                        if($this->helper->isActualLang($task,$lang)){
                             $text = $this->helper->texPreproc->preproc((string) $task);
                             if($text){
                                 $this->helper->updateProblemData(array('task' => $text),$year,$series,$problem->label,$lang);
@@ -182,9 +182,7 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
                             break;
                         }
                     }
-
                     $this->helper->storeTags($year,$series,$problem->label,$problem->topics->topic);
-                    $parameters['label'] = (string) $problem->label;
                     $result .= $that->replaceVariables($parameters,$problemTemplate);
                 }
                 return $result;
@@ -197,9 +195,7 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
         }
     }
 
-    private function isActualLang(SimpleXMLElement $e,$lang) {
-        return (($lang == (string) $e->attributes('http://www.w3.org/XML/1998/namespace')->lang));
-    }
+   
 
     private function getLanguages(SimpleXMLElement $seriesXML) {
         $langs = array();
@@ -227,19 +223,7 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
         return $result;
     }
 
-    final private function getSpecLang($id,$lang = null) {
-        global $conf;
-        if(!$lang || $lang == $conf['lang']){
-            return $this->getLang($id);
-        }
-
-        $this->localised = false;
-        $confLang = $conf['lang'];
-        $conf['lang'] = $lang;
-        $l = $this->getLang($id);
-        $conf['lang'] = $confLang;
-        return $l;
-    }
+   
 
 }
 
