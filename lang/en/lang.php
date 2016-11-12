@@ -27,8 +27,8 @@ $lang['years'] ='Years';
 $lang['deadline']="Upload deadline";
 $lang['deadline-post']="Post deadline";
 
-$lang['deadline-format']="jS F Y";
-$lang['deadline-post-format']="jS F Y h:i:s A";
+$lang['deadline-post-format']="jS F Y";
+$lang['deadline-format']="jS F Y h:i:s A";
 
 $lang['test'] ="TEST EN";
 $lang['label']=$lang['problem'];

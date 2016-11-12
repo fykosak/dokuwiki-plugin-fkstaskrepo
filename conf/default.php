@@ -13,3 +13,5 @@ $conf['page_path_mask_en'] = 'task:r%1$s:s%2$s';
 $conf['series_template'] = 'system:series_template';
 $conf['task_template'] = 'system:task_template';
 $conf['task_template_search'] = 'system:task_template';
+
+$conf['im_convert']='';

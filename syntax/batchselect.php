@@ -69,7 +69,7 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
         preg_match('/lang="([a-z]+)"/',substr($match,19,-2),$m);
         $lang = $m[1];
         // var_dump($conf);
-        $path = preg_replace('/%[0-9]\$s/','([0-9]+)',$this->getConf('page_path_mask_cs'));
+        $path = preg_replace('/%[0-9]\$s/','([0-9]+)',$this->getConf('page_path_mask_'.$lang));
 
         search($data,$conf['datadir'],'search_allpages',array(),"",-1);
 
@@ -103,10 +103,11 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
      */
     public function render($mode,Doku_Renderer &$renderer,$data) {
         list($pages,$lang) = $data;
+        $renderer->nocache();
         $renderer->doc.='<div class="FKS_taskrepo select">';
         $renderer->doc.='<h4>'.$this->helper->getSpecLang('batch_select',$lang).'</h4>';
+       $renderer->doc.='<select id="FKS_taskrepo_select" class="edit" >';
 
-        $renderer->doc.='<select id="FKS_taskrepo_select" class="edit" >';
         $renderer->doc.='<option>--'.$this->helper->getSpecLang('batch_select',$lang).'--</option>';
         foreach ($pages as $year => $batchs) {
             $renderer->doc.=' <option value="'.$year.'">'.$this->helper->getSpecLang('year',$lang).' '.$year.'</option>';
@@ -117,11 +118,11 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
         foreach ($pages as $year => $batchs) {
 
 
-            $renderer->doc.='<div class="year" style="display:none" data-year="'.$year.'"><ul>';
+            $renderer->doc.='<div class="year" style="display:none" data-year="'.$year.'">';
             foreach ($batchs as $batch => $page) {
-                $renderer->doc.=' <li><a href="'.wl($page).'" >'.$this->helper->getSpecLang('series',$lang).' '.$batch.'</a></li>';
+                $renderer->doc.='<a href="'.wl($page).'" ><span class="btn">'.$this->helper->getSpecLang('series',$lang).' '.$batch.'</span></a>';
             }
-            $renderer->doc.='</ul></div>';
+            $renderer->doc.='</div>';
         }
 
         $renderer->doc.='</div>';

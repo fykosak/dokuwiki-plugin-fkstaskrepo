@@ -145,20 +145,23 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
 
                 $problemData['figure']['caption'] = (!empty($f)) ? $f['caption'] : false;
                 foreach ($problem->children() as $k => $child) {
+
                     if($this->isActualLang($child,$lang) && (trim((string) $child) != "")){
+
                         $problemData[$k] = (string) $child;
                     }
                     /* is array? */
                     if(count($child) > 1){
+
                         foreach ($child->children() as $ch) {
-                            if($this->isActualLang($child,$lang)){
+                            if($this->isActualLang($child,$lang) && $this->isActualLang($ch,$lang)){
                                 $problemData[$k] = (array) $child->children();
                             }
                         }
                         continue;
                     }
-                    $problemData[$k] = (string) $child;
                 }
+
                 unset($problemData['figures']);
 
                 break;
@@ -342,6 +345,49 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
             }
         }
         return $d;
+    }
+
+    public function extractParameters($match) {
+        $parameterString = substr($match,13,-2); // strip markup (including space after "<fkstaskrepo ")
+        return $this->parseParameters($parameterString);
+    }
+
+    /**
+     * @param string $parameterString
+     */
+    public function parseParameters($parameterString) {
+        //----- default parameter settings
+        $params = array(
+            'year' => null,
+            'series' => null,
+            'problem' => null,
+            'lang' => null
+        );
+
+        //----- parse parameteres into name="value" pairs  
+        preg_match_all("/(\w+?)=\"(.*?)\"/",$parameterString,$regexMatches,PREG_SET_ORDER);
+
+        for ($i = 0; $i < count($regexMatches); $i++) {
+            $name = strtolower($regexMatches[$i][1]);  // first subpattern: name of attribute in lowercase
+            $value = $regexMatches[$i][2];              // second subpattern is value
+            if(in_array($name,array('year','series','problem','lang'))){
+                $params[$name] = trim($value);
+            }else{
+                $found = false;
+                foreach ($params as $paramName => $default) {
+                    if(strcmp($name,$paramName) == 0){
+                        $params[$name] = trim($value);
+                        $found = true;
+                        break;
+                    }
+                }
+                if(!$found){
+                    msg(sprintf($this->getLang('unexpected_value'),$name),-1);
+                }
+            }
+        }
+
+        return $params;
     }
 
 }

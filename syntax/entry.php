@@ -67,7 +67,7 @@ class syntax_plugin_fkstaskrepo_entry extends DokuWiki_Syntax_Plugin {
      * @return array Data for the renderer
      */
     public function handle($match,$state,$pos,Doku_Handler &$handler) {
-        $parameters = $this->extractParameters($match,$this);
+        $parameters = $this->helper->extractParameters($match);
 
         return array(
             'parameters' => $parameters,
@@ -102,7 +102,7 @@ class syntax_plugin_fkstaskrepo_entry extends DokuWiki_Syntax_Plugin {
 
             $editLabel = $this->getLang('problem').' '.$problemData['name'];
             $classes[] = $renderer->startSectionEdit($data['bytepos_start'],'plugin_fkstaskrepo',$editLabel);
-            $renderer->doc .='<div class="taskrepo_task">';
+            $renderer->doc .='<div class="FKS_taskrepo task">';
             $renderer->doc .= '<div class="'.implode(' ',$classes).'">';
             $renderer->doc .= p_render($mode,$this->helper->prepareContent($problemData,$this->getConf('task_template')),$info);
             $renderer->doc .= '</div>';
@@ -137,10 +137,7 @@ class syntax_plugin_fkstaskrepo_entry extends DokuWiki_Syntax_Plugin {
         return false;
     }
 
-    private function extractParameters($match,$plugin) {
-        $parameterString = substr($match,13,-2); // strip markup (including space after "<fkstaskrepo ")
-        return $this->parseParameters($parameterString,$plugin);
-    }
+  
 
     private function addDependencies(Doku_Renderer &$renderer,$files) {
         $name = $this->getPluginName();
@@ -155,43 +152,7 @@ class syntax_plugin_fkstaskrepo_entry extends DokuWiki_Syntax_Plugin {
         }
     }
 
-    /**
-     * @param string $parameterString
-     */
-    private function parseParameters($parameterString,$plugin) {
-        //----- default parameter settings
-        $params = array(
-            'year' => null,
-            'series' => null,
-            'problem' => null,
-            'lang' => null
-        );
-
-        //----- parse parameteres into name="value" pairs  
-        preg_match_all("/(\w+?)=\"(.*?)\"/",$parameterString,$regexMatches,PREG_SET_ORDER);
-
-        for ($i = 0; $i < count($regexMatches); $i++) {
-            $name = strtolower($regexMatches[$i][1]);  // first subpattern: name of attribute in lowercase
-            $value = $regexMatches[$i][2];              // second subpattern is value
-            if(in_array($name,array('year','series','problem','lang'))){
-                $params[$name] = trim($value);
-            }else{
-                $found = false;
-                foreach ($params as $paramName => $default) {
-                    if(strcmp($name,$paramName) == 0){
-                        $params[$name] = trim($value);
-                        $found = true;
-                        break;
-                    }
-                }
-                if(!$found){
-                    msg(sprintf($plugin->getLang('unexpected_value'),$name),-1);
-                }
-            }
-        }
-
-        return $params;
-    }
+    
 
 }
 

@@ -48,9 +48,8 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         }
         if(!$INPUT->has('topng')){
             return;
-            
         }
-       
+
 
         $xml = simplexml_load_file($event->data['file']);
 
@@ -71,19 +70,38 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         }else{
             $height = $event->data['height'];
         }
-       
+
 
         $local = getCacheName($event->data['file'],'.media.'.$event->data['width'].'x'.$height.'.'.$event->data['ext'].'.png');
         $mtime = @filemtime($local);
 
         if($mtime < filemtime($event->data['file'])){
-            media_resize_imageIM($event->data['ext'],$event->data['file'],null,null,$local,$event->data['width'],$height);
+            $this->media_resize_imageIM($event->data['ext'],$event->data['file'],null,null,$local,$event->data['width'],$height);
         }
         if(!empty($conf['fperm'])){
             @chmod($local,$conf['fperm']);
         }
 
         sendFile($local,'image/png',$event->data['download'],$event->data['cache'],$event->data['ispublic'],$event->data['orig']);
+    }
+
+    private function media_resize_imageIM($ext,$from,$from_w,$from_h,$to,$to_w,$to_h) {
+        global $conf;
+        
+        if(!$this->getConf('im_convert')) return false;
+
+        $cmd = $this->getConf('im_convert');
+        $cmd .= ' -resize '.$to_w.'x'.$to_h.'!';
+        if($ext == 'jpg' || $ext == 'jpeg'){
+            $cmd .= ' -quality '.$conf['jpg_quality'];
+        }
+        $cmd .= " $from $to";
+
+        @exec($cmd,$out,$retval);
+
+
+        if($retval == 0) return true;
+        return false;
     }
 
     /**
@@ -126,7 +144,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
                 $parameters[$field] = $_POST[$field];
             }
         }else{
-            $parameters = syntax_plugin_fkstaskrepo_entry::extractParameters($TEXT,$this);
+            $parameters = $this->helper->extractParameters($TEXT);
         }
 
         $data = $this->helper->getProblemData($parameters['year'],$parameters['series'],$parameters['problem'],$parameters['lang']);
@@ -207,4 +225,3 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
 
 }
 
-// vim:ts=4:sw=4:et:

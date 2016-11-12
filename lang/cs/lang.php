@@ -28,8 +28,8 @@ $lang['years'] = 'Ročníku';
 $lang['deadline'] = "Termín uploadu";
 $lang['deadline-post'] = "Termín odeslání poštou";
 
-$lang['deadline-format']="jS F Y";
-$lang['deadline-post-format']="jS F Y h:i:s A";
+$lang['deadline-post-format']="j.n. Y";
+$lang['deadline-format']="j.n. Y H:i:s";
 
 $lang['test'] = "TEST CS";
 $lang['label']=$lang['problem'];
