@@ -44,7 +44,12 @@ $lang['hard_update']='Hard upadte';
 
 $lang['batch_select']='Select year';
 
+$lang['brochure']= "Br";
+
 $lang['tag__termoDyn']="thermodynamics";
 $lang['tag__mechHmBodu']="thermodynamics";
 $lang['tag__termoDyn']="thermodynamics";
+
+
+
 //Setup VIM: ex: et ts=4 :

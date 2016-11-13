@@ -64,16 +64,12 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
         $form->setHiddenField('do', 'admin');
         $form->addTextInput('year', $this->getLang('year'))->attr('pattern', '[0-9]+');
         $form->addTextInput('series', $this->getLang('series'))->attr('pattern', '[0-9]+');
-        $form->addDropdown('language',array('ALL', 'cs', 'en'),$this->getLang('language'));
+        $form->addDropdown('language', array('ALL', 'cs', 'en'), $this->getLang('language'));
 
-       $form->addElement(new \dokuwiki\Form\InputElement('file','xml_file',$this->getLang('xml_file')));
-$form->addCheckbox('hard',$this->getLang('hard_update'));
+        $form->addElement(new \dokuwiki\Form\InputElement('file', 'xml_file', $this->getLang('xml_file')));
+        $form->addCheckbox('hard', $this->getLang('hard_update'));
         $form->addButton('submit', $this->getLang('update'));
-        //$form->addElement(form_makeFileField('xml_file', '<span title="' . $this->getLang('xml_source_help') . '">' . $this->getLang('xml_file') . '</span>'));
-       // $form->addElement(form_makeCheckboxField('hard', '1', $this->getLang('hard_update')));
-       // $form->addElement(form_makeButton('submit', 'admin', $this->getLang('update')));
-       // $form->endFieldset();
-       // $form->printForm();
+
         $form->addFieldsetClose();
         echo $form->toHTML();
 
@@ -101,6 +97,7 @@ $form->addCheckbox('hard',$this->getLang('hard_update'));
 
     private function processSeries($content, $year, $series, $language) {
         global $INPUT;
+        global $INFO;
 
         // series template
         $seriesXML = simplexml_load_string($content);
@@ -129,8 +126,31 @@ $form->addCheckbox('hard',$this->getLang('hard_update'));
             }
 
             $parameters = array('figure' => '@figure@', 'human-year' => $year . '. ' . $this->helper->getSpecLang('years', $lang), 'human-series' => $series . '. ' . $this->helper->getSpecLang('series', $lang), 'label' => '@label@', 'human-deadline' => $this->helper->getSpecLang('deadline', $lang) . ': ' . date($this->helper->getSpecLang('deadline-format', $lang), strtotime($deadline)), 'human-deadline-post' => $this->helper->getSpecLang('deadline-post', $lang) . ': ' . date($this->helper->getSpecLang('deadline-post-format', $lang), strtotime($dedline_post)));
-
             $pagePath = sprintf($this->getConf('page_path_mask_' . $lang), $year, $series);
+
+
+            $file = wikiFN($pagePath);
+            $created = @filectime($file);
+            $meta = array();
+            $meta['date']['created'] = $created;
+            $user = $_SERVER['REMOTE_USER'];
+            if ($user) $meta['creator'] = $INFO['userinfo']['name'];
+            if ($lang != 'cs') {
+$csPath = sprintf($this->getConf('page_path_mask_cs'), $year, $series);
+
+                $meta['relation']['istranslationof'][$csPath] = "cs";
+            } else {
+                $meta['relation']['translations'] = [];
+                foreach ($langs as $l) {
+                    $meta['relation']['translations'][sprintf($this->getConf('page_path_mask_' . $l), $year, $series)] = $l;
+                }
+
+            }
+            $meta['language'] = $lang;
+
+            p_set_metadata($pagePath, $meta);
+
+
 
             if ($pagePath == "") {
                 msg('No page path defined for language ' . $lang, -1);
@@ -191,6 +211,10 @@ $form->addCheckbox('hard',$this->getLang('hard_update'));
             msg(sprintf('Updated <a href="%s">%s</a>.', wl($pagePath), $pagePath));
         }
     }
+    private function getDefaultLang(){
+        return "cs";
+    }
+
 
 
     private function getLanguages(SimpleXMLElement $seriesXML) {

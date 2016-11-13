@@ -43,4 +43,7 @@ $lang['task']='Úloha';
 $lang['hard_update']='Tvrdý upadte';
 
 $lang['batch_select']='Výběr série';
+
+$lang['brochure']= "Brožurka se zadáním";
+
 //Setup VIM: ex: et ts=4 :

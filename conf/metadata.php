@@ -7,7 +7,10 @@
  * @author Michal Červeňák <miso@fykos.cz>
  */
 $meta['remote_path_mask'] = array('string');
-$meta['page_path_mask'] = array('string');
+
+
+$meta['page_path_mask_cs'] = array('string');
+$meta['page_path_mask_en'] = array('string');
 
 $meta['series_template'] = array('string');
 $meta['task_template'] = array('string');
