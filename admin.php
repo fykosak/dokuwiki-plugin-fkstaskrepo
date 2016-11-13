@@ -12,6 +12,7 @@ if (!defined('DOKU_INC')) die();
 class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
 
     const DEFAULT_LANGUAGE = 'cs';
+    static $availableVersions= [1];
 
     /**
      *
@@ -64,7 +65,7 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
         $form->setHiddenField('do', 'admin');
         $form->addTextInput('year', $this->getLang('year'))->attr('pattern', '[0-9]+');
         $form->addTextInput('series', $this->getLang('series'))->attr('pattern', '[0-9]+');
-        $form->addDropdown('language', array('ALL', 'cs', 'en'), $this->getLang('language'));
+        $form->addDropdown('language', ['ALL', 'cs', 'en'], $this->getLang('language'));
 
         $form->addElement(new \dokuwiki\Form\InputElement('file', 'xml_file', $this->getLang('xml_file')));
         $form->addCheckbox('hard', $this->getLang('hard_update'));
@@ -97,12 +98,17 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
 
     private function processSeries($content, $year, $series, $language) {
         global $INPUT;
-        global $INFO;
 
-        // series template
+
         $seriesXML = simplexml_load_string($content);
+        if(!in_array((int)$seriesXML->attributes()->version,self::$availableVersions) ){
+            msg('Version not supported',-1);
+            return;
+        };
+
+
         $deadline = $seriesXML->deadline;
-        $dedline_post = $seriesXML->{'deadline-post'};
+        $deadline_post = $seriesXML->{'deadline-post'};
 
 
         if ($INPUT->int('hard') == 0) {
@@ -111,57 +117,50 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
                 msg('Series must be same as in the XML', -1);
                 return;
             }
-            if ((int)$seriesXML->year != $year) {
+            $m = [];
+            preg_match('/[0-9]+/', $seriesXML->source, $m);
+
+
+            if ((int)$m[0] != $year) {
                 msg('Year must be same as in the XML', -1);
                 return;
             }
         }
 
-        $langs = $this->getLanguages($seriesXML);
 
-        foreach ($langs as $lang) {
+        $languages = $this->getLanguages($seriesXML);
+
+
+        foreach ($languages as $lang) {
 
             if ($language && $lang != $language) {
                 continue;
             }
 
-            $parameters = array('figure' => '@figure@', 'human-year' => $year . '. ' . $this->helper->getSpecLang('years', $lang), 'human-series' => $series . '. ' . $this->helper->getSpecLang('series', $lang), 'label' => '@label@', 'human-deadline' => $this->helper->getSpecLang('deadline', $lang) . ': ' . date($this->helper->getSpecLang('deadline-format', $lang), strtotime($deadline)), 'human-deadline-post' => $this->helper->getSpecLang('deadline-post', $lang) . ': ' . date($this->helper->getSpecLang('deadline-post-format', $lang), strtotime($dedline_post)));
+
             $pagePath = sprintf($this->getConf('page_path_mask_' . $lang), $year, $series);
-
-
-            $file = wikiFN($pagePath);
-            $created = @filectime($file);
-            $meta = array();
-            $meta['date']['created'] = $created;
-            $user = $_SERVER['REMOTE_USER'];
-            if ($user) $meta['creator'] = $INFO['userinfo']['name'];
-            if ($lang != 'cs') {
-$csPath = sprintf($this->getConf('page_path_mask_cs'), $year, $series);
-
-                $meta['relation']['istranslationof'][$csPath] = "cs";
-            } else {
-                $meta['relation']['translations'] = [];
-                foreach ($langs as $l) {
-                    $meta['relation']['translations'][sprintf($this->getConf('page_path_mask_' . $l), $year, $series)] = $l;
-                }
-
-            }
-            $meta['language'] = $lang;
-
-            p_set_metadata($pagePath, $meta);
-
-
 
             if ($pagePath == "") {
                 msg('No page path defined for language ' . $lang, -1);
                 continue;
             }
+            $this->setTranslations($pagePath, $year, $series, $languages, $lang);
             $pageTemplate = io_readFile(wikiFN($this->getConf('series_template')));
 
-
+            $parameters = [];
+            $parameters['human-series'] = $series . '. ' . $this->helper->getSpecLang('series', $lang);
+            $parameters['label'] = '@label@';
+            $parameters['brochure_path']= str_replace(['@year@','@series@'],[$year,$series],$this->getConf('brochure_path_' . $lang));
+            $parameters['human-deadline'] = $this->helper->getSpecLang('deadline', $lang) . ': ' . date($this->helper->getSpecLang('deadline-format', $lang), strtotime($deadline));
+            $parameters['human-deadline-post'] = $this->helper->getSpecLang('deadline-post', $lang) . ': ' . date($this->helper->getSpecLang('deadline-post-format', $lang), strtotime($deadline_post));
+            $parameters['brochure'] = $this->helper->getSpecLang('brochure', $lang);
+            $parameters['figure'] = '@figure@';
+            $parameters['human-year'] = $year . '. ' . $this->helper->getSpecLang('years', $lang);
             $parameters['lang'] = $lang;
-            $parameters ['year'] = $year;
+            $parameters['year'] = $year;
             $parameters['series'] = $series;
+
+
             $pageContent = $this->replaceVariables($parameters, $pageTemplate);
 
 
@@ -169,7 +168,6 @@ $csPath = sprintf($this->getConf('page_path_mask_cs'), $year, $series);
             $pageContent = preg_replace_callback('/--\s*problem\s--(.*)--\s*endproblem\s*--/is', function ($match) use ($seriesXML, $that, $parameters, $year, $series, $lang) {
                 $result = '';
                 $problemTemplate = $match[1];
-
 
                 foreach ($seriesXML->problems->children() as $problem) {
                     $parameters['figure'] = "";
@@ -194,7 +192,7 @@ $csPath = sprintf($this->getConf('page_path_mask_cs'), $year, $series);
                         if ($this->helper->isActualLang($task, $lang)) {
                             $text = $this->helper->texPreproc->preproc((string)$task);
                             if ($text) {
-                                $this->helper->updateProblemData(array('task' => $text), $year, $series, $problem->label, $lang);
+                                $this->helper->updateProblemData(['task' => $text], $year, $series, $problem->label, $lang);
                             }
                             break;
                         }
@@ -202,6 +200,7 @@ $csPath = sprintf($this->getConf('page_path_mask_cs'), $year, $series);
                     $this->helper->storeTags($year, $series, $problem->label, $problem->topics->topic);
                     $result .= $that->replaceVariables($parameters, $problemTemplate);
                 }
+
                 return $result;
             }, $pageContent);
 
@@ -209,23 +208,53 @@ $csPath = sprintf($this->getConf('page_path_mask_cs'), $year, $series);
             io_saveFile(wikiFN($pagePath), $pageContent);
 
             msg(sprintf('Updated <a href="%s">%s</a>.', wl($pagePath), $pagePath));
+
         }
+
     }
-    private function getDefaultLang(){
-        return "cs";
+
+    private function setTranslations($pagePath, $year, $series, $languages, $lang) {
+        global $INFO;
+
+        $file = wikiFN($pagePath);
+        $created = @filectime($file);
+        $meta = [];
+        $meta['date']['created'] = $created;
+        $user = $_SERVER['REMOTE_USER'];
+        if ($user) $meta['creator'] = $INFO['userinfo']['name'];
+        if ($lang != self::DEFAULT_LANGUAGE) {
+            ${self::DEFAULT_LANGUAGE.'Path'} = sprintf($this->getConf('page_path_mask_'.self::DEFAULT_LANGUAGE), $year, $series);
+
+            $meta['relation']['istranslationof'][${self::DEFAULT_LANGUAGE.'Path'}] = self::DEFAULT_LANGUAGE;
+        } else {
+            $meta['relation']['translations'] = [];
+            foreach ($languages as $l) {
+                $meta['relation']['translations'][sprintf($this->getConf('page_path_mask_' . $l), $year, $series)] = $l;
+            }
+
+        }
+        $meta['language'] = $lang;
+
+        p_set_metadata($pagePath, $meta);
     }
+
 
 
 
     private function getLanguages(SimpleXMLElement $seriesXML) {
-        $langs = array();
-        foreach ($seriesXML->xpath('problems/problem/*[@xml:lang]') as $e) {
+        $languages = [];
+
+
+        foreach ($seriesXML->problems->xpath('*/*[@xml:lang]') as $e) {
             $l = (string)$e->attributes('http://www.w3.org/XML/1998/namespace')->lang;
-            if (!in_array($l, $langs)) {
-                $langs[] = $l;
+            if (!in_array($l, $languages)) {
+                $languages[] = $l;
             }
         }
-        return $langs;
+        if (count($languages) == 0) {
+            msg("No language found!!", -1);
+        }
+        return $languages;
     }
 
     private function replaceVariables($parameters, $template) {
@@ -245,5 +274,3 @@ $csPath = sprintf($this->getConf('page_path_mask_cs'), $year, $series);
 
 
 }
-
-// vim:ts=4:sw=4:et:

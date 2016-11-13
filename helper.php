@@ -47,16 +47,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         }
     }
 
-    /**
-     * Return info about supported methods in this Helper Plugin
-     *
-     * @return array of public methods
-     */
-    public function getMethods() {
-        return array(
-//TODO
-        );
-    }
+
 
     public function getProblemData($year,$series,$problem,$lang) {
 
@@ -66,7 +57,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
 
 
 
-        return array_merge($globalData,$localData,array('year' => $year,'series' => $series,'problem' => $problem,'lang' => $lang));
+        return array_merge($globalData,$localData,['year' => $year,'series' => $series,'problem' => $problem,'lang' => $lang]);
     }
 
     public function updateProblemData($data,$year,$series,$problem,$lang) {
@@ -95,7 +86,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         if($content){
             $data = unserialize($content);
         }else{
-            $data = array();
+            $data = [];
         }
 //$tags = $this->loadTags($year,$series,$problem);
 // $data['tags'] = $tags;
@@ -132,11 +123,10 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
 
         $problems = $series->problems;
 
-        $deadline = $series->deadline;
-        $dedline_post = $series->{'deadline-post'};
+
         $problemData = null;
         if(!$problems){
-            return array();
+            return [];
         }
         foreach ($problems->problem as $problem) {
 
@@ -178,6 +168,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
      */
 
     public function storeTags($year,$series,$problem,$tags) {
+       // const tableProblem="problem";
         // allocate problem ID
         $sql = 'select problem_id from problem where year = ? and series = ? and problem = ?';
         $res = $this->sqlite->query($sql,$year,$series,$problem);
@@ -188,9 +179,12 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
             $problemId = $this->sqlite->res2single($res);
         }
 
+
         // flush and insert tags
         $this->sqlite->query('begin transaction');
+
         $this->sqlite->query('delete from problem_tag where problem_id = ?',$problemId);
+
         foreach ($tags as $tag) {
             // allocate tag ID
             $sql = 'select tag_id from tag where tag_cs = ?';
@@ -209,41 +203,47 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         $this->sqlite->query('commit transaction');
     }
 
-    private function loadTags($year,$series,$problem) {
+    /**
+     * @param $year
+     * @param $series
+     * @param $problem
+     * @return array
+     */
+    private function loadTags($year, $series, $problem) {
         $sql = 'select problem_id from problem where year = ? and series = ? and problem = ?';
         $res = $this->sqlite->query($sql,$year,$series,$problem);
         $problemId = $this->sqlite->res2single($res);
 
         if(!$problemId){
-            return array();
+            return [];
         }
 
         $res = $this->sqlite->query('select t.tag_cs from tag t left join problem_tag pt on pt.tag_id = t.tag_id where pt.problem_id =?',$problemId);
-        $result = array();
+        $result = [];
         foreach ($this->sqlite->res2arr($res) as $row) {
             $result[] = $row['tag_cs'];
         }
         return $result;
     }
 
-    public function getTags($lang = 'cs') {
+    public function getTags() {
         $sql = 'select t.tag_cs as tag, count(pt.problem_id) as count from tag t left join problem_tag pt on pt.tag_id = t.tag_id group by t.tag_id order by 1';
         $res = $this->sqlite->query($sql);
         return $this->sqlite->res2arr($res);
     }
 
-    public function getProblemsByTag($tag,$lang = 'cs') {
+    public function getProblemsByTag($tag) {
         $sql = 'select tag_id from tag where tag_cs = ?';
         $res = $this->sqlite->query($sql,$tag);
         $tagId = $this->sqlite->res2single($res);
         if(!$tagId){
-            return array();
+            return [];
         }
 
         $res = $this->sqlite->query('select distinct p.year, p.series, p.problem from problem p left join problem_tag pt on pt.problem_id = p.problem_id where pt.tag_id = ? order by 1 desc, 2 desc, 3 asc',$tagId);
-        $result = array();
+        $result = [];
         foreach ($this->sqlite->res2arr($res) as $row) {
-            $result[] = array($row['year'],$row['series'],$row['problem']);
+            $result[] = [$row['year'],$row['series'],$row['problem']];
         }
         return $result;
     }
@@ -271,10 +271,14 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
     }
 
     public function prepareContent($data,$templatePage) {
-        global $ID;
+        global $ID,$conf;
 
         $templateFile = wikiFN($templatePage);
         $templateString = io_readFile($templateFile);
+
+        $templateString = str_replace("@solution_path@",$this->getConf('solution_path_'.$data['lang']),$templateString);
+        $templateString = str_replace("@solution@",$this->getLang('solution'),$templateString);
+
         foreach ($data as $key => $value) {
 
             switch ($key) {
@@ -292,6 +296,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
 
                 case 'label':
                     $templateString = str_replace("@human-$key@",$this->getSpecLang($key,$data['lang']).' '.$value,$templateString);
+
                     break;
                 case 'series':
                 case 'year':
@@ -312,11 +317,10 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         $tags = $this->loadTags($data['year'],$data['series'],$data['label']);
         $t = "";
         foreach ($tags as $tag) {
-            $t.= '[['.wl($ID,array(syntax_plugin_fkstaskrepo_table::URL_PARAM => $tag)).'|'.hsc($this->getSpecLang('tag__'.$tag,$data['lang'])).']] ';
+            $t.= '[['.wl($ID,[syntax_plugin_fkstaskrepo_table::URL_PARAM => $tag]).'|'.hsc($this->getSpecLang('tag__'.$tag,$data['lang'])).']] ';
         }
         $templateString = str_replace("@tags@",$t,$templateString);
         $templateString = str_replace("@figure@","",$templateString);
-
 
         return p_get_instructions($templateString);
     }
@@ -332,7 +336,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
     }
 
     public function extractFigure(SimpleXMLElement $problem,$lang) {
-        $d = array();
+        $d = [];
         if((string) $problem->figures != ""){
             foreach ($problem->figures->figure as $figure) {
                 if($this->isActualLang($figure,$lang)){
@@ -357,12 +361,12 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
      */
     public function parseParameters($parameterString) {
         //----- default parameter settings
-        $params = array(
+        $params = [
             'year' => null,
             'series' => null,
             'problem' => null,
             'lang' => null
-        );
+        ];
 
         //----- parse parameteres into name="value" pairs  
         preg_match_all("/(\w+?)=\"(.*?)\"/",$parameterString,$regexMatches,PREG_SET_ORDER);
@@ -370,7 +374,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         for ($i = 0; $i < count($regexMatches); $i++) {
             $name = strtolower($regexMatches[$i][1]);  // first subpattern: name of attribute in lowercase
             $value = $regexMatches[$i][2];              // second subpattern is value
-            if(in_array($name,array('year','series','problem','lang'))){
+            if(in_array($name,['year','series','problem','lang'])){
                 $params[$name] = trim($value);
             }else{
                 $found = false;

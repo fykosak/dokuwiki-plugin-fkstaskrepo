@@ -104,6 +104,7 @@ class syntax_plugin_fkstaskrepo_entry extends DokuWiki_Syntax_Plugin {
             $classes[] = $renderer->startSectionEdit($data['bytepos_start'],'plugin_fkstaskrepo',$editLabel);
             $renderer->doc .='<div class="FKS_taskrepo task">';
             $renderer->doc .= '<div class="'.implode(' ',$classes).'">';
+
             $renderer->doc .= p_render($mode,$this->helper->prepareContent($problemData,$this->getConf('task_template')),$info);
             $renderer->doc .= '</div>';
             $renderer->doc .= '</div>';

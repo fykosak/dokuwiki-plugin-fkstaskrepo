@@ -1,5 +1,5 @@
-.outdated {
-  // border: 3px dotted __border__;
+.logedIn .outdated {
+  border: 3px dotted @ini_border;
 }
 
 p.fkstaskrepo-tagcloud a {
@@ -48,11 +48,18 @@ form.fkstaskrepo span[title] {
 
   &.select {
     .year {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
       a {
-        color: @ini_background!important;
+        color: @ini_background !important;
 
         display: inline-block;
-        margin: .5em;
+        padding: .5em;
+        &:hover {
+          background-color: @ini_background;
+          color: @ini_text_alt !important;
+        }
       }
     }
 
@@ -69,7 +76,6 @@ form.fkstaskrepo span[title] {
     //float: right;
     //width: 300px;
 
-
     background-color: @ini_text_alt;
     color: @ini_background;
     margin: auto -.25em;
@@ -77,27 +83,31 @@ form.fkstaskrepo span[title] {
 
   }
   &.task {
+
     font-family: STIXGeneral;
     clear: both;
     h3 {
-      small {
-        text-align: end;
-        display: block;
-      }
+      justify-content: space-between;
+      display: flex;
+      flex-wrap: wrap;
       background-color: @ini_text_alt;
       padding: .25em;
       font-family: inherit;
       margin: auto -.25em;
+      margin-bottom: .75em;
       color: white;
       font-variant: normal;
     }
 
   }
   &.probfig {
-    img {
-      //width: 100%;
-      max-height: 400px;
-      cursor: zoom-in;
+    figure {
+      text-align: center;
+      margin-bottom: 2em;
+      img {
+        max-height: 400px;
+        cursor: zoom-in;
+      }
     }
 
     figcaption {

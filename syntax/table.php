@@ -104,19 +104,23 @@ class syntax_plugin_fkstaskrepo_table extends DokuWiki_Syntax_Plugin {
 
     private function showMainSearch(Doku_Renderer &$R,$data,$lang) {
         global $ID,$lang;
-        if(substr($ID,-1,1) == 's'){
+      /*  if(substr($ID,-1,1) == 's'){
             $searchNS = substr($ID,0,-1);
         }else{
             $searchNS = $ID;
-        }
-
-        $R->doc .= '<form action="'.wl().'" accept-charset="utf-8" class="fkstaskrepo-search" id="dw__search2" method="get"><div class="no">'.NL;
-        $R->doc .= '  <input type="hidden" name="do" value="search" />'.NL;
-        $R->doc .= '  <input type="hidden" id="dw__ns" name="ns" value="'.$searchNS.'" />'.NL;
-        $R->doc .= '  <input type="text" id="qsearch2__in" accesskey="f" name="id" class="edit" />'.NL;
-        $R->doc .= '  <input type="submit" value="'.$lang['btn_search'].'" class="button" />'.NL;
-        $R->doc .= '  <div id="qsearch2__out" class="ajax_qsearch JSpopup"></div>'.NL;
-        $R->doc .= '</div></form>'.NL;
+        }*/
+//$form = new \dokuwiki\Form\Form();
+    //    $form->setHiddenField('do',"search");
+      //  $form->addTextInput('tag',$this->getLang('Search!'));
+     //   $form->attr('id','taskrepo-search');
+     //   $R->doc .= $form->toHTML();
+      //  $R->doc .= '<form action="'.wl().'" accept-charset="utf-8" class="fkstaskrepo-search" id="dw__search2" method="get"><div class="no">'.NL;
+       // $R->doc .= '  <input type="hidden" name="do" value="search" />'.NL;
+       // $R->doc .= '  <input type="hidden" id="dw__ns" name="ns" value="'.$searchNS.'" />'.NL;
+       // $R->doc .= '  <input type="text" id="qsearch2__in" accesskey="f" name="id" class="edit" />'.NL;
+      //  $R->doc .= '  <input type="submit" value="'.$lang['btn_search'].'" class="button" />'.NL;
+       // $R->doc .= '  <div id="qsearch2__out" class="ajax_qsearch JSpopup"></div>'.NL;
+       // $R->doc .= '</div></form>'.NL;
     }
 
     private function showTagSearch(&$R,$data,$lang) {
