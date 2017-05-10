@@ -1,9 +1,14 @@
 jQuery(function () {
     var $ = jQuery;
-    $('#FKS_taskrepo_select').change(function (e) {
-        const $sel = $(this);
-        $sel.parent('.FKS_taskrepo').find('div.year').hide();
-        const year = $sel.find('option:selected').val();
-        $sel.parent('.FKS_taskrepo').find(' div[data-year="' + year + '"]').show();
+    $('.task-repo.batch-select').each(function (e) {
+
+        const $container = $(this);
+        const $dropDownItems = $container.find('.dropdown .dropdown-item');
+        $dropDownItems.click(function () {
+            "use strict";
+            const year = $(this).attr('data-year');
+            $container.find('.year').hide();
+            $container.find('.year[data-year="' + year + '"]').show();
+        });
     });
 });
