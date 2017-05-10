@@ -1,14 +1,7 @@
 <?php
 
-/**
- * English language file for fkstaskrepo plugin
- *
- * @author Michal Koutný <michal@fykos.cz>
- */
-// menu entry for admin plugins
 $lang['menu'] = 'Upload úloh';
 
-// custom language strings for the plugin
 $lang['name'] = 'Název';
 $lang['language'] = 'Jazyk';
 $lang['origin'] = 'Původ';
@@ -25,27 +18,48 @@ $lang['year'] = 'Ročník';
 $lang['years'] = 'Ročníku';
 
 
-$lang['deadline'] = "Termín uploadu";
-$lang['deadline-post'] = "Termín odeslání poštou";
+$lang['deadline'] = 'Termín uploadu';
+$lang['deadline-post'] = 'Termín odeslání poštou';
 
-$lang['deadline-post-format']="j. n. Y";
-$lang['deadline-format']="j. n. Y H:i:s";
+$lang['deadline-post-format'] = 'j. n. Y';
+$lang['deadline-format'] = 'j. n. Y H:i:s';
 
-$lang['test'] = "TEST CS";
-$lang['label']=$lang['problem'];
+$lang['test'] = 'TEST CS';
+$lang['label'] = $lang['problem'];
 
-$lang['points-N-SG_vote']="bod";
-$lang['points-N-PL_vote']="body";
-$lang['points-G-PL_vote']="bodů";
+$lang['points-N-SG_vote'] = 'bod';
+$lang['points-N-PL_vote'] = 'body';
+$lang['points-G-PL_vote'] = 'bodů';
 
-$lang['task']='Úloha';
+$lang['task'] = 'Úloha';
 
-$lang['hard_update']='Tvrdý upadte';
+$lang['hard_update'] = 'Tvrdý upadte';
 
-$lang['batch_select']='Výběr série';
+$lang['batch_select'] = 'Výběr série';
 
-$lang['brochure']= "Brožurka se zadáním";
-$lang['solution']="Řešení";
+$lang['brochure'] = 'Brožurka se zadáním';
+$lang['solution'] = 'Řešení';
 
-
-//Setup VIM: ex: et ts=4 :
+$lang['tag__mechHmBodu'] = 'mechanika hmotnéhop bodu';
+$lang['tag__mechTuhTel'] = 'machanika tuháho telesa';
+$lang['tag__hydroMech'] = 'hydro-mechanika';
+$lang['tag__mechPlynu'] = 'mechanika plynu';
+$lang['tag__gravPole'] = 'gravitačné pole';
+$lang['tag__kmitani'] = 'kmitani';
+$lang['tag__vlneni'] = 'vlnení';
+$lang['tag__molFyzika'] = 'molekulová fyzika';
+$lang['tag__termoDyn'] = 'termodynamika';
+$lang['tag__statFyz'] = 'statistická fyzika';
+$lang['tag__optikaGeom'] = 'geometrická optika';
+$lang['tag__optikaVln'] = 'vlnenie v optike';
+$lang['tag__elProud'] = 'elektrický proud';
+$lang['tag__elPole'] = 'elektrické pole';
+$lang['tag__magPole'] = 'magnetické pole';
+$lang['tag__relat'] = 'relativistická fyzika';
+$lang['tag__kvantFyz'] = 'kvantová fyzika';
+$lang['tag__jadFyz'] = 'jaderní fyzika';
+$lang['tag__astroFyz'] = 'astrofyzika';
+$lang['tag__matematika'] = 'matematika';
+$lang['tag__chemie'] = 'chémie';
+$lang['tag__biofyzika'] = 'biofyzikla';
+$lang['tag__other'] = 'ostatní';
