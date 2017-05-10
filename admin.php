@@ -12,7 +12,7 @@ if (!defined('DOKU_INC')) die();
 class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
 
     const DEFAULT_LANGUAGE = 'cs';
-    static $availableVersions= [1];
+    static $availableVersions = [1];
 
     /**
      *
@@ -42,37 +42,10 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
      * Should carry out any processing required by the plugin.
      */
     public function handle() {
-
-    }
-
-    /**
-     * Render HTML output, e.g. helpful text and a form
-     */
-    public function html() {
-        global $ID;
         global $INPUT;
-
         $year = $INPUT->post->int('year', null);
         $series = $INPUT->post->int('series', null);
         $language = $INPUT->post->str('language', null);
-
-        ptln('<h1>' . $this->getLang('menu') . '</h1>');
-        $form = new \dokuwiki\Form\Form();
-
-        $form->attrs(['class' => $this->getPluginName(), 'enctype' => 'multipart/form-data']);
-        $form->addFieldsetOpen($this->getLang('update'));
-        $form->setHiddenField('id', $ID);
-        $form->setHiddenField('do', 'admin');
-        $form->addTextInput('year', $this->getLang('year'))->attr('pattern', '[0-9]+');
-        $form->addTextInput('series', $this->getLang('series'))->attr('pattern', '[0-9]+');
-        $form->addDropdown('language', ['ALL', 'cs', 'en'], $this->getLang('language'));
-
-        $form->addElement(new \dokuwiki\Form\InputElement('file', 'xml_file', $this->getLang('xml_file')));
-        $form->addCheckbox('hard', $this->getLang('hard_update'));
-        $form->addButton('submit', $this->getLang('update'));
-
-        $form->addFieldsetClose();
-        echo $form->toHTML();
 
         if ($year !== null && $series !== null && $language !== null) {
             if ($language == "ALL") {
@@ -96,16 +69,41 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
         }
     }
 
+    /**
+     * Render HTML output, e.g. helpful text and a form
+     */
+    public function html() {
+        global $ID;
+        ptln('<h1>' . $this->getLang('menu') . '</h1>');
+        $form = new \dokuwiki\Form\Form();
+
+        $form->attrs(['class' => $this->getPluginName(), 'enctype' => 'multipart/form-data']);
+        $form->addFieldsetOpen($this->getLang('update'));
+        $form->setHiddenField('id', $ID);
+        $form->setHiddenField('do', 'admin');
+        $form->addTextInput('year', $this->getLang('year'))
+            ->attr('pattern', '[0-9]+');
+        $form->addTextInput('series', $this->getLang('series'))
+            ->attr('pattern', '[0-9]+');
+        $form->addDropdown('language', ['ALL', 'cs', 'en'], $this->getLang('language'));
+
+        $form->addElement(new \dokuwiki\Form\InputElement('file', 'xml_file', $this->getLang('xml_file')));
+        $form->addCheckbox('hard', $this->getLang('hard_update'));
+        $form->addButton('submit', $this->getLang('update'));
+
+        $form->addFieldsetClose();
+        echo $form->toHTML();
+    }
+
     private function processSeries($content, $year, $series, $language) {
         global $INPUT;
 
 
         $seriesXML = simplexml_load_string($content);
-        if(!in_array((int)$seriesXML->attributes()->version,self::$availableVersions) ){
-            msg('Version not supported',-1);
+        if (!in_array((int)$seriesXML->attributes()->version, self::$availableVersions)) {
+            msg('Version not supported', -1);
             return;
         };
-
 
         $deadline = $seriesXML->deadline;
         $deadline_post = $seriesXML->{'deadline-post'};
@@ -132,6 +130,7 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
 
 
         foreach ($languages as $lang) {
+            //$this->extractProblem($seriesXML, $lang);
 
             if ($language && $lang != $language) {
                 continue;
@@ -150,11 +149,14 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
             $parameters = [];
             $parameters['human-series'] = $series . '. ' . $this->helper->getSpecLang('series', $lang);
             $parameters['label'] = '@label@';
-            $parameters['brochure_path']= str_replace(['@year@','@series@'],[$year,$series],$this->getConf('brochure_path_' . $lang));
+            $parameters['brochure_path'] = str_replace(['@year@', '@series@'], [
+                $year,
+                $series
+            ], $this->getConf('brochure_path_' . $lang));
             $parameters['human-deadline'] = $this->helper->getSpecLang('deadline', $lang) . ': ' . date($this->helper->getSpecLang('deadline-format', $lang), strtotime($deadline));
             $parameters['human-deadline-post'] = $this->helper->getSpecLang('deadline-post', $lang) . ': ' . date($this->helper->getSpecLang('deadline-post-format', $lang), strtotime($deadline_post));
             $parameters['brochure'] = $this->helper->getSpecLang('brochure', $lang);
-            $parameters['figure'] = '@figure@';
+
             $parameters['human-year'] = $year . '. ' . $this->helper->getSpecLang('years', $lang);
             $parameters['lang'] = $lang;
             $parameters['year'] = $year;
@@ -165,52 +167,60 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
 
 
             $that = $this;
-            $pageContent = preg_replace_callback('/--\s*problem\s--(.*)--\s*endproblem\s*--/is', function ($match) use ($seriesXML, $that, $parameters, $year, $series, $lang) {
-                $result = '';
-                $problemTemplate = $match[1];
+            $pageContent = preg_replace_callback('/--\s*problem\s--(.*)--\s*endproblem\s*--/is', function () use ($seriesXML, $that, $parameters, $year, $series, $lang) {
 
+
+                $problemsString = '';
                 foreach ($seriesXML->problems->children() as $problem) {
-                    $parameters['figure'] = "";
-                    $parameters['label'] = (string)$problem->label;
-                    $d = $this->helper->extractFigure($problem, $lang);
-                    if (!empty($d) && !empty($d['data'])) {
-                        foreach ($d['data'] as $type => $imgContent) {
-                            if (!$type) {
-                                msg('invalid or empty extenson figure: ' . $type, -1);
-                                continue;
-                            }
-                            $name = $that->helper->getImagePath($year, $series, (string)$problem->label, $lang, $type);
-                            $parameters['figure'] = '{{probfig>' . $this->helper->getImagePath($year, $series, (string)$problem->label, $lang) . ' |' . $d['caption'] . '}}';
+// preprocess figure
+                    $figure = $that->helper->extractFigure($problem, $lang);
+                    $figuresPaths = $that->saveFigure($figure, $year, $series, (string)$problem->label, $lang);
 
-                            if (io_saveFile(mediaFN($name), (string)trim($imgContent))) {
-                                msg('image: ' . $name . ' for language ' . $lang . ' has been saved', 1);
+                    $problemData = [];
+                    foreach ($problem->children() as $k => $child) {
+                        if ($this->helper->isActualLang($child, $lang)) {
+                            /* is array? */
+                            if (count($child)) {
+                                $problemData[$k] = (array)$child->children();
+                            } else {
+                                if ((trim((string)$child) != "")) {
+                                    $problemData[$k] = (string)$child;
+
+                                }
                             }
                         }
                     }
-                    foreach ($problem->task as $task) {
+                    $problemData['figures'] = $figuresPaths;
+                    $this->helper->updateProblemData($problemData, $year, $series, $problemData['label'], $lang);
+                    $this->helper->storeTags($year, $series, $problemData['label'], $problem->topics->topic);
+                    $problemsString .= '<fkstaskrepo lang="' . $lang . '" year="' . $year . '" series="' . $series . '" problem="' . $problemData['label'] . '"/>' . "\n";
 
-                        if ($this->helper->isActualLang($task, $lang)) {
-                            $text = $this->helper->texPreproc->preproc((string)$task);
-                            if ($text) {
-                                $this->helper->updateProblemData(['task' => $text], $year, $series, $problem->label, $lang);
-                            }
-                            break;
-                        }
-                    }
-                    $this->helper->storeTags($year, $series, $problem->label, $problem->topics->topic);
-                    $result .= $that->replaceVariables($parameters, $problemTemplate);
                 }
-
-                return $result;
+                return $problemsString;
             }, $pageContent);
 
-
             io_saveFile(wikiFN($pagePath), $pageContent);
-
             msg(sprintf('Updated <a href="%s">%s</a>.', wl($pagePath), $pagePath));
-
         }
 
+    }
+
+    private function saveFigure($figure, $year, $series, $label, $lang) {
+        $figuresPaths = [];
+        if (!empty($figure) && !empty($figure['data'])) {
+            foreach ($figure['data'] as $type => $imgContent) {
+                if (!$type) {
+                    msg('invalid or empty extenson figure: ' . $type, -1);
+                    continue;
+                }
+                $name = $this->helper->getImagePath($year, $series, $label, $lang, $type);
+                if (io_saveFile(mediaFN($name), (string)trim($imgContent))) {
+                    msg('image: ' . $name . ' for language ' . $lang . ' has been saved', 1);
+                }
+                $figuresPaths[] = ['path'=>$name,'caption'=>$figure['caption']];
+            }
+        }
+        return $figuresPaths;
     }
 
     private function setTranslations($pagePath, $year, $series, $languages, $lang) {
@@ -223,9 +233,9 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
         $user = $_SERVER['REMOTE_USER'];
         if ($user) $meta['creator'] = $INFO['userinfo']['name'];
         if ($lang != self::DEFAULT_LANGUAGE) {
-            ${self::DEFAULT_LANGUAGE.'Path'} = sprintf($this->getConf('page_path_mask_'.self::DEFAULT_LANGUAGE), $year, $series);
+            ${self::DEFAULT_LANGUAGE . 'Path'} = sprintf($this->getConf('page_path_mask_' . self::DEFAULT_LANGUAGE), $year, $series);
 
-            $meta['relation']['istranslationof'][${self::DEFAULT_LANGUAGE.'Path'}] = self::DEFAULT_LANGUAGE;
+            $meta['relation']['istranslationof'][${self::DEFAULT_LANGUAGE . 'Path'}] = self::DEFAULT_LANGUAGE;
         } else {
             $meta['relation']['translations'] = [];
             foreach ($languages as $l) {
@@ -238,13 +248,8 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
         p_set_metadata($pagePath, $meta);
     }
 
-
-
-
     private function getLanguages(SimpleXMLElement $seriesXML) {
         $languages = [];
-
-
         foreach ($seriesXML->problems->xpath('*/*[@xml:lang]') as $e) {
             $l = (string)$e->attributes('http://www.w3.org/XML/1998/namespace')->lang;
             if (!in_array($l, $languages)) {
@@ -252,7 +257,7 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
             }
         }
         if (count($languages) == 0) {
-            msg("No language found!!", -1);
+            msg('No language found!!', -1);
         }
         return $languages;
     }
@@ -271,6 +276,4 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
         }, $template);
         return $result;
     }
-
-
 }
