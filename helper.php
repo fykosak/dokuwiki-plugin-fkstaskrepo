@@ -97,7 +97,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         return $this->downloader->getCacheFilename($this->downloader->getWebServerFilename($this->getPath($year, $series)));
     }
 
-    /*     * **************
+    /*
      * Tags
      */
 
@@ -112,8 +112,6 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
             $res = $this->sqlite->query($sql, $year, $series, $problem);
             $problemId = $this->sqlite->res2single($res);
         }
-
-
         // flush and insert tags
         $this->sqlite->query('begin transaction');
 
@@ -129,7 +127,6 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
                 $res = $this->sqlite->query($sql, $tag);
                 $tagId = $this->sqlite->res2single($res);
             }
-
             $this->sqlite->query('insert into problem_tag (problem_id, tag_id) values(?, ?)', $problemId, $tagId);
         }
 

@@ -88,31 +88,34 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
         switch ($state) {
             case DOKU_LEXER_SPECIAL:
                 $seriesFile = $this->helper->getSeriesFilename($parameters['year'], $parameters['series']);
-                if ($mode == 'xhtml') {
-                    $renderer->nocache();
-                    $problemData = $this->helper->getProblemData($parameters['year'], $parameters['series'], $parameters['problem'], $parameters['lang']);
-
-                    $problemData['lang'] = $parameters['lang'];
-                    $classes = [];
-                    $renderer->doc .= '<div class="task-repo task">';
-                    $this->renderContent($renderer, $problemData, $classes, !!$parameters['full']);
-                    $renderer->doc .= '</div>';
-                    return false;
-                } else if ($mode == 'text') {
-                    try {
-                        $problemData = $this->helper->getProblemData($parameters['year'], $parameters['series'], $parameters['problem'], $parameters['lang']);
-                        foreach ($problemData as $key => $value) {
-                            $renderer->doc .= "$key: $value\n";
-                        }
-                    } catch (fkstaskrepo_exception $e) {
+                switch ($mode) {
+                    case 'xhtml':
                         $renderer->nocache();
-                        msg($e->getMessage(), -1);
-                    }
-                } else if ($mode == 'metadata') {
-                    $templateFile = wikiFN($this->getConf('task_template'));
-                    $problemFile = $this->helper->getProblemFile($parameters['year'], $parameters['series'], $parameters['problem'], $parameters['lang']);
-                    $this->addDependencies($renderer, array($templateFile, $problemFile, $seriesFile));
-                    return true;
+                        $problemData = $this->helper->getProblemData($parameters['year'], $parameters['series'], $parameters['problem'], $parameters['lang']);
+                        $problemData['lang'] = $parameters['lang'];
+                        $classes = [];
+                        $renderer->doc .= '<div class="task-repo task">';
+                        $this->renderContent($renderer, $problemData, $classes, !!$parameters['full']);
+                        $renderer->doc .= '</div>';
+                        return false;
+                    case 'text':
+                        try {
+                            $problemData = $this->helper->getProblemData($parameters['year'], $parameters['series'], $parameters['problem'], $parameters['lang']);
+                            foreach ($problemData as $key => $value) {
+                                $renderer->doc .= "$key: $value\n";
+                            }
+                        } catch (fkstaskrepo_exception $e) {
+                            $renderer->nocache();
+                            msg($e->getMessage(), -1);
+                        }
+                        break;
+                    case 'metadata':
+                        $templateFile = wikiFN($this->getConf('task_template'));
+                        $problemFile = $this->helper->getProblemFile($parameters['year'], $parameters['series'], $parameters['problem'], $parameters['lang']);
+                        $this->addDependencies($renderer, [$templateFile, $problemFile, $seriesFile]);
+                        return true;
+                    default:
+                        return false;
                 }
                 break;
             default:
