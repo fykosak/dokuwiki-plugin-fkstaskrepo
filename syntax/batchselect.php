@@ -20,8 +20,8 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
     private $helper;
 
     function __construct() {
-
         $this->helper = $this->loadHelper('fkstaskrepo');
+
     }
 
     /**
@@ -67,17 +67,15 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
         global $conf;
         preg_match('/lang="([a-z]+)"/', substr($match, 19, -2), $m);
         $lang = $m[1];
-        $path = preg_replace('/%[0-9]\$s/', '([0-9]+)', $this->getConf('page_path_mask_' . $lang));
 
+        $path = $this->getRegExpPath($lang);
         search($data, $conf['datadir'], 'search_allpages', [], '', -1);
 
         $data = array_filter($data, function ($a) use ($path) {
             return preg_match('/' . $path . '/', $a['id']);
         });
-        $data = array_map(function ($a) use ($path) {
-            preg_match('/' . $path . '/', $a['id'], $m);
-            $a['year'] = $m[1];
-            $a['series'] = $m[2];
+        $data = array_map(function ($a) use ($path, $lang) {
+            list($a['year'], $a['series']) = $this->extractPathParameters($a['id'], $lang);
             return $a;
         }, $data);
 
@@ -97,38 +95,57 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
      * @return bool If rendering was successful.
      */
     public function render($mode, Doku_Renderer &$renderer, $data) {
+        global $ID;
         list($state, list($pages, $lang)) = $data;
+        list($currentYear, $currentSeries) = $this->extractPathParameters($ID, $lang);
+
         switch ($state) {
             case DOKU_LEXER_SPECIAL:
                 $renderer->nocache();
-                $renderer->doc .= '<div class="task-repo batch-select">';
-                $this->renderDropdown($renderer, $pages);
-
-                foreach ($pages as $year => $batches) {
-                    $renderer->doc .= '<div class="year nav flex-column" style="display:none" data-year="' . $year . '">';
-                    foreach ($batches as $batch => $page) {
-                        $renderer->doc .= '<a class="nav-link" href="' . wl($page) . '" >' . $this->helper->getSpecLang('series', $lang) . ' ' . $batch . '</a>';
-                    }
-                    $renderer->doc .= '</div>';
-                }
+                $renderer->doc .= '<div class="task-repo batch-select col-xl-3 col-lg-4 col-md-5 col-sm-12 pull-right">';
+                $this->renderHeadline($renderer, $lang);
+                $this->renderYearSelect($renderer, $pages, $lang, $currentYear);
+                $this->renderSeries($renderer, $pages, $lang, $currentYear, $currentSeries);
                 $renderer->doc .= '</div>';
-
                 return true;
             default:
                 return false;
         }
     }
 
-    private function renderDropdown(Doku_Renderer &$renderer, $pages) {
-        $id = md5(random_bytes(10) . serialize($pages));
-        $renderer->doc .= '<div class="dropdown">';
-        $renderer->doc .= '<button type="button" data-toggle="dropdown" id="' . $id . '" class="dropdown-toggle btn btn-secondary">' . $this->helper->getSpecLang('batch_select', $lang) . '</button>';
-        $renderer->doc .= '<div class="dropdown-menu" aria-labelledby="' . $id . '">';
-        foreach ($pages as $year => $batches) {
-            $renderer->doc .= ' <a class="dropdown-item" data-year="' . $year . '">' . $this->helper->getSpecLang('year', $lang) . ' ' . $year . '</a>';
-        }
-        $renderer->doc .= '</div>';
-        $renderer->doc .= '</div>';
+    private function renderHeadline(Doku_Renderer &$renderer, $lang) {
+        $renderer->doc .= '<h4>' . $this->helper->getSpecLang('batch_select', $lang) . '</h4>';
     }
 
+    private function renderSeries(Doku_Renderer &$renderer, $pages, $lang, $currentYear = null, $currentSeries = null) {
+        foreach ($pages as $year => $batches) {
+            $renderer->doc .= '<div class="year" ' . ($currentYear == $year ? '' : 'style="display:none"') . ' data-year="' . $year . '">';
+            $renderer->doc .= $this->helper->getSpecLang('series', $lang);
+            $renderer->doc .= '<ul class="pagination">';
+            foreach ($batches as $batch => $page) {
+                $renderer->doc .= '<li class="page-item ' . ($currentSeries == $batch && $currentYear == $year ? 'active' : '') . '"><a class="page-link" href="' . wl($page) . '" >' . $batch . '</a></li>';
+            }
+            $renderer->doc .= '</ul>';
+            $renderer->doc .= '</div>';
+        }
+    }
+
+    private function renderYearSelect(Doku_Renderer &$renderer, $pages, $lang, $currentYear = null) {
+        $renderer->doc .= '<select class="form-control" size="">';
+        foreach ($pages as $year => $batches) {
+            $renderer->doc .= ' <option data-year="' . $year . '" ' . ($year == $currentYear ? 'selected' : '') . '>' . $this->helper->getSpecLang('year', $lang) . ' ' . $year . '</option>';
+        }
+        $renderer->doc .= '</select>';
+    }
+
+    private function getRegExpPath($lang) {
+        return preg_replace('/%[0-9]\$s/', '([0-9]+)', $this->getConf('page_path_mask_' . $lang));
+    }
+
+    private function extractPathParameters($id, $lang) {
+        preg_match('/' . $this->getRegExpPath($lang) . '/', $id, $m);
+        $currentYear = $m[1];
+        $currentSeries = $m[2];
+        return [$currentYear, $currentSeries];
+    }
 }

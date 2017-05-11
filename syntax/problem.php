@@ -228,6 +228,9 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
 
     private function getProblemIcon($data) {
         switch ($data['label']) {
+            case '1':
+            case '2':
+                return '<span class="fa fa-smile-o"></span>';
             case 'E':
                 return '<span class="fa fa-flask"></span>';
             case 'S':
@@ -236,7 +239,7 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
             case'P':
                 return '<span class="fa fa-lightbulb-o"></span>';
             default:
-                return '';
+                return '<span class="fa fa-pencil-square-o"></span>';
         }
     }
 

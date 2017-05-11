@@ -1,12 +1,11 @@
 jQuery(function () {
     var $ = jQuery;
     $('.task-repo.batch-select').each(function (e) {
-
         const $container = $(this);
-        const $dropDownItems = $container.find('.dropdown .dropdown-item');
-        $dropDownItems.click(function () {
+        const $select = $container.find('select');
+        $select.change(function () {
             "use strict";
-            const year = $(this).attr('data-year');
+            const year = $(this).find(':selected').attr('data-year');
             $container.find('.year').hide();
             $container.find('.year[data-year="' + year + '"]').show();
         });
