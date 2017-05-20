@@ -20,7 +20,7 @@ $conf['brochure_path_en']=":archive:year@year@:series@series@.pdf";
 $conf['solution_path_cs']=":archiv:rocnik@year@:problem@label@.pdf";
 $conf['solution_path_en']=":archive:year@year@:problems@label@.pdf";
 
-$conf['archive_path_cs']='ulohy:archiv';
-$conf['archive_path_en']='ulohy:archiv';
+$conf['archive_path_cs']='ulohy:start';
+$conf['archive_path_en']='ulohy:start';
 
 $conf['im_convert']='';
