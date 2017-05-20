@@ -43,7 +43,9 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
             msg($pluginName . ': This plugin requires the sqlite plugin. Please install it.');
             return;
         }
-        if (!$this->sqlite->init($pluginName, DOKU_PLUGIN . $pluginName . DIRECTORY_SEPARATOR . 'db' . DIRECTORY_SEPARATOR)) {
+        if (!$this->sqlite->init($pluginName,
+            DOKU_PLUGIN . $pluginName . DIRECTORY_SEPARATOR . 'db' . DIRECTORY_SEPARATOR)
+        ) {
             msg($pluginName . ': Cannot initialize database.');
             return;
         }
@@ -51,12 +53,13 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
 
     public function getProblemData($year, $series, $problem, $lang) {
         $localData = $this->getLocalData($year, $series, $problem, $lang);
-        return array_merge($localData, [
-            'year' => $year,
-            'series' => $series,
-            'problem' => $problem,
-            'lang' => $lang
-        ]);
+        return array_merge($localData,
+            [
+                'year' => $year,
+                'series' => $series,
+                'problem' => $problem,
+                'lang' => $lang,
+            ]);
     }
 
     public function updateProblemData($data, $year, $series, $problem, $lang) {
@@ -94,7 +97,8 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
     }
 
     public function getSeriesFilename($year, $series) {
-        return $this->downloader->getCacheFilename($this->downloader->getWebServerFilename($this->getPath($year, $series)));
+        return $this->downloader->getCacheFilename($this->downloader->getWebServerFilename($this->getPath($year,
+            $series)));
     }
 
     /*
@@ -108,7 +112,10 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         $res = $this->sqlite->query($sql, $year, $series, $problem);
         $problemId = $this->sqlite->res2single($res);
         if (!$problemId) {
-            $this->sqlite->query('insert into problem (year, series, problem) values(?, ?, ?)', $year, $series, $problem);
+            $this->sqlite->query('insert into problem (year, series, problem) values(?, ?, ?)',
+                $year,
+                $series,
+                $problem);
             $res = $this->sqlite->query($sql, $year, $series, $problem);
             $problemId = $this->sqlite->res2single($res);
         }
@@ -149,7 +156,8 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
             return [];
         }
 
-        $res = $this->sqlite->query('select t.tag_cs from tag t left join problem_tag pt on pt.tag_id = t.tag_id where pt.problem_id =?', $problemId);
+        $res = $this->sqlite->query('select t.tag_cs from tag t left join problem_tag pt on pt.tag_id = t.tag_id where pt.problem_id =?',
+            $problemId);
         $result = [];
         foreach ($this->sqlite->res2arr($res) as $row) {
             $result[] = $row['tag_cs'];
@@ -171,7 +179,8 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
             return [];
         }
 
-        $res = $this->sqlite->query('select distinct p.year, p.series, p.problem from problem p left join problem_tag pt on pt.problem_id = p.problem_id where pt.tag_id = ? order by 1 desc, 2 desc, 3 asc', $tagId);
+        $res = $this->sqlite->query('select distinct p.year, p.series, p.problem from problem p left join problem_tag pt on pt.problem_id = p.problem_id where pt.tag_id = ? order by 1 desc, 2 desc, 3 asc',
+            $tagId);
         $result = [];
         foreach ($this->sqlite->res2arr($res) as $row) {
             $result[] = [$row['year'], $row['series'], $row['problem']];
@@ -195,7 +204,8 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
 
     public function getImagePath($year, $series, $problem, $lang, $type = null) {
         if ($type) {
-            return $this->getPluginName() . ':figure:year' . $year . '_series' . $series . '_' . $problem . '_' . $lang . '.' . $type;
+            return $this->getPluginName() . ':figure:year' . $year . '_series' . $series . '_' . $problem . '_' .
+            $lang . '.' . $type;
         }
         return $this->getPluginName() . ':figure:year' . $year . '_series' . $series . '_' . $problem . '_' . $lang;
     }
@@ -207,7 +217,8 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
      * @return bool
      */
     public function isActualLang(SimpleXMLElement $e, $lang) {
-        return (($lang == (string)$e->attributes(self::XMLNamespace)->lang) || (string)$e->attributes(self::XMLNamespace)->lang == "");
+        return (($lang == (string)$e->attributes(self::XMLNamespace)->lang) ||
+            (string)$e->attributes(self::XMLNamespace)->lang == "");
     }
 
     public function extractFigure(SimpleXMLElement $problem, $lang) {
@@ -216,6 +227,9 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
             foreach ($problem->figures->figure as $figure) {
                 if ($this->isActualLang($figure, $lang)) {
                     $d['caption'] = (string)$figure->caption;
+                    /**
+                     * @var $data SimpleXMLElement
+                     */
                     foreach ($figure->data as $data) {
                         $type = (string)$data->attributes()->extension;
                         $d['data'][$type] = trim((string)$data);
@@ -228,11 +242,12 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
 
     public function getTagLink($tag, $size = 5, $lang = 'cs', $count = 0, $active = false) {
         $page = $this->getConf('archive_path_' . $lang);
-        $html = '<a data-tag="' . $tag . '" href="' . wl($page, [self::URL_PARAM => $tag]) . '" class="btn size' . $size . ' ' . ($active ? '' : '') . '">';
+        $html = '<a data-tag="' . $tag . '" href="' . wl($page, [self::URL_PARAM => $tag]) . '" class="bodge size' .
+            $size . ' ' . ($active ? '' : '') . '">';
         $html .= '<span class="fa fa-tag"></span>';
-        $html .= hsc( $this->getSpecLang('tag__' . $tag, $lang));
+        $html .= hsc($this->getSpecLang('tag__' . $tag, $lang));
         if ($count) {
-            $html .= '(';
+            $html .= ' (';
             $html .= $count;
             $html .= ')';
         }

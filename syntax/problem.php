@@ -87,11 +87,14 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
         $state = $data['state'];
         switch ($state) {
             case DOKU_LEXER_SPECIAL:
-                $seriesFile = $this->helper->getSeriesFilename($parameters['year'], $parameters['series']);
+                // $seriesFile = $this->helper->getSeriesFilename($parameters['year'], $parameters['series']);
                 switch ($mode) {
                     case 'xhtml':
                         $renderer->nocache();
-                        $problemData = $this->helper->getProblemData($parameters['year'], $parameters['series'], $parameters['problem'], $parameters['lang']);
+                        $problemData = $this->helper->getProblemData($parameters['year'],
+                            $parameters['series'],
+                            $parameters['problem'],
+                            $parameters['lang']);
                         $problemData['lang'] = $parameters['lang'];
                         $classes = [];
                         $renderer->doc .= '<div class="task-repo task">';
@@ -100,7 +103,10 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
                         return false;
                     case 'text':
                         try {
-                            $problemData = $this->helper->getProblemData($parameters['year'], $parameters['series'], $parameters['problem'], $parameters['lang']);
+                            $problemData = $this->helper->getProblemData($parameters['year'],
+                                $parameters['series'],
+                                $parameters['problem'],
+                                $parameters['lang']);
                             foreach ($problemData as $key => $value) {
                                 $renderer->doc .= "$key: $value\n";
                             }
@@ -111,8 +117,11 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
                         break;
                     case 'metadata':
                         $templateFile = wikiFN($this->getConf('task_template'));
-                        $problemFile = $this->helper->getProblemFile($parameters['year'], $parameters['series'], $parameters['problem'], $parameters['lang']);
-                        $this->addDependencies($renderer, [$templateFile, $problemFile, $seriesFile]);
+                        $problemFile = $this->helper->getProblemFile($parameters['year'],
+                            $parameters['series'],
+                            $parameters['problem'],
+                            $parameters['lang']);
+                        // $this->addDependencies($renderer, [$templateFile, $problemFile, $seriesFile]);
                         return true;
                     default:
                         return false;
@@ -139,7 +148,8 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
     }
 
     private function renderContent(Doku_Renderer &$renderer, $data, $classes, $full = false) {
-        $renderer->doc .= '<div class="mb-3" data-label="' . $data['label'] . '" class="' . implode(' ', $classes) . '">';
+        $renderer->doc .= '<div class="mb-3" data-label="' . $data['label'] . '" class="' . implode(' ', $classes) .
+            '">';
         $this->renderHeader($renderer, $data, $full);
         $this->renderFigures($renderer, $data, $full);
         $this->renderTask($renderer, $data);
@@ -192,11 +202,11 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
         $renderer->doc .= $this->getProblemIcon($data);
         // TODO
         if ($full) {
-            $renderer->doc .= $seriesLabel . ' ' . $yearLabel . '-' . $problemLabel . '... ' . $problemName . '<small class="pull-right">(' . $pointsLabel . ')</small>';
+            $renderer->doc .= $seriesLabel . ' ' . $yearLabel . '-' . $problemLabel . '... ' . $problemName;;
         } else {
-            $renderer->doc .= $problemLabel . '... ' . $problemName . '<small class="pull-right">(' . $pointsLabel . ')</small>';
+            $renderer->doc .= $problemLabel . '... ' . $problemName;
         }
-
+        $renderer->doc .= '<small class="pull-right">(' . $pointsLabel . ')</small>';
         $renderer->doc .= '</h3>';
     }
 
