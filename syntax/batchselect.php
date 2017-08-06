@@ -7,7 +7,7 @@
  * @author  Michal Červeňák <miso@fykos.cz>
  */
 // must be run within Dokuwiki
-if(!defined('DOKU_INC')){
+if (!defined('DOKU_INC')) {
     die();
 }
 
@@ -20,8 +20,8 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
     private $helper;
 
     function __construct() {
-
         $this->helper = $this->loadHelper('fkstaskrepo');
+
     }
 
     /**
@@ -51,85 +51,101 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
      * @param string $mode Parser mode
      */
     public function connectTo($mode) {
-        $this->Lexer->addSpecialPattern('<fkstaskreposelect\s.*?/>',$mode,'plugin_fkstaskrepo_batchselect');
+        $this->Lexer->addSpecialPattern('<fkstaskreposelect\s.*?/>', $mode, 'plugin_fkstaskrepo_batchselect');
     }
 
     /**
      * Handle matches of the fkstaskrepo syntax
      *
      * @param string $match The match of the syntax
-     * @param int    $state The state of the handler
-     * @param int    $pos The position in the document
-     * @param Doku_Handler    $handler The handler
+     * @param int $state The state of the handler
+     * @param int $pos The position in the document
+     * @param Doku_Handler $handler The handler
      * @return array Data for the renderer
      */
-    public function handle($match,$state,$pos,Doku_Handler &$handler) {
+    public function handle($match, $state, $pos, Doku_Handler &$handler) {
         global $conf;
-
-        preg_match('/lang="([a-z]+)"/',substr($match,19,-2),$m);
+        preg_match('/lang="([a-z]+)"/', substr($match, 19, -2), $m);
         $lang = $m[1];
-        // var_dump($conf);
-        $path = preg_replace('/%[0-9]\$s/','([0-9]+)',$this->getConf('page_path_mask_'.$lang));
 
-        search($data,$conf['datadir'],'search_allpages',array(),"",-1);
+        $path = $this->getRegExpPath($lang);
+        search($data, $conf['datadir'], 'search_allpages', [], '', -1);
 
-        $data = array_filter($data,function($a)use ($path) {
-            return preg_match('/'.$path.'/',$a['id']);
+        $data = array_filter($data, function ($a) use ($path) {
+            return preg_match('/' . $path . '/', $a['id']);
         });
-        $data = array_map(function($a)use ($path) {
-            preg_match('/'.$path.'/',$a['id'],$m);
-            $a['year'] = $m[1];
-            $a['series'] = $m[2];
+        $data = array_map(function ($a) use ($path, $lang) {
+            list($a['year'], $a['series']) = $this->extractPathParameters($a['id'], $lang);
             return $a;
-        },$data);
+        }, $data);
 
-        $pages = array();
+        $pages = [];
         foreach ($data as $page) {
             $pages[$page['year']][$page['series']] = $page['id'];
         }
-
-
-
-        return array($pages,$lang);
+        return [$state, [$pages, $lang]];
     }
 
     /**
      * Render xhtml output or metadata
      *
-     * @param string         $mode      Renderer mode (supported modes: xhtml)
-     * @param Doku_Renderer  $renderer  The renderer
-     * @param array          $data      The data from the handler() function
+     * @param string $mode Renderer mode (supported modes: xhtml)
+     * @param Doku_Renderer $renderer The renderer
+     * @param array $data The data from the handler() function
      * @return bool If rendering was successful.
      */
-    public function render($mode,Doku_Renderer &$renderer,$data) {
-        list($pages,$lang) = $data;
-        $renderer->nocache();
-        $renderer->doc.='<div class="FKS_taskrepo select">';
-        $renderer->doc.='<h4>'.$this->helper->getSpecLang('batch_select',$lang).'</h4>';
-       $renderer->doc.='<select id="FKS_taskrepo_select" class="edit" >';
+    public function render($mode, Doku_Renderer &$renderer, $data) {
+        global $ID;
+        list($state, list($pages, $lang)) = $data;
+        list($currentYear, $currentSeries) = $this->extractPathParameters($ID, $lang);
 
-        $renderer->doc.='<option>--'.$this->helper->getSpecLang('batch_select',$lang).'--</option>';
-        foreach ($pages as $year => $batchs) {
-            $renderer->doc.=' <option value="'.$year.'">'.$this->helper->getSpecLang('year',$lang).' '.$year.'</option>';
+        switch ($state) {
+            case DOKU_LEXER_SPECIAL:
+                $renderer->nocache();
+                $renderer->doc .= '<div class="task-repo batch-select col-xl-3 col-lg-4 col-md-5 col-sm-12 pull-right">';
+                $this->renderHeadline($renderer, $lang);
+                $this->renderYearSelect($renderer, $pages, $lang, $currentYear);
+                $this->renderSeries($renderer, $pages, $lang, $currentYear, $currentSeries);
+                $renderer->doc .= '</div>';
+                return true;
+            default:
+                return false;
         }
-        $renderer->doc.='</select>';
-
-
-        foreach ($pages as $year => $batchs) {
-
-
-            $renderer->doc.='<div class="year" style="display:none" data-year="'.$year.'">';
-            foreach ($batchs as $batch => $page) {
-                $renderer->doc.='<a href="'.wl($page).'" ><span class="btn">'.$this->helper->getSpecLang('series',$lang).' '.$batch.'</span></a>';
-            }
-            $renderer->doc.='</div>';
-        }
-
-        $renderer->doc.='</div>';
-        return false;
     }
 
+    private function renderHeadline(Doku_Renderer &$renderer, $lang) {
+        $renderer->doc .= '<h4>' . $this->helper->getSpecLang('batch_select', $lang) . '</h4>';
+    }
+
+    private function renderSeries(Doku_Renderer &$renderer, $pages, $lang, $currentYear = null, $currentSeries = null) {
+        foreach ($pages as $year => $batches) {
+            $renderer->doc .= '<div class="year" ' . ($currentYear == $year ? '' : 'style="display:none"') . ' data-year="' . $year . '">';
+            $renderer->doc .= $this->helper->getSpecLang('series', $lang);
+            $renderer->doc .= '<ul class="pagination">';
+            foreach ($batches as $batch => $page) {
+                $renderer->doc .= '<li class="page-item ' . ($currentSeries == $batch && $currentYear == $year ? 'active' : '') . '"><a class="page-link" href="' . wl($page) . '" >' . $batch . '</a></li>';
+            }
+            $renderer->doc .= '</ul>';
+            $renderer->doc .= '</div>';
+        }
+    }
+
+    private function renderYearSelect(Doku_Renderer &$renderer, $pages, $lang, $currentYear = null) {
+        $renderer->doc .= '<select class="form-control" size="">';
+        foreach ($pages as $year => $batches) {
+            $renderer->doc .= ' <option data-year="' . $year . '" ' . ($year == $currentYear ? 'selected' : '') . '>' . $this->helper->getSpecLang('year', $lang) . ' ' . $year . '</option>';
+        }
+        $renderer->doc .= '</select>';
+    }
+
+    private function getRegExpPath($lang) {
+        return preg_replace('/%[0-9]\$s/', '([0-9]+)', $this->getConf('page_path_mask_' . $lang));
+    }
+
+    private function extractPathParameters($id, $lang) {
+        preg_match('/' . $this->getRegExpPath($lang) . '/', $id, $m);
+        $currentYear = $m[1];
+        $currentSeries = $m[2];
+        return [$currentYear, $currentSeries];
+    }
 }
-
-// vim:ts=4:sw=4:et:
-

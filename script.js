@@ -1,28 +1,13 @@
 jQuery(function () {
     var $ = jQuery;
-   $
-
-
-
-
-
-
-
-    $('.FKS_taskrepo.task h3').each(function () {
-        $(this).html(($(this).html().replace(/(\(.*\))/, "<small>$1</small>")));
+    $('.task-repo.batch-select').each(function (e) {
+        const $container = $(this);
+        const $select = $container.find('select');
+        $select.change(function () {
+            "use strict";
+            const year = $(this).find(':selected').attr('data-year');
+            $container.find('.year').hide();
+            $container.find('.year[data-year="' + year + '"]').show();
+        });
     });
-
-
-    $('#FKS_taskrepo_select').change(function (e) {
-        var $sel = $(this);
-
-        $sel.parent('.FKS_taskrepo').find('div.year').hide();
-        var year = $sel.find('option:selected').val();
-        $sel.parent('.FKS_taskrepo').find(' div[data-year="' + year + '"]').show();
-    });
-
-    //  $('.FKS_taskrepo.probfig a').prettyPhoto();
-
-
 });
-

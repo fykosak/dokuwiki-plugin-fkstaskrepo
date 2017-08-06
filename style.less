@@ -1,9 +1,5 @@
-.logedIn .outdated {
-  border: 3px dotted @ini_border;
-}
-
-p.fkstaskrepo-tagcloud a {
-  margin: 0.5em;
+.task-repo.tag-cloud a {
+  margin: 0.5rem;
 
   &.size1 {
     font-size: 60%;
@@ -37,79 +33,13 @@ p.fkstaskrepo-tagcloud a {
   }
 }
 
-form.fkstaskrepo span[title] {
-  border-bottom: 1px dotted @ini_text;
-  cursor: help;
+body {
+  counter-reset: probfig;
 }
 
-.FKS_taskrepo {
-
-  font-size: 120%;
-
-  &.select {
-    .year {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-around;
-      a {
-        color: @ini_background !important;
-
-        display: inline-block;
-        padding: .5em;
-        &:hover {
-          background-color: @ini_background;
-          color: @ini_text_alt !important;
-        }
-      }
-    }
-
-    @media (min-width: @ini_tablet_width) {
-      display: inline-block;
-      width: 250px;
-      float: right;
-      margin-bottom: 1em;
-    }
-    @media (max-width: @ini_tablet_width - 1) {
-      display: block;
-
-    }
-    //float: right;
-    //width: 300px;
-
-    background-color: @ini_text_alt;
-    color: @ini_background;
-    margin: auto -.25em;
-    padding: .25em;
-
-  }
-  &.task {
-
-    font-family: STIXGeneral;
-    clear: both;
-    h3 {
-      justify-content: space-between;
-      display: flex;
-      flex-wrap: wrap;
-      background-color: @ini_text_alt;
-      padding: .25em;
-      font-family: inherit;
-      margin: auto -.25em;
-      margin-bottom: .75em;
-      color: white;
-      font-variant: normal;
-    }
-
-  }
-  &.probfig {
-    figure {
-      text-align: center;
-      margin-bottom: 2em;
-      img {
-        max-height: 400px;
-        cursor: zoom-in;
-      }
-    }
-
+.task-repo.task {
+  figure {
+    float: right;
     figcaption {
       &[data-lang="cs"]::before {
         content: "Obr. " counter(probfig) " ";
@@ -123,19 +53,5 @@ form.fkstaskrepo span[title] {
       text-align: center;
     }
 
-    @media (min-width: @ini_screen_sm) {
-      width: 25%;
-    }
-
-    @media (max-width: (@ini_screen_sm - 1)) {
-      width: 33%;
-    }
-
   }
 }
-
-body {
-  counter-reset: probfig;
-}
-
-

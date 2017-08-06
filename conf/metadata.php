@@ -1,19 +1,17 @@
 <?php
 
-/**
- * Options for the fkstaskrepo plugin
- *
- * @author Michal Koutný <michal@fykos.cz>
- * @author Michal Červeňák <miso@fykos.cz>
- */
-$meta['remote_path_mask'] = array('string');
+$meta['remote_path_mask'] = ['string'];
 
+$meta['page_path_mask_cs'] = ['string'];
+$meta['page_path_mask_en'] = ['string'];
 
-$meta['page_path_mask_cs'] = array('string');
-$meta['page_path_mask_en'] = array('string');
+$meta['series_template'] = ['string'];
 
-$meta['series_template'] = array('string');
-$meta['task_template'] = array('string');
-$meta['task_template_search'] = array('string');
-$meta['im_convert'] = array('string');
+$meta['brochure_path_cs'] = ['string'];
+$meta['brochure_path_en'] = ['string'];
 
+$meta['solution_path_cs'] = ['string'];
+$meta['solution_path_en'] = ['string'];
+
+$meta['archive_path_cs'] = ['string'];
+$meta['archive_path_en'] = ['string'];
