@@ -1,20 +1,6 @@
 <?php
 
-/**
- * DokuWiki Plugin fkstaskrepo (Syntax Component)
- *
- * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
- * @author  Michal Koutný <michal@fykos.cz>
- */
-// must be run within Dokuwiki
-if (!defined('DOKU_INC')) die();
-
 class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
-
-    /**
-     * @var helper_plugin_fksdownloader
-     */
-    private $downloader;
 
     /**
      *
@@ -23,7 +9,6 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
     private $helper;
 
     function __construct() {
-        $this->downloader = $this->loadHelper('fksdownloader');
         $this->helper = $this->loadHelper('fkstaskrepo');
     }
 
@@ -66,7 +51,7 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
      * @param Doku_Handler $handler The handler
      * @return array Data for the renderer
      */
-    public function handle($match, $state, $pos, Doku_Handler &$handler) {
+    public function handle($match, $state, $pos, Doku_Handler $handler) {
         $parameters = $this->extractParameters($match);
         return [
             'state' => $state,
@@ -82,7 +67,7 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
      * @param array $data The data from the handler() function
      * @return bool If rendering was successful.
      */
-    public function render($mode, Doku_Renderer &$renderer, $data) {
+    public function render($mode, \Doku_Renderer $renderer, $data) {
         $parameters = $data['parameters'];
         $state = $data['state'];
         switch ($state) {
@@ -91,38 +76,26 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
                 switch ($mode) {
                     case 'xhtml':
                         $renderer->nocache();
-                        $problemData = $this->helper->getProblemData($parameters['year'],
+                        $problemData = new \PluginFKSTaskRepo\Task(
+                            $parameters['year'],
                             $parameters['series'],
                             $parameters['problem'],
                             $parameters['lang']);
-                        $problemData['lang'] = $parameters['lang'];
-                        $classes = [];
+                        $problemData->load();
                         $renderer->doc .= '<div class="task-repo task">';
-                        $this->renderContent($renderer, $problemData, $classes, !!$parameters['full']);
+                        $this->renderContent($renderer, $problemData, !!$parameters['full']);
                         $renderer->doc .= '</div>';
                         return false;
                     case 'text':
-                        try {
-                            $problemData = $this->helper->getProblemData($parameters['year'],
-                                $parameters['series'],
-                                $parameters['problem'],
-                                $parameters['lang']);
-                            foreach ($problemData as $key => $value) {
-                                $renderer->doc .= "$key: $value\n";
-                            }
-                        } catch (fkstaskrepo_exception $e) {
-                            $renderer->nocache();
-                            msg($e->getMessage(), -1);
-                        }
-                        break;
-                    case 'metadata':
-                        $templateFile = wikiFN($this->getConf('task_template'));
-                        $problemFile = $this->helper->getProblemFile($parameters['year'],
+                        $problemData = new \PluginFKSTaskRepo\Task(
+                            $parameters['year'],
                             $parameters['series'],
                             $parameters['problem'],
                             $parameters['lang']);
-                        // $this->addDependencies($renderer, [$templateFile, $problemFile, $seriesFile]);
-                        return true;
+
+                        $renderer->doc .= $problemData->getTask();
+
+                        break;
                     default:
                         return false;
                 }
@@ -134,45 +107,37 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
         return false;
     }
 
-    private function addDependencies(Doku_Renderer &$renderer, $files) {
-        $name = $this->getPluginName();
-        if (isset($renderer->meta['relation'][$name])) {
-            foreach ($files as $file) {
-                if (!in_array($file, $renderer->meta['relation'][$name])) {
-                    $renderer->meta['relation'][$name][] = $file;
-                }
-            }
-        } else {
-            $renderer->meta['relation'][$name] = $files;
-        }
-    }
+    private function renderContent(Doku_Renderer &$renderer, \PluginFKSTaskRepo\Task $data, $full = false) {
 
-    private function renderContent(Doku_Renderer &$renderer, $data, $classes, $full = false) {
-        $renderer->doc .= '<div class="mb-3" data-label="' . $data['label'] . '" class="' . implode(' ', $classes) .
-            '">';
+        $renderer->doc .= '<div class="mb-3" data-label="' . $data->getLabel() . '">';
         $this->renderHeader($renderer, $data, $full);
-        $this->renderFigures($renderer, $data, $full);
+        $this->renderFigures($renderer, $data);
         $this->renderTask($renderer, $data);
         // $this->renderSolutions();
         $this->renderTags($renderer, $data);
-        /*  $renderer->doc .= '<a href="' . wl(null, [
-                  'do' => 'plugin_fkstaskrepo',
-                  'task[do]' => 'edit',
-                  'task[year]' => $data['year'],
-                  'task[series]' => $data['series'],
-                  'task[problem]' => $data['problem'],
-                  'task[lang]' => $data['lang'],
-
-              ]) . '">Tu</a>';*/
+        $this->renderEditButton($renderer, $data);
+        // TODO linky na upravovanie
         $renderer->doc .= '</div>';
     }
 
-    private function renderFigures(Doku_Renderer &$renderer, $data, $full) {
-        if (isset($data['figures']) && is_array($data['figures'])) {
-            foreach ($data['figures'] as $figure) {
-                $renderer->doc .= '<figure class="col-xl-3 col-lg-4 col-md-5 col-sm-6">';
+    private function renderEditButton(Doku_Renderer &$renderer, \PluginFKSTaskRepo\Task $data) {
+        $form = new \dokuwiki\Form\Form();
+        $form->setHiddenField('do', 'plugin_fkstaskrepo');
+        $form->setHiddenField('task[do]', 'edit');
+        $form->setHiddenField('task[year]', $data->getYear());
+        $form->setHiddenField('task[series]', $data->getSeries());
+        $form->setHiddenField('task[problem]', $data->getLabel());
+        $form->setHiddenField('task[lang]', $data->getLang());
+        $form->addButton('submit', 'Edit')->addClass('btn btn-warning');
+        $renderer->doc .= $form->toHTML();
+    }
+
+    private function renderFigures(Doku_Renderer &$renderer, \PluginFKSTaskRepo\Task $data) {
+        if (is_array($data->getFigures())) {
+            foreach ($data->getFigures() as $figure) {
+                $renderer->doc .= '<figure class="col-xl-4 col-lg-5 col-md-6 col-sm-12">';
                 $renderer->doc .= '<img src="' . ml($figure['path']) . '" alt="figure" />';
-                $renderer->doc .= '<figcaption data-lang="' . $data['lang'] . '" >';
+                $renderer->doc .= '<figcaption data-lang="' . $data->getLang() . '" >';
                 $renderer->doc .= $renderer->render_text($figure['caption']);
                 $renderer->doc .= '</figcaption>';
                 $renderer->doc .= '</figure>';
@@ -180,22 +145,22 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
         }
     }
 
-    private function renderTags(Doku_Renderer &$renderer, $data) {
-        $tags = $this->helper->loadTags($data['year'], $data['series'], $data['label']);
+    private function renderTags(Doku_Renderer &$renderer, \PluginFKSTaskRepo\Task $data) {
+        $tags = $this->helper->loadTags($data->getYear(), $data->getSeries(), $data->getLabel());
         foreach ($tags as $tag) {
-            $renderer->doc .= $this->helper->getTagLink($tag, null, $data['lang']);
+            $renderer->doc .= $this->helper->getTagLink($tag, null, $data->getLang());
         }
     }
 
-    private function renderTask(Doku_Renderer &$renderer, $data) {
+    private function renderTask(Doku_Renderer &$renderer, \PluginFKSTaskRepo\Task $data) {
         // TODO trim is very ugly
-        $renderer->doc .= '<div>' . $renderer->render_text(trim($data['task'])) . '</div>';
+        $renderer->doc .= '<div>' . $renderer->render_text(trim($data->getTask())) . '</div>';
     }
 
-    private function renderHeader(Doku_Renderer &$renderer, $data, $full = false) {
+    private function renderHeader(Doku_Renderer &$renderer, \PluginFKSTaskRepo\Task $data, $full = false) {
         $pointsLabel = $this->getPointsLabel($data);
-        $problemLabel = $data['label'] . '. ';//. $this->helper->getSpecLang('label', $data['lang']);
-        $problemName = $data['name'];
+        $problemLabel = $data->getLabel() . '. ';//. $this->helper->getSpecLang('label', $data['lang']);
+        $problemName = $data->getName();
         $seriesLabel = $this->getSeriesLabel($data);
         $yearLabel = $this->getYearLabel($data);
         $renderer->doc .= '<h3>';
@@ -210,34 +175,34 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
         $renderer->doc .= '</h3>';
     }
 
-    private function getPointsLabel($data) {
-        $pointsLabel = $data['points'] . ' ';
-        switch ($data['points']) {
+    private function getPointsLabel(\PluginFKSTaskRepo\Task $data) {
+        $pointsLabel = $data->getPoints() . ' ';
+        switch ($data->getPoints()) {
             case 1:
-                $pointsLabel .= $this->helper->getSpecLang('points-N-SG_vote', $data['lang']);
+                $pointsLabel .= $this->helper->getSpecLang('points-N-SG_vote', $data->getLang());
                 break;
             case 2:
             case 3:
             case 4:
-                $pointsLabel .= $this->helper->getSpecLang('points-N-PL_vote', $data['lang']);
+                $pointsLabel .= $this->helper->getSpecLang('points-N-PL_vote', $data->getLang());
                 break;
             default:
-                $pointsLabel .= $this->helper->getSpecLang('points-G-PL_vote', $data['lang']);
+                $pointsLabel .= $this->helper->getSpecLang('points-G-PL_vote', $data->getLang());
                 break;
         }
         return $pointsLabel;
     }
 
-    private function getSeriesLabel($data) {
-        return $data['series'] . '. ' . $this->helper->getSpecLang('series', $data['lang']);
+    private function getSeriesLabel(\PluginFKSTaskRepo\Task $data) {
+        return $data->getSeries() . '. ' . $this->helper->getSpecLang('series', $data->getLang());
     }
 
-    private function getYearLabel($data) {
-        return $data['year'] . '. ' . $this->helper->getSpecLang('years', $data['lang']);
+    private function getYearLabel(\PluginFKSTaskRepo\Task $data) {
+        return $data->getYear() . '. ' . $this->helper->getSpecLang('years', $data->getLang());
     }
 
-    private function getProblemIcon($data) {
-        switch ($data['label']) {
+    private function getProblemIcon(\PluginFKSTaskRepo\Task $data) {
+        switch ($data->getLabel()) {
             case '1':
             case '2':
                 return '<span class="fa fa-smile-o"></span>';

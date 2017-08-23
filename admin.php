@@ -67,9 +67,6 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
         }
     }
 
-    /**
-     * Render HTML output, e.g. helpful text and a form
-     */
     public function html() {
         global $ID;
         ptln('<h1>' . $this->getLang('menu') . '</h1>');
@@ -179,52 +176,67 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
 
     private function prepareProblem(SimpleXMLElement $problem, $year, $series, $lang) {
         // preprocess figure
-        $figure = $this->helper->extractFigure($problem, $lang);
-        $figuresPaths = $this->saveFigure($figure, $year, $series, (string)$problem->label, $lang);
-
-        $problemData = [];
+        $task = new \PluginFKSTaskRepo\Task($year, $series, (string)$problem->label, $lang);
+        $task->extractFigure($problem);
         /**
          * @var $child SimpleXMLElement
          */
         foreach ($problem->children() as $k => $child) {
-            if ($this->helper->isActualLang($child, $lang)) {
-                /* is array? */
-                if ($child->count()) {
-                    $problemData[$k] = (array)$child->children();
-                } else {
-                    if ((trim((string)$child) != "")) {
-                        $problemData[$k] = (string)$child;
-                    }
+            if ($task->isActualLang($child)) {
+                switch ($k) {
+                    case 'number':
+                        $task->setNumber((int)$child);
+                        break;
+                    case'name':
+                        $task->setName((string)$child);
+                        break;
+                    case 'origin':
+                        $task->setOrigin((string)$child);
+                        break;
+                    case'points':
+                        $task->setPoints((int)$child);
+                        break;
+                    case 'task':
+                        $task->setTask((string)$child);
+                        break;
+                    case 'authors':
+                        $authors = (array)$child->children();
+                        if ($authors['author']) {
+                            if (is_scalar($authors['author'])) {
+                                $task->setAuthors([$authors['author']]);
+                            } else {
+                                $task->setAuthors($authors['author']);
+                            }
+                        };
+                        break;
+                    case 'solution-authors':
+                        $solutionAuthors = (array)$child->children();
+                        if ($solutionAuthors['solution-author']) {
+                            if (is_scalar($solutionAuthors['solution-author'])) {
+                                $task->setSolutionAuthors([$solutionAuthors['solution-author']]);
+                            } else {
+                                $task->setSolutionAuthors($solutionAuthors['solution-author']);
+                            }
+                        };
+                        break;
                 }
             }
         }
-        $problemData['figures'] = $figuresPaths;
-        $problemData['task'] = $this->helper->texPreproc->preproc($problemData['task']);
-        $this->helper->updateProblemData($problemData, $year, $series, $problemData['label'], $lang);
-        $this->helper->storeTags($year, $series, $problemData['label'], (array)$problem->topics->topic);
-        return '<fkstaskrepo lang="' . $lang . '" year="' . $year . '" series="' . $series . '" problem="' .
-        $problemData['label'] . '"/>' . "\n";
+        $task->save();
+        $this->helper->storeTags($task->getYear(), $task->getSeries(), $task->getLabel(), (array)$problem->topics->topic);
+        return '<fkstaskrepo lang="' . $task->getLang() . '" year="' . $task->getYear() . '" series="' . $task->getSeries() . '" problem="' .
+            $task->getLabel() . '"/>' . "\n";
 
     }
 
-    private function saveFigure($figure, $year, $series, $label, $lang) {
-        $figuresPaths = [];
-        if (!empty($figure) && !empty($figure['data'])) {
-            foreach ($figure['data'] as $type => $imgContent) {
-                if (!$type) {
-                    msg('invalid or empty extenson figure: ' . $type, -1);
-                    continue;
-                }
-                $name = $this->helper->getImagePath($year, $series, $label, $lang, $type);
-                if (io_saveFile(mediaFN($name), (string)trim($imgContent))) {
-                    msg('image: ' . $name . ' for language ' . $lang . ' has been saved', 1);
-                }
-                $figuresPaths[] = ['path' => $name, 'caption' => $figure['caption']];
-            }
-        }
-        return $figuresPaths;
-    }
-
+    /**
+     * @param $pagePath
+     * @param $year
+     * @param $series
+     * @param $languages
+     * @param $lang
+     * @deprecated
+     */
     private function setTranslations($pagePath, $year, $series, $languages, $lang) {
         global $INFO;
 

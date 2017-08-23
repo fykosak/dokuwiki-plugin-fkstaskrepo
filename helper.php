@@ -11,17 +11,14 @@ if (!defined('DOKU_INC')) die();
 
 require_once 'tex_preproc.php';
 
+require_once 'inc/Task.php';
+
 class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
 
     /**
      * @var helper_plugin_fksdownloader
      */
     private $downloader;
-
-    /**
-     * @var fkstaskrepo_tex_preproc;
-     */
-    public $texPreproc;
 
     /**
      * @var helper_plugin_sqlite
@@ -34,7 +31,6 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
 
     public function __construct() {
         $this->downloader = $this->loadHelper('fksdownloader');
-        $this->texPreproc = new fkstaskrepo_tex_preproc();
 
 // initialize sqlite
         $this->sqlite = $this->loadHelper('sqlite', false);
@@ -51,31 +47,10 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         }
     }
 
-    public function getProblemData($year, $series, $problem, $lang) {
-        $localData = $this->getLocalData($year, $series, $problem, $lang);
-        return array_merge($localData,
-            [
-                'year' => $year,
-                'series' => $series,
-                'problem' => $problem,
-                'lang' => $lang,
-            ]);
-    }
 
     public function updateProblemData($data, $year, $series, $problem, $lang) {
         $filename = $this->getProblemFile($year, $series, $problem, $lang);
         io_saveFile($filename, serialize($data));
-    }
-
-    private function getLocalData($year, $series, $problem, $lang) {
-        $filename = $this->getProblemFile($year, $series, $problem, $lang);
-        $content = io_readFile($filename, false);
-        if ($content) {
-            $data = unserialize($content);
-        } else {
-            $data = [];
-        }
-        return $data;
     }
 
     /*     * **************
@@ -108,11 +83,11 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
     public function storeTags($year, $series, $problem, $tags) {
         // const tableProblem="problem";
         // allocate problem ID
-        $sql = 'select problem_id from problem where year = ? and series = ? and problem = ?';
+        $sql = 'SELECT problem_id FROM problem WHERE year = ? AND series = ? AND problem = ?';
         $res = $this->sqlite->query($sql, $year, $series, $problem);
         $problemId = $this->sqlite->res2single($res);
         if (!$problemId) {
-            $this->sqlite->query('insert into problem (year, series, problem) values(?, ?, ?)',
+            $this->sqlite->query('INSERT INTO problem (year, series, problem) VALUES(?, ?, ?)',
                 $year,
                 $series,
                 $problem);
@@ -122,22 +97,22 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         // flush and insert tags
         $this->sqlite->query('begin transaction');
 
-        $this->sqlite->query('delete from problem_tag where problem_id = ?', $problemId);
+        $this->sqlite->query('DELETE FROM problem_tag WHERE problem_id = ?', $problemId);
 
         foreach ($tags as $tag) {
             // allocate tag ID
-            $sql = 'select tag_id from tag where tag_cs = ?';
+            $sql = 'SELECT tag_id FROM tag WHERE tag_cs = ?';
             $res = $this->sqlite->query($sql, $tag);
             $tagId = $this->sqlite->res2single($res);
             if (!$tagId) {
-                $this->sqlite->query('insert into tag (tag_cs) values(?)', $tag);
+                $this->sqlite->query('INSERT INTO tag (tag_cs) VALUES(?)', $tag);
                 $res = $this->sqlite->query($sql, $tag);
                 $tagId = $this->sqlite->res2single($res);
             }
-            $this->sqlite->query('insert into problem_tag (problem_id, tag_id) values(?, ?)', $problemId, $tagId);
+            $this->sqlite->query('INSERT INTO problem_tag (problem_id, tag_id) VALUES(?, ?)', $problemId, $tagId);
         }
 
-        $this->sqlite->query('delete from tag where tag_id not in (select tag_id from problem_tag)'); // garbage collection
+        $this->sqlite->query('DELETE FROM tag WHERE tag_id NOT IN (SELECT tag_id FROM problem_tag)'); // garbage collection
         $this->sqlite->query('commit transaction');
     }
 
@@ -148,7 +123,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
      * @return array
      */
     public function loadTags($year, $series, $problem) {
-        $sql = 'select problem_id from problem where year = ? and series = ? and problem = ?';
+        $sql = 'SELECT problem_id FROM problem WHERE year = ? AND series = ? AND problem = ?';
         $res = $this->sqlite->query($sql, $year, $series, $problem);
         $problemId = $this->sqlite->res2single($res);
 
@@ -156,7 +131,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
             return [];
         }
 
-        $res = $this->sqlite->query('select t.tag_cs from tag t left join problem_tag pt on pt.tag_id = t.tag_id where pt.problem_id =?',
+        $res = $this->sqlite->query('SELECT t.tag_cs FROM tag t LEFT JOIN problem_tag pt ON pt.tag_id = t.tag_id WHERE pt.problem_id =?',
             $problemId);
         $result = [];
         foreach ($this->sqlite->res2arr($res) as $row) {
@@ -166,20 +141,20 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
     }
 
     public function getTags() {
-        $sql = 'select t.tag_cs as tag, count(pt.problem_id) as count from tag t left join problem_tag pt on pt.tag_id = t.tag_id group by t.tag_id order by 1';
+        $sql = 'SELECT t.tag_cs AS tag, count(pt.problem_id) AS count FROM tag t LEFT JOIN problem_tag pt ON pt.tag_id = t.tag_id GROUP BY t.tag_id ORDER BY 1';
         $res = $this->sqlite->query($sql);
         return $this->sqlite->res2arr($res);
     }
 
     public function getProblemsByTag($tag) {
-        $sql = 'select tag_id from tag where tag_cs = ?';
+        $sql = 'SELECT tag_id FROM tag WHERE tag_cs = ?';
         $res = $this->sqlite->query($sql, $tag);
         $tagId = $this->sqlite->res2single($res);
         if (!$tagId) {
             return [];
         }
 
-        $res = $this->sqlite->query('select distinct p.year, p.series, p.problem from problem p left join problem_tag pt on pt.problem_id = p.problem_id where pt.tag_id = ? order by 1 desc, 2 desc, 3 asc',
+        $res = $this->sqlite->query('SELECT DISTINCT p.year, p.series, p.problem FROM problem p LEFT JOIN problem_tag pt ON pt.problem_id = p.problem_id WHERE pt.tag_id = ? ORDER BY 1 DESC, 2 DESC, 3 ASC',
             $tagId);
         $result = [];
         foreach ($this->sqlite->res2arr($res) as $row) {
@@ -200,44 +175,6 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         $conf['lang'] = $confLang;
         $this->localised = false;
         return $l;
-    }
-
-    public function getImagePath($year, $series, $problem, $lang, $type = null) {
-        if ($type) {
-            return $this->getPluginName() . ':figure:year' . $year . '_series' . $series . '_' . $problem . '_' .
-            $lang . '.' . $type;
-        }
-        return $this->getPluginName() . ':figure:year' . $year . '_series' . $series . '_' . $problem . '_' . $lang;
-    }
-
-    /**
-     * return true when xml:lang is same as $lang or xml:lang is not set
-     * @param SimpleXMLElement $e element
-     * @param string $lang
-     * @return bool
-     */
-    public function isActualLang(SimpleXMLElement $e, $lang) {
-        return (($lang == (string)$e->attributes(self::XMLNamespace)->lang) ||
-            (string)$e->attributes(self::XMLNamespace)->lang == "");
-    }
-
-    public function extractFigure(SimpleXMLElement $problem, $lang) {
-        $d = [];
-        if ((string)$problem->figures != "") {
-            foreach ($problem->figures->figure as $figure) {
-                if ($this->isActualLang($figure, $lang)) {
-                    $d['caption'] = (string)$figure->caption;
-                    /**
-                     * @var $data SimpleXMLElement
-                     */
-                    foreach ($figure->data as $data) {
-                        $type = (string)$data->attributes()->extension;
-                        $d['data'][$type] = trim((string)$data);
-                    }
-                }
-            }
-        }
-        return $d;
     }
 
     public function getTagLink($tag, $size = 5, $lang = 'cs', $count = 0, $active = false) {
