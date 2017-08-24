@@ -77,6 +77,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
 
         $form = new \dokuwiki\Form\Form();
         $form->setHiddenField('task[do]', 'update');
+        $form->setHiddenField('do', 'plugin_fkstaskrepo');
 
         foreach (\PluginFKSTaskRepo\Task::$readonlyFields as $field) {
             $form->addTagOpen('div')->addClass('form-group');
@@ -150,9 +151,6 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
             $form->addTagClose('div');
         }
         $this->addTagsField($form, $problem);
-
-
-        /* */
         $form->addButton('submit', 'Uložiť');
         echo $form->toHTML();
     }
@@ -172,7 +170,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
             if (is_array($topics)) {
                 $isIn = in_array($tag, $topics);
             }
-            $input = $form->addCheckbox('problem[topics][topic][]', $this->getLang('tag__' . $tag))->val($tag);
+            $input = $form->addCheckbox('problem[topics][]', $this->getLang('tag__' . $tag))->val($tag);
             if ($isIn) {
                 $input->attr('checked', 'checked');
             }
@@ -199,20 +197,20 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
 
     private function updateProblem(Doku_Event &$event) {
         global $INPUT;
-        $data = [];
+
         $problemData = $INPUT->param('problem');
-        $problemData['task'] = cleanText($INPUT->param('problem')['task']);
-        unset($problemData['authors']);
-        unset ($problemData['solution-authors']);
-        $problemData['authors']['author'] = array_map('trim', explode(',', $INPUT->param('problem')['authors']));
-        $problemData['solution-authors']['solution-author'] = array_map('trim',
-            explode(',', $INPUT->param('problem')['solution-authors']));
-//TODO
-        $this->helper->updateProblemData($data,
-            $problemData['year'],
-            $problemData['series'],
-            $problemData['problem'],
-            $problemData['lang']);
+
+        $problem = new \PluginFKSTaskRepo\Task($problemData['year'], $problemData['series'], $problemData['label'], $problemData['lang']);
+        $problem->setTask(cleanText($INPUT->param('problem')['task']));
+        $problem->setOrigin($INPUT->param('problem')['origin']);
+        $problem->setNumber((int)$INPUT->param('problem')['number']);
+        $problem->setName($INPUT->param('problem')['name']);
+        $problem->setPoints((int)$INPUT->param('problem')['points']);
+        $problem->setFigures($INPUT->param('problem')['figures']);
+        $problem->setSolutionAuthors(explode(',', $INPUT->param('problem')['solution-authors']));
+        $problem->setAuthors(explode(',', $INPUT->param('problem')['authors']));
+        $problem->save();
+        $this->helper->storeTags($problem->getYear(), $problem->getSeries(), $problem->getLabel(), $INPUT->param('problem')['topics']);
         $event->data = 'show';
     }
 

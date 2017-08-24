@@ -116,7 +116,6 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
         // $this->renderSolutions();
         $this->renderTags($renderer, $data);
         $this->renderEditButton($renderer, $data);
-        // TODO linky na upravovanie
         $renderer->doc .= '</div>';
     }
 
@@ -128,7 +127,7 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
         $form->setHiddenField('task[series]', $data->getSeries());
         $form->setHiddenField('task[problem]', $data->getLabel());
         $form->setHiddenField('task[lang]', $data->getLang());
-        $form->addButton('submit', 'Edit')->addClass('btn btn-warning');
+        $form->addButton('submit', $this->getLang('edit'))->addClass('btn btn-warning');
         $renderer->doc .= $form->toHTML();
     }
 

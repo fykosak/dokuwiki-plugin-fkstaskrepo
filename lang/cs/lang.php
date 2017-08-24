@@ -1,22 +1,37 @@
 <?php
-
+/**
+ * @var array $lang
+ * @author Michal Koutny, Michal Červeňák
+ */
 $lang['menu'] = 'Upload úloh';
 
 $lang['name'] = 'Název';
 $lang['language'] = 'Jazyk';
+$lang['lang'] = 'Jazyk';
 $lang['origin'] = 'Původ';
-$lang['problem_not_found'] = 'Úloha \'%s\' nenalezena.';
+$lang['label'] = $lang['problem'];
+$lang['number'] = 'Číslo';
+$lang['points'] = 'Body';
+$lang['task'] = 'Úloha';
 $lang['problem'] = 'Úloha';
 $lang['tags'] = 'Štítky';
+$lang['topics'] = $lang['tags'];
 $lang['series'] = 'Série';
-$lang['undefined_template_variable'] = 'Nedefinovaná proměnná \'%s\' v templatu.';
-$lang['unexpected_value'] = 'Neočekávaná hodnota \'%s\'.';
-$lang['update'] = 'Update';
-$lang['xml_file'] = 'XML soubor';
-$lang['xml_source_help'] = 'Nechej prázdné pro download souboru z přednastaveného serveru (Astrid).';
 $lang['year'] = 'Ročník';
 $lang['years'] = 'Ročníku';
+$lang['authors'] = 'Autori';
+$lang['solution-authors'] = 'Autori rešení';
 
+
+$lang['problem_not_found'] = 'Úloha \'%s\' nenalezena.';
+
+$lang['undefined_template_variable'] = 'Nedefinovaná proměnná \'%s\' v templatu.';
+$lang['unexpected_value'] = 'Neočekávaná hodnota \'%s\'.';
+
+$lang['update'] = 'Update';
+
+$lang['xml_file'] = 'XML soubor';
+$lang['xml_source_help'] = 'Nechej prázdné pro download souboru z přednastaveného serveru (Astrid).';
 
 $lang['deadline'] = 'Termín uploadu';
 $lang['deadline-post'] = 'Termín odeslání poštou';
@@ -24,14 +39,9 @@ $lang['deadline-post'] = 'Termín odeslání poštou';
 $lang['deadline-post-format'] = 'j. n. Y';
 $lang['deadline-format'] = 'j. n. Y H:i:s';
 
-$lang['test'] = 'TEST CS';
-$lang['label'] = $lang['problem'];
-
 $lang['points-N-SG_vote'] = 'bod';
 $lang['points-N-PL_vote'] = 'body';
 $lang['points-G-PL_vote'] = 'bodů';
-
-$lang['task'] = 'Úloha';
 
 $lang['hard_update'] = 'Tvrdý upadte';
 
@@ -39,6 +49,8 @@ $lang['batch_select'] = 'Výběr série';
 
 $lang['brochure'] = 'Brožurka se zadáním';
 $lang['solution'] = 'Řešení';
+
+$lang['edit'] = 'Upravit úlohu';
 
 $lang['tag__mechHmBodu'] = 'mechanika hmotnéhop bodu';
 $lang['tag__mechTuhTel'] = 'machanika tuháho telesa';

@@ -47,23 +47,12 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         }
     }
 
-
-    public function updateProblemData($data, $year, $series, $problem, $lang) {
-        $filename = $this->getProblemFile($year, $series, $problem, $lang);
-        io_saveFile($filename, serialize($data));
-    }
-
     /*     * **************
      * XML data
      */
     private function getPath($year, $series) {
         $mask = $this->getConf('remote_path_mask');
         return sprintf($mask, $year, $series);
-    }
-
-    public function getProblemFile($year, $series, $problem, $lang) {
-        $id = $this->getPluginName() . ":" . $year . ":" . $series . "-" . $problem . "_" . $lang;
-        return metaFN($id, '.dat');
     }
 
     public function getSeriesData($year, $series, $expiration = helper_plugin_fksdownloader::EXPIRATION_NEVER) {
