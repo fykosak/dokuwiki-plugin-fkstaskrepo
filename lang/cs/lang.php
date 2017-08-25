@@ -19,8 +19,9 @@ $lang['topics'] = $lang['tags'];
 $lang['series'] = 'Série';
 $lang['year'] = 'Ročník';
 $lang['years'] = 'Ročníku';
-$lang['authors'] = 'Autori';
-$lang['solution-authors'] = 'Autori rešení';
+$lang['authors'] = 'Autoři';
+$lang['solution-authors'] = 'Autoři rešení';
+$lang['figures'] = 'Přílohy';
 
 
 $lang['problem_not_found'] = 'Úloha \'%s\' nenalezena.';

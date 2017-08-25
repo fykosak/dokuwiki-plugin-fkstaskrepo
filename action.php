@@ -65,7 +65,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
             return;
         }
         $event->preventDefault();
-        echo '<h1>Edit task</h1>';
+        echo '<h1>Úprava úlohy</h1>';
 
         $problem = new \PluginFKSTaskRepo\Task(
             $INPUT->param('task')['year'],
@@ -76,6 +76,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         $problem->load();
 
         $form = new \dokuwiki\Form\Form();
+        $form->addClass('task-repo-edit');
         $form->setHiddenField('task[do]', 'update');
         $form->setHiddenField('do', 'plugin_fkstaskrepo');
 
@@ -94,9 +95,6 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
                 case 'label':
                     $this->addStaticField($form, $field, $problem->getLabel());
                     break;
-                case 'points':
-                    $this->addStaticField($form, $field, $problem->getPoints());
-                    break;
                 case 'lang':
                     $this->addStaticField($form, $field, $problem->getlang());
                     break;
@@ -107,28 +105,40 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
             $form->addTagOpen('div')->addClass('form-group');
             switch ($field) {
                 case 'task':
-                    $form->addTextarea('problem[task]', $this->getLang($field))->attrs(['class' => 'form-control'])
+                    $form->addTextarea('problem[task]', $this->getLang($field))->attrs(['class' => 'form-control', 'rows' => 5])
                         ->val($problem->getTask());
                     break;
                 case 'figures':
-                    $form->addFieldsetOpen('figures');
+                    $form->addFieldsetOpen($this->getLang('figures'));
                     $figures = $problem->getFigures();
+                    $form->addTagOpen('table')->addClass('figures table table-bordered">');
+                    $form->addHTML('<tbody><tr><td>Cesta</td><td>Popisek</td><td></td></tr></tbody>');
                     if (count($figures)) {
                         foreach ($figures as $key => $figure) {
-                            $form->addTextInput('problem[figures][' . $key . '][path]', 'figures_path')
-                                ->val($figure['path']);
-                            $form->addTextInput('problem[figures][' . $key . '][caption]', 'figure_caption')
-                                ->val($figure['caption']);
+                            $form->addTagOpen('tr');
+
+                            $form->addTagOpen('td');
+                            $form->addTextInput('')->val($figure['path']);
+                            $form->addTagClose('td');
+                            $form->addTagOpen('td');
+                            $form->addTextInput('')->val($figure['caption']);
+                            $form->addTagClose('td');
+
+                            $form->addHTML('<td><button>X</button></td>');
+
+                            $form->addTagClose('tr');
                         }
-                    } else {
-                        $form->addHTML('<span class="badge badge-warning">No figures</span>');
                     }
+                    $form->addTagClose('table');
+
+                    $form->addHTML('<button class="btn btn-success btn-sm" onclick="figureManager.add();" type="button">Přidat</button>');
 
                     $form->addFieldsetClose();
                     break;
                 case 'name':
                     $form->addTextInput('problem[name]', $this->getLang($field))
                         ->attrs(['class' => 'form-control'])->val($problem->getName());
+                    $form->addHTML('<small class="form-text">Jméno úlohy bude potřeba opravit i ve FKSDB.</small>');
                     break;
                 case 'origin':
                     $form->addTextInput('problem[origin]', $this->getLang($field))
@@ -145,13 +155,22 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
                     $form->addTextInput('problem[solution-authors]', $this->getLang($field))
                         ->attrs(['class' => 'form-control'])->val($value);
                     break;
+                case 'points':
+                    $inputElement = new dokuwiki\Form\InputElement('number', 'problem[points]', $this->getLang($field));
+                    $inputElement->val($problem->getPoints());
+                    $inputElement->attrs(['class' => 'form-control']);
+                    $form->addElement($inputElement);
+                    $form->addHTML('<small class="form-text">Body za úlohu budou potřeba opravit i ve FKSDB.</small>');
+                    break;
                 default:
                     var_dump($field);
             }
             $form->addTagClose('div');
         }
         $this->addTagsField($form, $problem);
-        $form->addButton('submit', 'Uložiť');
+        $form->addHTML('<hr>');
+        $form->addHTML('<p>Nezapomeňte upravit všechny jazykové verze.</p>');
+        $form->addButton('submit', 'Uložit')->addClass('btn btn-primary');
         echo $form->toHTML();
     }
 
@@ -161,8 +180,9 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
     }
 
     private function addTagsField(\dokuwiki\Form\Form $form, \PluginFKSTaskRepo\Task $data) {
-        $form->addFieldsetOpen('tags');
+        $form->addFieldsetOpen($this->getLang('tags'));
 
+        $form->addTagOpen('div')->addClass('row');
         $topics = $this->helper->loadTags($data->getYear(), $data->getSeries(), $data->getLabel());
         foreach (self::$tags as $tag) {
             $form->addTagOpen('div')->addClass('form-check col-lg-4 col-md-6 col-sm-12');
@@ -176,6 +196,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
             }
             $form->addTagClose('div');
         }
+        $form->addTagClose('div');
         $form->addFieldsetClose();
     }
 

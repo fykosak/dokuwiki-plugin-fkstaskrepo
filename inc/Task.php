@@ -13,16 +13,16 @@ class Task {
 
     public static $editableFields = [
         'name',
+        'points',
         'origin',
         'task',
-        'figures',
-        'authors',
+         'authors',
         'solution-authors',
+        'figures',
     ];
 
     public static $readonlyFields = [
         'year',
-        'points',
         'number',
         'series',
         'label',
