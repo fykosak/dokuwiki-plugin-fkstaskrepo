@@ -52,7 +52,26 @@ $lang['batch_select'] = 'Select year';
 
 $lang['edit'] = 'Edit problem';
 
-$lang['tag__termoDyn'] = "thermodynamics";
-$lang['tag__mechHmBodu'] = "thermodynamics";
-$lang['tag__termoDyn'] = "thermodynamics";
-
+$lang['tag__mechHmBodu'] = 'mechanics of a material point';
+$lang['tag__mechTuhTel'] = 'solid mechanics';
+$lang['tag__hydroMech'] = 'hydromechanics';
+$lang['tag__mechPlynu'] = 'gas mechanics';
+$lang['tag__gravPole'] = 'gravitational field';
+$lang['tag__kmitani'] = 'oscillation';
+$lang['tag__vlneni'] = 'wave';
+$lang['tag__molFyzika'] = 'molecular physics';
+$lang['tag__termoDyn'] = 'termodynamics';
+$lang['tag__statFyz'] = 'statistical physics';
+$lang['tag__optikaGeom'] = 'geometrical optics';
+$lang['tag__optikaVln'] = 'waves in optics';
+$lang['tag__elProud'] = 'electric current';
+$lang['tag__elPole'] = 'elektric field';
+$lang['tag__magPole'] = 'magnetic field';
+$lang['tag__relat'] = 'relativistic physics';
+$lang['tag__kvantFyz'] = 'quantum physics';
+$lang['tag__jadFyz'] = 'nuclear physics';
+$lang['tag__astroFyz'] = 'astrophysics';
+$lang['tag__matematika'] = 'mathematics';
+$lang['tag__chemie'] = 'chemistry';
+$lang['tag__biofyzika'] = 'biophysics';
+$lang['tag__other'] = 'other';
