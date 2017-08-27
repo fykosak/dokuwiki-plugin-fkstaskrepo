@@ -65,7 +65,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
             return;
         }
         $event->preventDefault();
-        echo '<h1>Úprava úlohy</h1>';
+        echo '<h1>' . $this->getLang('edit_form_title') . '</h1>';
 
         $problem = new \PluginFKSTaskRepo\Task(
             $INPUT->param('task')['year'],
@@ -138,7 +138,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
                 case 'name':
                     $form->addTextInput('problem[name]', $this->getLang($field))
                         ->attrs(['class' => 'form-control'])->val($problem->getName());
-                    $form->addHTML('<small class="form-text">Jméno úlohy bude potřeba opravit i ve FKSDB.</small>');
+                    $form->addHTML('<small class="form-text">' . $this->getLang('edit_form_name_warning') . '</small>');
                     break;
                 case 'origin':
                     $form->addTextInput('problem[origin]', $this->getLang($field))
@@ -160,17 +160,15 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
                     $inputElement->val($problem->getPoints());
                     $inputElement->attrs(['class' => 'form-control']);
                     $form->addElement($inputElement);
-                    $form->addHTML('<small class="form-text">Body za úlohu budou potřeba opravit i ve FKSDB.</small>');
+                    $form->addHTML('<small class="form-text">' . $this->getLang('edit_form_points_warning') . '</small>');
                     break;
-                default:
-                    var_dump($field);
             }
             $form->addTagClose('div');
         }
         $this->addTagsField($form, $problem);
         $form->addHTML('<hr>');
-        $form->addHTML('<p>Nezapomeňte upravit všechny jazykové verze.</p>');
-        $form->addButton('submit', 'Uložit')->addClass('btn btn-primary');
+        $form->addHTML('<p>' . $this->getLang('edit_form_submit_warning') . '</p>');
+        $form->addButton('submit', $this->getLang('save'))->addClass('btn btn-primary');
         echo $form->toHTML();
     }
 
@@ -255,3 +253,4 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
             $depends) : $depends;
     }
 }
+
