@@ -108,14 +108,16 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
     }
 
     private function renderContent(Doku_Renderer &$renderer, \PluginFKSTaskRepo\Task $data, $full = false) {
-
         $renderer->doc .= '<div class="mb-3" data-label="' . $data->getLabel() . '">';
         $this->renderHeader($renderer, $data, $full);
         $this->renderFigures($renderer, $data);
         $this->renderTask($renderer, $data);
         // $this->renderSolutions();
         $this->renderTags($renderer, $data);
-        $this->renderEditButton($renderer, $data);
+        global $ID;
+        if (auth_quickaclcheck($ID) >= AUTH_EDIT) {
+            $this->renderEditButton($renderer, $data);
+        }
         $renderer->doc .= '</div>';
     }
 

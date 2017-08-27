@@ -61,7 +61,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
 
     public function tplEditForm(Doku_Event &$event) {
         global $INPUT;
-        if ($event->data !== 'plugin_fkstaskrepo') {
+        if ($event->data !== 'plugin_fkstaskrepo' || !$this->isLogged()) {
             return;
         }
         $event->preventDefault();
@@ -178,7 +178,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
 
     public function editTask(Doku_Event &$event) {
         global $INPUT;
-        if ($event->data !== 'plugin_fkstaskrepo') {
+        if ($event->data !== 'plugin_fkstaskrepo' || !$this->isLogged()) {
             return;
         }
         $event->preventDefault();
@@ -194,6 +194,10 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
 
     private function updateProblem(Doku_Event &$event) {
         global $INPUT;
+
+        if (!$this->isLogged()) {
+            return false;
+        }
 
         $problemData = $INPUT->param('problem');
 
@@ -229,6 +233,14 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         }
         $cache->depends['files'] = !empty($cache->depends['files']) ? array_merge($cache->depends['files'],
             $depends) : $depends;
+    }
+
+    /**
+     * @return bool
+     */
+    private function isLogged () {
+        global $ID;
+        return auth_quickaclcheck($ID) >= AUTH_EDIT;
     }
 }
 
