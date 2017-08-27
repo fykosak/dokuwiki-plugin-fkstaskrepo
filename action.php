@@ -110,11 +110,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
                     break;
                 case 'figures':
                     $form->addFieldsetOpen($this->getLang('figures'));
-                    $figures = $problem->getFigures();
-                    $form->addHTML('<script type="text/javascript">figures = ');
-                    $form->addHTML(json_encode($figures));
-                    $form->addHTML(';</script>');
-                    $form->addTag('div')->addClass('figures');
+                    $form->addTag('div')->addClass('figures')->attr('data-value', json_encode($problem->getFigures()));
                     $form->addFieldsetClose();
                     break;
                 case 'name':

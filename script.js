@@ -26,7 +26,7 @@ jQuery(function () {
             '</div>';
     };
 
-    let html =  $.map( figures, (figure, index) => {
+    let html = $figureContainer.data('value').map((figure, index) => {
         return addRow(index, figure.path, figure.caption);
     }).join('');
 
