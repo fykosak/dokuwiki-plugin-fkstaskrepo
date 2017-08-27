@@ -6,10 +6,10 @@
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Michal Koutný <michal@fykos.cz>
  */
-// must be run within Dokuwiki
-if(!defined('DOKU_INC')) die();
 
-class fkstaskrepo_tex_lexer implements Iterator {
+namespace PluginFKSTaskRepo;
+
+class TexLexer implements \Iterator {
 
     const TOKEN_LBRACE = 0;
     const TOKEN_RBRACE = 1;
@@ -80,7 +80,7 @@ class fkstaskrepo_tex_lexer implements Iterator {
  * Macro -- control sequence in text neglecting arguments
  * Variant -- control sequence with particular no. of arguments
  */
-class fkstaskrepo_tex_preproc {
+class TexPreproc {
 
     const SAFETY_LIMIT = 10000;
 
@@ -214,7 +214,7 @@ class fkstaskrepo_tex_preproc {
         reset($ast);
         while (($it = current($ast)) !== false) {
             if(++$safety_counter > self::SAFETY_LIMIT){
-                throw new fkstaskrepo_exception('Infinite loop in parser.',-1);
+                throw new \Error('Infinite loop in parser.',-1);
             }
 
             if(is_array($it)){ // group
@@ -269,7 +269,7 @@ class fkstaskrepo_tex_preproc {
     }
 
     private function processText($text) {
-        var_dump($text);
+        //var_dump($text);
 
         return $text;
     }
@@ -277,20 +277,20 @@ class fkstaskrepo_tex_preproc {
     private function parse($text) {
         $stack = array(array());
         $current = &$stack[0];
-        $lexer = new fkstaskrepo_tex_lexer($text);
+        $lexer = new TexLexer($text);
 
         foreach ($lexer as $token) {
             switch ($token['type']) {
-                case fkstaskrepo_tex_lexer::TOKEN_LBRACE:
+                case TexLexer::TOKEN_LBRACE:
                     array_push($stack,array());
                     $current = & $stack[count($stack) - 1];
                     break;
-                case fkstaskrepo_tex_lexer::TOKEN_RBRACE:
+                case TexLexer::TOKEN_RBRACE:
                     $content = array_pop($stack);
                     $current = & $stack[count($stack) - 1];
                     $current[] = $content;
                     break;
-                case fkstaskrepo_tex_lexer::TOKEN_SEQ:
+                case TexLexer::TOKEN_SEQ:
                     $sequence = preg_replace('/\s+\*/','*',$token['text']);
                     $current[] = $sequence;
                     break;

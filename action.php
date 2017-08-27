@@ -11,23 +11,6 @@ if (!defined('DOKU_INC')) die();
 
 class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
 
-    private $detFields = ['year', 'series', 'problem', 'label'];
-    private $modFields = ['name', 'origin', 'task'];
-    private static $fields = [
-        'year',
-        'series',
-        'problem',
-        'label',
-        'name',
-        'origin',
-        'tags',
-        'task',
-        'points',
-        'figures',
-        // 'authors',
-        //'solution-authors'
-    ];
-
     private static $tags = [
         'mechHmBodu',
         'mechTuhTel',
@@ -51,9 +34,8 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         'matematika',
         'chemie',
         'biofyzika',
-        'other'
+        'other',
     ];
-
     /**
      * @var helper_plugin_fkstaskrepo
      */
@@ -75,172 +57,122 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'editTask');
 
         $controller->register_hook('PARSER_CACHE_USE', 'BEFORE', $this, 'handle_parser_cache_use');
-        $controller->register_hook('FETCH_MEDIA_STATUS', 'BEFORE', $this, 'fetch_media_svg2png');
     }
 
-    public function fetch_media_svg2png(Doku_Event &$event, $param) {
-        global $conf;
-        global $INPUT;
-        if ($event->data['ext'] != 'svg') {
-            return;
-        }
-        if ($event->data['width'] == 0 && $event->data['height'] == 0) {
-            return;
-        }
-        if (!$INPUT->has('topng')) {
-            return;
-        }
-
-        $xml = simplexml_load_file($event->data['file']);
-
-        $w = $xml->attributes()->width;
-        $h = $xml->attributes()->height;
-        $v = $xml->attributes()->viewBox;
-
-        if (!is_numeric($w) || !is_numeric($h)) {
-            preg_match('/([0-9]+)\s([0-9]+)\s([0-9]+)\s([0-9]+)/', $v, $m);
-            $w = $m[3];
-            $h = $m[4];
-        }
-        if (!$event->data['height']) {
-            $height = round(($event->data['width'] * $h) / $w);
-        } else {
-            $height = $event->data['height'];
-        }
-        $local = getCacheName($event->data['file'], '.media.' . $event->data['width'] . 'x' . $height . '.' . $event->data['ext'] . '.png');
-        $mtime = @filemtime($local);
-
-        if ($mtime < filemtime($event->data['file'])) {
-            $this->media_resize_imageIM($event->data['ext'], $event->data['file'], null, null, $local, $event->data['width'], $height);
-        }
-        if (!empty($conf['fperm'])) {
-            @chmod($local, $conf['fperm']);
-        }
-
-        sendFile($local, 'image/png', $event->data['download'], $event->data['cache'], $event->data['ispublic'], $event->data['orig']);
-    }
-
-    private function media_resize_imageIM($ext, $from, $from_w, $from_h, $to, $to_w, $to_h) {
-        global $conf;
-        if (!$this->getConf('im_convert')) return false;
-
-        $cmd = $this->getConf('im_convert');
-        $cmd .= ' -resize ' . $to_w . 'x' . $to_h . '!';
-        if ($ext == 'jpg' || $ext == 'jpeg') {
-            $cmd .= ' -quality ' . $conf['jpg_quality'];
-        }
-        $cmd .= " $from $to";
-        @exec($cmd, $out, $retval);
-        if ($retval == 0) return true;
-        return false;
-    }
-
-
-    public function tplEditForm(Doku_Event &$event, $param) {
+    public function tplEditForm(Doku_Event &$event) {
         global $INPUT;
         if ($event->data !== 'plugin_fkstaskrepo') {
             return;
         }
         $event->preventDefault();
-        echo '<h1>Edit task</h1>';
+        echo '<h1>' . $this->getLang('edit_form_title') . '</h1>';
+
+        $problem = new \PluginFKSTaskRepo\Task(
+            $INPUT->param('task')['year'],
+            $INPUT->param('task')['series'],
+            $INPUT->param('task')['problem'],
+            $INPUT->param('task')['lang']
+        );
+        $problem->load();
 
         $form = new \dokuwiki\Form\Form();
+        $form->addClass('task-repo-edit');
         $form->setHiddenField('task[do]', 'update');
+        $form->setHiddenField('do', 'plugin_fkstaskrepo');
 
-        $data = $this->helper->getProblemData($INPUT->param('task')['year'], $INPUT->param('task')['series'], $INPUT->param('task')['problem'], $INPUT->param('task')['lang']);
-        var_dump($data);
-        /*    'authors' =>
-    array (size=1)
-      'author' => string 'hanzelka' (length=8)
-  'solution-authors' =>
-    array (size=1)
-      'solution-author' => string 'smitalova' (length=9)
-*/
-        foreach ($data as $field => $value) {
-            $form->addTagOpen('div')
-                ->addClass('form-group');
+        foreach (\PluginFKSTaskRepo\Task::$readonlyFields as $field) {
+            $form->addTagOpen('div')->addClass('form-group');
             switch ($field) {
-                case 'task':
-                    $form->addTextarea('problem[task]', $this->getLang($field))
-                        ->attrs(['class' => 'form-control'])
-                        ->val($value);
-                    break;
                 case 'year':
+                    $this->addStaticField($form, $field, $problem->getYear());
+                    break;
                 case 'number':
+                    $this->addStaticField($form, $field, $problem->getNumber());
+                    break;
                 case 'series':
-                case 'problem':
+                    $this->addStaticField($form, $field, $problem->getSeries());
+                    break;
                 case 'label':
-                case 'points':
+                    $this->addStaticField($form, $field, $problem->getLabel());
+                    break;
                 case 'lang':
-                    $form->setHiddenField('problem[' . $field . ']', $value);
-                    $form->addTagOpen('label')
-                        ->addClass('form-group');//->//form-control-static
-                    $form->addHTML('<label><span>' . $this->getLang($field) . '</span><p class="form-control-static">' . $value . '</p></label>');
+                    $this->addStaticField($form, $field, $problem->getlang());
                     break;
-                case 'figures':
-                    $form->addFieldsetOpen('figures');
-                    foreach ($data['figures'] as $key => $figure) {
-                        $form->addTextInput('problem[figures][' . $key . '][path]', 'figures_path')
-                            ->val($figure['path']);
-                        $form->addTextInput('problem[figures][' . $key . '][caption]', 'figure_caption')
-                            ->val($figure['caption']);
-                    }
-                    $form->addFieldsetClose();
-                    break;
-                case 'topics':
-                    $this->getTagsField($form, $data);
-                    break;
-                case 'name':
-                case 'origin':
-                    $form->addTextInput('problem[' . $field . ']', $this->getLang($field))
-                        ->attrs(['class' => 'form-control'])
-                        ->val($value);
-                    break;
-                case 'authors':
-                case 'solution-authors':
-                    if (is_array($value)) {
-                        foreach ($value as $subField => $subValue) {
-                            if (is_array($subValue)) {
-                                $fieldValue = implode(',',$subValue);
-                            } else {
-                                $fieldValue = $subValue;
-                            }
-                            $form->addTextInput('problem[' . $field . '][' . $subField . ']', $this->getLang($field))
-                                ->attrs(['class' => 'form-control'])
-                                ->val($fieldValue);
-                        }
-                    }
-                    break;
-                default:
-                    var_dump($field);
-
-
             }
             $form->addTagClose('div');
         }
+        foreach (\PluginFKSTaskRepo\Task::$editableFields as $field) {
+            $form->addTagOpen('div')->addClass('form-group');
+            switch ($field) {
+                case 'task':
+                    $form->addTextarea('problem[task]', $this->getLang($field))->attrs(['class' => 'form-control', 'rows' => 5])
+                        ->val($problem->getTask());
+                    break;
+                case 'figures':
+                    $form->addFieldsetOpen($this->getLang('figures'));
+                    $form->addTag('div')->addClass('figures')->attr('data-value', json_encode($problem->getFigures()));
+                    $form->addFieldsetClose();
+                    break;
+                case 'name':
+                    $form->addTextInput('problem[name]', $this->getLang($field))
+                        ->attrs(['class' => 'form-control'])->val($problem->getName());
+                    $form->addHTML('<small class="form-text">' . $this->getLang('edit_form_name_warning') . '</small>');
+                    break;
+                case 'origin':
+                    $form->addTextInput('problem[origin]', $this->getLang($field))
+                        ->attrs(['class' => 'form-control'])->val($problem->getOrigin());
+                    break;
+                case 'authors':
+                    $value = implode(',', $problem->getAuthors());
+                    $form->addTextInput('problem[authors]', $this->getLang($field))
+                        ->attrs(['class' => 'form-control'])->val($value);
+                    break;
 
-        $form->addButton('submit', 'Uložiť');
+                case 'solution-authors':
+                    $value = implode(',', $problem->getSolutionAuthors());
+                    $form->addTextInput('problem[solution-authors]', $this->getLang($field))
+                        ->attrs(['class' => 'form-control'])->val($value);
+                    break;
+                case 'points':
+                    $inputElement = new dokuwiki\Form\InputElement('number', 'problem[points]', $this->getLang($field));
+                    $inputElement->val($problem->getPoints());
+                    $inputElement->attrs(['class' => 'form-control']);
+                    $form->addElement($inputElement);
+                    $form->addHTML('<small class="form-text">' . $this->getLang('edit_form_points_warning') . '</small>');
+                    break;
+            }
+            $form->addTagClose('div');
+        }
+        $this->addTagsField($form, $problem);
+        $form->addHTML('<hr>');
+        $form->addHTML('<p>' . $this->getLang('edit_form_submit_warning') . '</p>');
+        $form->addButton('submit', $this->getLang('save'))->addClass('btn btn-primary');
         echo $form->toHTML();
     }
 
-    private function getTagsField(\dokuwiki\Form\Form $form, $data) {
-        $form->addFieldsetOpen('tags');
-        foreach (self::$tags as $tag) {
-            $form->addTagOpen('div')
-                ->addClass('form-check');
-            if (is_array($data['topics']['topic'])) {
-                $isIn = in_array($tag, $data['topics']['topic']);
+    private function addStaticField(\dokuwiki\Form\Form &$form, $field, $value) {
+        $form->addTextInput('problem[' . $field . ']', $this->getLang($field))
+            ->attrs(['class' => 'form-control', 'readonly' => 'readonly'])->val($value);
+    }
 
-            } else {
-                $isIn = $data['tags'] == $data['topics']['topic'];
+    private function addTagsField(\dokuwiki\Form\Form $form, \PluginFKSTaskRepo\Task $data) {
+        $form->addFieldsetOpen($this->getLang('tags'));
+
+        $form->addTagOpen('div')->addClass('row');
+        $topics = $this->helper->loadTags($data->getYear(), $data->getSeries(), $data->getLabel());
+        foreach (self::$tags as $tag) {
+            $form->addTagOpen('div')->addClass('form-check col-lg-4 col-md-6 col-sm-12');
+            $isIn = false;
+            if (is_array($topics)) {
+                $isIn = in_array($tag, $topics);
             }
-            $input = $form->addCheckbox('problem[topics][topic][]', $this->getLang('tag__' . $tag))
-                ->val($tag);
+            $input = $form->addCheckbox('problem[topics][]', $this->getLang('tag__' . $tag))->val($tag);
             if ($isIn) {
                 $input->attr('checked', 'checked');
             }
             $form->addTagClose('div');
         }
+        $form->addTagClose('div');
         $form->addFieldsetClose();
     }
 
@@ -249,28 +181,37 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         if ($event->data !== 'plugin_fkstaskrepo') {
             return;
         }
-
         $event->preventDefault();
         $event->stopPropagation();
         switch ($INPUT->param('task')['do']) {
             case 'update':
-                $this->updateProblem();
+                $this->updateProblem($event);
                 break;
             case 'edit':
                 break;
         }
     }
 
-    private function updateProblem() {
+    private function updateProblem(Doku_Event &$event) {
         global $INPUT;
-        $data = [];
+
         $problemData = $INPUT->param('problem');
-        $problemData['task'] = cleanText($INPUT->param('problem')['task']);
-        die();
-        $this->helper->updateProblemData($data, $problemData['year'], $problemData['series'], $problemData['problem'], $problemData['lang']);
+
+        $problem = new \PluginFKSTaskRepo\Task($problemData['year'], $problemData['series'], $problemData['label'], $problemData['lang']);
+        $problem->setTask(cleanText($INPUT->param('problem')['task']));
+        $problem->setOrigin($INPUT->param('problem')['origin']);
+        $problem->setNumber((int)$INPUT->param('problem')['number']);
+        $problem->setName($INPUT->param('problem')['name']);
+        $problem->setPoints((int)$INPUT->param('problem')['points']);
+        $problem->setFigures($INPUT->param('problem')['figures']);
+        $problem->setSolutionAuthors(explode(',', $INPUT->param('problem')['solution-authors']));
+        $problem->setAuthors(explode(',', $INPUT->param('problem')['authors']));
+        $problem->save();
+        $this->helper->storeTags($problem->getYear(), $problem->getSeries(), $problem->getLabel(), $INPUT->param('problem')['topics']);
+        $event->data = 'show';
     }
 
-    public function handle_parser_cache_use(Doku_Event &$event, $param) {
+    public function handle_parser_cache_use(Doku_Event &$event) {
         $cache = &$event->data;
 
         // we're only interested in wiki pages
@@ -286,8 +227,8 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         if (!is_array($depends) || !count($depends)) {
             return; // nothing to do
         }
-        $cache->depends['files'] = !empty($cache->depends['files']) ? array_merge($cache->depends['files'], $depends) : $depends;
+        $cache->depends['files'] = !empty($cache->depends['files']) ? array_merge($cache->depends['files'],
+            $depends) : $depends;
     }
-
 }
 
