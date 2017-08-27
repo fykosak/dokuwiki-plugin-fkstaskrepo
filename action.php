@@ -193,7 +193,9 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
     }
 
     private function updateProblem(Doku_Event &$event) {
-        global $INPUT;
+        global $INPUT, $ID;
+
+        (auth_quickaclcheck($ID) >= AUTH_EDIT) OR die();
 
         $problemData = $INPUT->param('problem');
 
