@@ -61,7 +61,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
 
     public function tplEditForm(Doku_Event &$event) {
         global $INPUT;
-        if ($event->data !== 'plugin_fkstaskrepo' OR !$this->isLogged()) {
+        if ($event->data !== 'plugin_fkstaskrepo' || !$this->isLogged()) {
             return;
         }
         $event->preventDefault();
@@ -178,7 +178,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
 
     public function editTask(Doku_Event &$event) {
         global $INPUT;
-        if ($event->data !== 'plugin_fkstaskrepo' OR !$this->isLogged()) {
+        if ($event->data !== 'plugin_fkstaskrepo' || !$this->isLogged()) {
             return;
         }
         $event->preventDefault();
