@@ -111,28 +111,10 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
                 case 'figures':
                     $form->addFieldsetOpen($this->getLang('figures'));
                     $figures = $problem->getFigures();
-                    $form->addTagOpen('table')->addClass('figures table table-bordered">');
-                    $form->addHTML('<tbody><tr><td>Cesta</td><td>Popisek</td><td></td></tr></tbody>');
-                    if (count($figures)) {
-                        foreach ($figures as $key => $figure) {
-                            $form->addTagOpen('tr');
-
-                            $form->addTagOpen('td');
-                            $form->addTextInput('')->val($figure['path']);
-                            $form->addTagClose('td');
-                            $form->addTagOpen('td');
-                            $form->addTextInput('')->val($figure['caption']);
-                            $form->addTagClose('td');
-
-                            $form->addHTML('<td><button>X</button></td>');
-
-                            $form->addTagClose('tr');
-                        }
-                    }
-                    $form->addTagClose('table');
-
-                    $form->addHTML('<button class="btn btn-success btn-sm" onclick="figureManager.add();" type="button">Přidat</button>');
-
+                    $form->addHTML('<script type="text/javascript">figures = ');
+                    $form->addHTML(json_encode($figures));
+                    $form->addHTML(';</script>');
+                    $form->addTag('div')->addClass('figures');
                     $form->addFieldsetClose();
                     break;
                 case 'name':

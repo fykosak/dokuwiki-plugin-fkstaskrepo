@@ -294,7 +294,16 @@ class Task {
      * @param mixed $figures
      */
     public function setFigures($figures) {
-        $this->figures = $figures;
+        $this->figures = array();
+        foreach ($figures as $figure) {
+            $path = trim($figure['path']);
+            $caption = trim($figure['caption']);
+            if ($path == '') continue; // $caption can be omitted
+            $this->figures[] = array (
+                'path' => $path,
+                'caption' => $caption,
+            );
+        }
     }
 
     /**
