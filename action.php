@@ -202,7 +202,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         $problemData = $INPUT->param('problem');
 
         $problem = new \PluginFKSTaskRepo\Task($problemData['year'], $problemData['series'], $problemData['label'], $problemData['lang']);
-        $problem->setTask(cleanText($INPUT->param('problem')['task']));
+        $problem->setTask(cleanText($INPUT->param('problem')['task']), false);
         $problem->setOrigin($INPUT->param('problem')['origin']);
         $problem->setNumber((int)$INPUT->param('problem')['number']);
         $problem->setName($INPUT->param('problem')['name']);
@@ -238,7 +238,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
     /**
      * @return bool
      */
-    private function isLogged () {
+    private function isLogged() {
         global $ID;
         return auth_quickaclcheck($ID) >= AUTH_EDIT;
     }
