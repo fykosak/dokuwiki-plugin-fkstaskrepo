@@ -16,7 +16,7 @@ class Task {
         'points',
         'origin',
         'task',
-         'authors',
+        'authors',
         'solution-authors',
         'figures',
     ];
@@ -263,10 +263,15 @@ class Task {
     }
 
     /**
-     * @param mixed $task
+     * @param string $task
+     * @param boolean $preProc
      */
-    public function setTask($task) {
-        $this->task = $this->texPreproc->preproc($task);
+    public function setTask($task, $preProc = true) {
+        if ($preProc) {
+            $this->task = $this->texPreproc->preproc($task);
+        } else {
+            $this->task = $task;
+        }
     }
 
     /**
@@ -299,7 +304,7 @@ class Task {
             $path = trim($figure['path']);
             $caption = trim($figure['caption']);
             if ($path == '') continue; // $caption can be omitted
-            $this->figures[] = array (
+            $this->figures[] = array(
                 'path' => $path,
                 'caption' => $caption,
             );
