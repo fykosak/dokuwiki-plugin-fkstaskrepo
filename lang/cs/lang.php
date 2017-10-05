@@ -50,7 +50,7 @@ $lang['points-N-SG_vote'] = 'bod';
 $lang['points-N-PL_vote'] = 'body';
 $lang['points-G-PL_vote'] = 'bodů';
 
-$lang['hard_update'] = 'Tvrdý upadte';
+$lang['hard_update'] = 'Tvrdý update';
 
 $lang['batch_select'] = 'Výběr série';
 
@@ -60,7 +60,7 @@ $lang['solution'] = 'Řešení';
 $lang['edit'] = 'Upravit úlohu';
 
 $lang['tag__mechHmBodu'] = 'mechanika hmotného bodu';
-$lang['tag__mechTuhTel'] = 'machanika tuhého tělesa';
+$lang['tag__mechTuhTel'] = 'mechanika tuhého tělesa';
 $lang['tag__hydroMech'] = 'hydromechanika';
 $lang['tag__mechPlynu'] = 'mechanika plynů';
 $lang['tag__gravPole'] = 'gravitační pole';
@@ -70,7 +70,7 @@ $lang['tag__molFyzika'] = 'molekulová fyzika';
 $lang['tag__termoDyn'] = 'termodynamika';
 $lang['tag__statFyz'] = 'statistická fyzika';
 $lang['tag__optikaGeom'] = 'geometrická optika';
-$lang['tag__optikaVln'] = 'vlnění v optice';
+$lang['tag__optikaVln'] = 'vlnová optika';
 $lang['tag__elProud'] = 'elektrický proud';
 $lang['tag__elPole'] = 'elektrické pole';
 $lang['tag__magPole'] = 'magnetické pole';
@@ -80,5 +80,5 @@ $lang['tag__jadFyz'] = 'jaderná fyzika';
 $lang['tag__astroFyz'] = 'astrofyzika';
 $lang['tag__matematika'] = 'matematika';
 $lang['tag__chemie'] = 'chemie';
-$lang['tag__biofyzika'] = 'biofyzikla';
+$lang['tag__biofyzika'] = 'biofyzika';
 $lang['tag__other'] = 'ostatní';
