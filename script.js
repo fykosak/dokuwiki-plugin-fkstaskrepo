@@ -26,7 +26,7 @@ jQuery(function () {
                 '</div>';
         };
 
-        let html = element.getAttribute('data-value').map((figure, index) => {
+        let html = JSON.parse(element.getAttribute('data-value')).map((figure, index) => {
             return addRow(index, figure.path, figure.caption);
         }).join('');
 
