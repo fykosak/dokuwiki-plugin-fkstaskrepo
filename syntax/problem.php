@@ -167,6 +167,7 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
         $yearLabel = $this->getYearLabel($data);
         $renderer->doc .= '<h3 class="task-headline task-headline-'.$this->getHeadlineClass($data).'">';
         $renderer->doc .= $this->getProblemIcon($data);
+        $renderer->doc .= ' ';
         // TODO
         if ($full) {
             $renderer->doc .= $seriesLabel . ' ' . $yearLabel . '-' . $problemLabel . '... ' . $problemName;;

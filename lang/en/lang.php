@@ -12,7 +12,7 @@ $lang['origin'] = 'Origin';
 $lang['label'] = $lang['problem'];
 $lang['number'] = 'number';
 $lang['points'] = 'Points';
-$lang['task'] = 'Taks';
+$lang['task'] = 'Task';
 $lang['problem'] = 'Problem';
 $lang['tags'] = 'Tags';
 $lang['topics'] = $lang['tags'];
@@ -43,7 +43,7 @@ $lang['points-N-SG_vote'] = "point";
 $lang['points-N-PL_vote'] = "points";
 $lang['points-G-PL_vote'] = "points";
 
-$lang['hard_update'] = 'Hard upadte';
+$lang['hard_update'] = 'Hard update';
 
 $lang['batch_select'] = 'Select batch';
 
@@ -52,20 +52,20 @@ $lang['batch_select'] = 'Select year';
 
 $lang['edit'] = 'Edit problem';
 
-$lang['tag__mechHmBodu'] = 'mechanics of a material point';
-$lang['tag__mechTuhTel'] = 'solid mechanics';
+$lang['tag__mechHmBodu'] = 'mechanics of a point mass';
+$lang['tag__mechTuhTel'] = 'mechanics of rigid bodies';
 $lang['tag__hydroMech'] = 'hydromechanics';
 $lang['tag__mechPlynu'] = 'gas mechanics';
 $lang['tag__gravPole'] = 'gravitational field';
-$lang['tag__kmitani'] = 'oscillation';
-$lang['tag__vlneni'] = 'wave';
+$lang['tag__kmitani'] = 'oscillations';
+$lang['tag__vlneni'] = 'wave mechanics';
 $lang['tag__molFyzika'] = 'molecular physics';
-$lang['tag__termoDyn'] = 'termodynamics';
+$lang['tag__termoDyn'] = 'thermodynamics';
 $lang['tag__statFyz'] = 'statistical physics';
 $lang['tag__optikaGeom'] = 'geometrical optics';
-$lang['tag__optikaVln'] = 'waves in optics';
+$lang['tag__optikaVln'] = 'wave optics';
 $lang['tag__elProud'] = 'electric current';
-$lang['tag__elPole'] = 'elektric field';
+$lang['tag__elPole'] = 'electric field';
 $lang['tag__magPole'] = 'magnetic field';
 $lang['tag__relat'] = 'relativistic physics';
 $lang['tag__kvantFyz'] = 'quantum physics';
