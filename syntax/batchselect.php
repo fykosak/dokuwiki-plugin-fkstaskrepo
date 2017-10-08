@@ -63,7 +63,7 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
      * @param Doku_Handler $handler The handler
      * @return array Data for the renderer
      */
-    public function handle($match, $state, $pos, Doku_Handler &$handler) {
+    public function handle($match, $state, $pos, Doku_Handler $handler) {
         global $conf;
         preg_match('/lang="([a-z]+)"/', substr($match, 19, -2), $m);
         $lang = $m[1];
@@ -94,7 +94,7 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
      * @param array $data The data from the handler() function
      * @return bool If rendering was successful.
      */
-    public function render($mode, Doku_Renderer &$renderer, $data) {
+    public function render($mode, Doku_Renderer $renderer, $data) {
         global $ID;
         list($state, list($pages, $lang)) = $data;
         list($currentYear, $currentSeries) = $this->extractPathParameters($ID, $lang);
@@ -133,7 +133,7 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
     private function renderYearSelect(Doku_Renderer &$renderer, $pages, $lang, $currentYear = null) {
         $renderer->doc .= '<select class="form-control" size="">';
         foreach ($pages as $year => $batches) {
-            $renderer->doc .= ' <option data-year="' . $year . '" ' . ($year == $currentYear ? 'selected' : '') . '>' . $this->helper->getSpecLang('year', $lang) . ' ' . $year . '</option>';
+            $renderer->doc .= ' <option value="' . $year . '" ' . ($year == $currentYear ? 'selected' : '') . '>' . $this->helper->getSpecLang('year', $lang) . ' ' . $year . '</option>';
         }
         $renderer->doc .= '</select>';
     }

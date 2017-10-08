@@ -1,52 +1,53 @@
 jQuery(function () {
     "use strict";
-    var $ = jQuery;
-    $('.task-repo.batch-select').each(function () {
-        const $container = $(this);
-        const $select = $container.find('select');
-        $select.change(function () {
-            const year = $(this).find(':selected').attr('data-year');
-            $container.find('.year').hide();
-            $container.find('.year[data-year="' + year + '"]').show();
+    let $ = jQuery;
+    document.querySelectorAll('.task-repo.batch-select').forEach((container) => {
+        container.querySelector('select').addEventListener('change', (event) => {
+            const year = +event.target.value;
+            container.querySelectorAll('.year').forEach((element) => {
+                if ((+element.dataset['year']) === year) {
+                    element.style.display = '';
+                } else {
+                    element.style.display = 'none';
+                }
+            });
         });
     });
 
-});
+    document.querySelectorAll('.figures').forEach((element) => {
+        const $figureContainer = $(element);
+        let maxIndex = 0;
 
-// Figures
-jQuery(function () {
-    const $figureContainer = $('.figures');
-    let maxIndex = 0;
+        const addRow = (index, path = '', cation = '') => {
+            maxIndex = index;
+            return '<div class="row">' +
+                '<div class="col-6"><input type="text" class="form-control" name="problem[figures][' + index + '][path]" value="' + path + '"/></div>' +
+                '<div class="col-6"><input type="text" class="form-control" name="problem[figures][' + index + '][caption]" value="' + cation + '"/></div>' +
+                '</div>';
+        };
 
-    const addRow = (index, path = '', cation = '') => {
-        maxIndex = index;
-        return '<div class="row">' +
-            '<div class="col-6"><input type="text" class="form-control" name="problem[figures][' + index + '][path]" value="' + path + '"/></div>' +
-            '<div class="col-6"><input type="text" class="form-control" name="problem[figures][' + index + '][caption]" value="' + cation + '"/></div>' +
-            '</div>';
-    };
+        let html = element.getAttribute('data-value').map((figure, index) => {
+            return addRow(index, figure.path, figure.caption);
+        }).join('');
 
-    let html = $figureContainer.data('value').map((figure, index) => {
-        return addRow(index, figure.path, figure.caption);
-    }).join('');
+        html = '<div class="row">' +
+            '<div class="col-6">Cesta</div>' +
+            '<div class="col-6">Popisek</div>' +
+            '</div>' + html;
 
-    html = '<div class="row">' +
-        '<div class="col-6">Cesta</div>' +
-        '<div class="col-6">Popisek</div>' +
-        '</div>' + html;
+        element.innerHTML += html;
 
-    $figureContainer.append(html);
-
-    $figureContainer.on('input', '', function () {
-        let hasValue = false;
-        $figureContainer.find('.row').last().find('input').each(function () {
-            hasValue = hasValue || (!!$(this).val());
+        $(element).on('input', '', function(){
+            let hasValue = false;
+            $figureContainer.find('.row').last().find('input').each(function () {
+                hasValue = hasValue || (!!$(this).val());
+            });
+            if (hasValue) {
+                $figureContainer.append(addRow(maxIndex + 1));
+            }
         });
-        if (hasValue) {
-            $figureContainer.append(addRow(maxIndex + 1));
-        }
-    });
 
-    $figureContainer.append(addRow(maxIndex + 1));
+        element.innerHTML += (addRow(maxIndex + 1));
+    });
 
 });
