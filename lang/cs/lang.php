@@ -54,7 +54,7 @@ $lang['hard_update'] = 'Tvrdý upadte';
 
 $lang['batch_select'] = 'Výběr série';
 
-$lang['brochure'] = 'Brožurka se zadáním';
+$lang['brochure'] = 'Brožurka série';
 $lang['solution'] = 'Řešení';
 
 $lang['edit'] = 'Upravit úlohu';

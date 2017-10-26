@@ -48,6 +48,7 @@ $lang['hard_update'] = 'Hard upadte';
 $lang['batch_select'] = 'Select batch';
 
 $lang['brochure'] = "Brochure";
+$lang['brochure_original'] = "Brochure in Czech";
 $lang['batch_select'] = 'Select year';
 
 $lang['edit'] = 'Edit problem';

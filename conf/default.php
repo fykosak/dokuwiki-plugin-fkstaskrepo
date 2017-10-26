@@ -14,8 +14,8 @@ $conf['task_template_search'] = 'system:task_template';
 $conf['page_path_mask_cs'] = "rocnik@year@:ulohy:serie@series@";
 $conf['page_path_mask_en'] = "year@year@:tasks:series@series@";
 
-$conf['brochure_path_cs']="rocnik@year@:ulohy:serie@series@.pdf";
-$conf['brochure_path_en']="year@year@:tasks:series@series@.pdf";
+$conf['brochure_path_cs']="rocnik@year@:ulohy:pdf:@series@:brozurka_@year@_@series@.pdf";
+$conf['brochure_path_en']="year@year@:tasks:pdf:@series@:brochure_@year@_@series@.pdf";
 
 $conf['solution_path_cs']=":rocnik@year@:ulohy:problem@label@.pdf";
 $conf['solution_path_en']=":year@year@:tasks:problems@label@.pdf";
