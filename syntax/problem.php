@@ -112,8 +112,9 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
         $this->renderHeader($renderer, $data, $full);
         $this->renderFigures($renderer, $data);
         $this->renderTask($renderer, $data);
-        // $this->renderSolutions();
+        $this->renderSolutions($renderer, $data);
         $this->renderTags($renderer, $data);
+        $this->renderOrigin($renderer, $data);
         global $ID;
         if (auth_quickaclcheck($ID) >= AUTH_EDIT) {
             $this->renderEditButton($renderer, $data);
@@ -153,9 +154,39 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
         }
     }
 
+    private function renderOrigin(Doku_Renderer &$renderer, \PluginFKSTaskRepo\Task $data) {
+        $renderer->doc .= '<div class="origin">' . $renderer->render_text($data->getOrigin()) . '</div>';
+    }
+
     private function renderTask(Doku_Renderer &$renderer, \PluginFKSTaskRepo\Task $data) {
-        // TODO trim is very ugly
         $renderer->doc .= '<div>' . $renderer->render_text(trim($data->getTask())) . '</div>';
+    }
+
+    /**
+     * Renders links to PDF with solution to specific task. Czech PDF is rendered always though it is on english site.
+     * @param Doku_Renderer $renderer
+     * @param \PluginFKSTaskRepo\Task $data
+     */
+    private function renderSolutions(Doku_Renderer &$renderer, \PluginFKSTaskRepo\Task $data) {
+        global $conf;
+
+        $path = str_replace(['@year@', '@series@', '@label@'], [$data->getYear(), $data->getSeries(), $data->getLabel()], $this->getConf('solution_path_' . $conf['lang'])); // Add path
+        $path = file_exists(mediaFN($path)) ? $path : null;
+
+        // Include original cs PDF to en (if exists obviously)
+        $original = str_replace(['@year@', '@series@', '@label@'], [$data->getYear(), $data->getSeries(), $data->getLabel()], $this->getConf('solution_path_cs')); // Add path
+        $original = file_exists(mediaFN($original)) && $conf['lang'] != 'cs' ? $original : null;
+
+        if ($original) {
+            $renderer->doc .= '<div class="solution solution-original">';
+            $renderer->internalmedia($original, $this->helper->getSpecLang('solution_original',$conf['lang']),null,null,null,null,'linkonly');
+            $renderer->doc .= '</div>';
+        }
+        if ($path) {
+            $renderer->doc .= '<div class="solution solution-default">';
+            $renderer->internalmedia($path, $this->helper->getSpecLang('solution',$conf['lang']),null,null,null,null,'linkonly');
+            $renderer->doc .= '</div>';
+        }
     }
 
     private function renderHeader(Doku_Renderer &$renderer, \PluginFKSTaskRepo\Task $data, $full = false) {
