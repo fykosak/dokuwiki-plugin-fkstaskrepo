@@ -233,7 +233,7 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
         $problemName = $data->getName();
         $seriesLabel = $this->getSeriesLabel($data);
         $yearLabel = $this->getYearLabel($data);
-        $renderer->doc .= '<h3>';
+        $renderer->doc .= '<h3 class="task-headline task-headline-'.$this->getHeadlineClass($data).'">';
         $renderer->doc .= $this->getProblemIcon($data);
         if ($full) {
             $renderer->doc .= $seriesLabel . ' ' . $yearLabel . ' - ' . $problemLabel . ' ' . $problemName;;
@@ -242,6 +242,23 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
         }
         $renderer->doc .= $pointsLabel ? '<small class="pull-right">(' . $pointsLabel . ')</small>' : '';
         $renderer->doc .= '</h3>';
+    }
+
+    private function getHeadlineClass(\PluginFKSTaskRepo\Task $data){
+        switch ($data->getLabel()) {
+            case '1':
+            case '2':
+                return 'easy';
+            case 'E':
+                return 'experiment';
+            case 'S':
+            case 'C':
+                return 'serial';
+            case'P':
+                return 'problem';
+            default:
+                return 'default';
+        }
     }
 
     private function getPointsLabel(\PluginFKSTaskRepo\Task $data) {

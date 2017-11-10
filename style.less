@@ -1,61 +1,82 @@
 .task-repo.tag-cloud a {
-  margin: 0.5rem;
+    margin: 0.5rem;
 
-  &.size1 {
-    font-size: 60%;
-  }
-  &.size2 {
-    font-size: 70%;
-  }
-  &.size3 {
-    font-size: 80%;
-  }
-  &.size4 {
-    font-size: 90%;
-  }
-  &.size5 {
-    font-size: 100%;
-  }
-  &.size6 {
-    font-size: 110%;
-  }
-  &.size7 {
-    font-size: 120%;
-  }
-  &.size8 {
-    font-size: 130%;
-  }
-  &.size9 {
-    font-size: 140%;
-  }
-  &.size10 {
-    font-size: 150%;
-  }
+    &.size1 {
+        font-size: 60%;
+    }
+    &.size2 {
+        font-size: 70%;
+    }
+    &.size3 {
+        font-size: 80%;
+    }
+    &.size4 {
+        font-size: 90%;
+    }
+    &.size5 {
+        font-size: 100%;
+    }
+    &.size6 {
+        font-size: 110%;
+    }
+    &.size7 {
+        font-size: 120%;
+    }
+    &.size8 {
+        font-size: 130%;
+    }
+    &.size9 {
+        font-size: 140%;
+    }
+    &.size10 {
+        font-size: 150%;
+    }
 }
 
 body {
-  counter-reset: probfig;
+    counter-reset: probfig;
 }
 
 .task-repo.task {
-  figure {
-    float: right;
-    figcaption {
-      &[data-lang="cs"]::before {
-        content: "Obr. " counter(probfig) " ";
-      }
-      &[data-lang="en"]::before {
-        content: "Fig. " counter(probfig) " ";
-      }
-      &::before {
-        counter-increment: probfig;
-      }
-      text-align: center;
+    .tag {
+        margin-right: 1rem;
     }
-    img {
-      width: 100%;
+    .task-headline {
+        padding: 0 1rem;
+        color: white;
+        background-color: #37C4E5;
+        &.task-headline-easy {
+            background-color: #8AC75A;
+        }
+        &.task-headline-serial {
+            background-color: #F5BF69;
+        }
+        &.task-headline-problem {
+            background-color: #F47A69;
+        }
+        &.task-headline-experiment {
+            background-color: #F08BAA;
+        }
     }
-  }
+
+    figure {
+        float: right;
+        figcaption {
+            &[data-lang="cs"]::before {
+                content: "Obr. " counter(probfig) " ";
+            }
+            &[data-lang="en"]::before {
+                content: "Fig. " counter(probfig) " ";
+            }
+            &::before {
+                counter-increment: probfig;
+            }
+            text-align: center;
+        }
+        img {
+            width: 100%;
+        }
+    }
 
   .origin {
     float: right;
@@ -64,7 +85,7 @@ body {
 }
 
 .task-repo-edit {
-  label {
-    display: inline;
-  }
+    label {
+        display: inline;
+    }
 }

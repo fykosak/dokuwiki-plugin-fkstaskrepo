@@ -168,7 +168,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
 
     public function getTagLink($tag, $size = 5, $lang = 'cs', $count = 0, $active = false) {
         $page = $this->getConf('archive_path_' . $lang);
-        $html = '<a data-tag="' . $tag . '" href="' . wl($page, [self::URL_PARAM => $tag]) . '" class="bodge size' .
+        $html = '<a data-tag="' . $tag . '" href="' . wl($page, [self::URL_PARAM => $tag]) . '" class="tag size' .
             $size . ' ' . ($active ? '' : '') . '">';
         $html .= '<span class="fa fa-tag"></span>';
         $html .= hsc($this->getSpecLang('tag__' . $tag, $lang));
