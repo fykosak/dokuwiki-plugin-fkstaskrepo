@@ -49,4 +49,9 @@ jQuery(function () {
 
     $figureContainer.append(addRow(maxIndex + 1));
 
+    jQuery('#addmedia').click(function() {
+        window.DWMediaSelector.execute((url) => {
+            $figureContainer.find('.row:last input:first').val(url).trigger('input');
+        }, jQuery(this).data('folder-id'));
+    });
 });

@@ -131,12 +131,7 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
             $pageContent = $this->replaceVariables([
                 'human-series' => $series . '. ' . $this->helper->getSpecLang('series', $lang),
                 'label' => '@label@',
-                'brochure_path' => str_replace(['@year@', '@series@'],
-                    [
-                        $year,
-                        $series
-                    ],
-                    $this->getConf('brochure_path_' . $lang)),
+                'brochure_path' => vsprintf($this->getConf('brochure_path_' . $lang), [$year, $series]),
                 'human-deadline' => $this->helper->getSpecLang('deadline', $lang) . ': ' .
                     date($this->helper->getSpecLang('deadline-format', $lang), strtotime($deadline)),
                 'human-deadline-post' => $this->helper->getSpecLang('deadline-post', $lang) . ': ' .
@@ -176,7 +171,7 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
 
     private function prepareProblem(SimpleXMLElement $problem, $year, $series, $lang) {
         // preprocess figure
-        $task = new \PluginFKSTaskRepo\Task($year, $series, (string)$problem->label, $lang);
+        $task = new \PluginFKSTaskRepo\Task($this->helper, $year, $series, (string)$problem->label, $lang);
         $task->extractFigure($problem);
         /**
          * @var $child SimpleXMLElement

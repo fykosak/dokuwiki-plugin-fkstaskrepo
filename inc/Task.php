@@ -8,6 +8,10 @@
 
 namespace PluginFKSTaskRepo;
 
+/**
+ * Class Task
+ * @package PluginFKSTaskRepo
+ */
 
 class Task {
 
@@ -39,48 +43,31 @@ class Task {
     private $authors;
     private $solutionAuthors;
     private $year;
+    private $series;
+
     /**
      * @var \PluginFKSTaskRepo\TexPreproc;
      */
-
     private $texPreproc;
 
     /**
-     * @return mixed
+     * name, origin, task, figures
+     * @var array localized data stored in the file
      */
-    public function getSolutionAuthors() {
-        return $this->solutionAuthors ?: [];
-    }
+    private $taskLocalizedData = [];
 
     /**
-     * @param mixed $solutionAuthors
+     * @var \helper_plugin_fkstaskrepo Helper plugin
      */
-    public function setSolutionAuthors($solutionAuthors) {
-        $this->solutionAuthors = $solutionAuthors;
-    }
+    private $helper;
 
-    /**
-     * @return mixed
-     */
-    public function getYear() {
-        return $this->year;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getSeries() {
-        return $this->series;
-    }
-
-    private $series;
-
-    public function __construct($year, $series, $label, $lang = 'cs') {
+    public function __construct(\helper_plugin_fkstaskrepo $helper, $year, $series, $label, $lang = 'cs') {
         $this->texPreproc = new TexPreproc();
         $this->year = $year;
         $this->series = $series;
         $this->label = $label;
         $this->lang = $lang;
+        $this->helper = $helper;
     }
 
     public function isActualLang(\SimpleXMLElement $e) {
@@ -111,6 +98,7 @@ class Task {
     }
 
     /**
+     * Saves figures to server
      * @param $figure []
      */
     private function saveFigures($figure) {
@@ -120,9 +108,11 @@ class Task {
                     msg('invalid or empty extenson figure: ' . $type, -1);
                     continue;
                 }
-                $name = $this->getImagePath($type);
+                $name = $this->getAttachmentPath($figure['caption'], $type);
                 if (io_saveFile(mediaFN($name), (string)trim($imgContent))) {
-                    msg('image: ' . $name . ' for language ' . $this->lang . ' has been saved', 1);
+                    msg('Figure "' . $figure['caption'] . '" for language ' . $this->lang . ' has been saved', 1);
+                } else {
+                    msg('Figure "' . $figure['caption'] . '" for language ' . $this->lang . ' has not saved properly!', -1);
                 }
                 $this->figures[] = ['path' => $name, 'caption' => $figure['caption']];
             }
@@ -130,55 +120,77 @@ class Task {
     }
 
     /**
-     * @param string $type
-     * @return string
+     * Returns ID path of the Attachment based on its caption
+     * @param $caption string Attachment Caption
+     * @param $type string File type
+     * @return string ID
      */
-    private function getImagePath($type = null) {
-        if ($type) {
-            return $this->getPluginName() . ':figure:year' . $this->year . '_series' . $this->series . '_' . $this->label . '_' .
-                $this->lang . '.' . $type;
-        }
-        return $this->getPluginName() . ':figure:year' . $this->year . '_series' . $this->series . '_' . $this->label . '_' . $this->lang;
+    private function getAttachmentPath($caption, $type) {
+        $name = substr(preg_replace("/[^a-zA-Z0-9_-]+/", '-', $caption), 0, 30) . '_' . substr(md5($caption.$type),0,5);
+        return vsprintf($this->helper->getConf('attachment_path_' . $this->lang), [$this->year, $this->series, $this->label]) . ':' . $name . '.' . $type;
     }
 
-    public function getFileName() {
-        $id = 'fkstaskrepo:' . $this->year . ':' . $this->series . '-' . $this->label . '_' . $this->lang;
-        return metaFN($id, '.dat');
+    /**
+     * Returns the path of .json file with task data.
+     * @return string path of file
+     */
+    private function getFileName() {
+        global $conf;
+        return $conf['metadir'] . '/' . vsprintf($this->helper->getConf('task_data_meta_path'), [$this->year, $this->series, $this->label]);
     }
 
+    /**
+     * Saves task
+     */
     public function save() {
         $data = [
             'year' => $this->year,
             'series' => $this->series,
             'label' => $this->label,
-            'lang' => $this->lang,
             'number' => $this->number,
+            'points' => $this->points,
+            'authors' => $this->authors,
+            'solution-authors' => $this->solutionAuthors,
+            'localization' => $this->taskLocalizedData, // Includes old data
+        ];
+
+        $data['localization'][$this->lang] = [
             'name' => $this->name,
             'origin' => $this->origin,
             'task' => $this->task,
-            'points' => $this->points,
             'figures' => $this->figures,
-            'authors' => $this->authors,
-            'solution-authors' => $this->solutionAuthors,
         ];
-        io_saveFile($this->getFileName(), serialize($data));
+
+        io_saveFile($this->getFileName(), json_encode($data, JSON_PRETTY_PRINT));
     }
 
+    /**
+     * Loads task
+     * @return bool Success
+     */
     public function load() {
         $content = io_readFile($this->getFileName(), false);
         if (!$content) {
-            return;
+            return false;
         }
-        $data = unserialize($content);
+        $data = json_decode($content, true);
+
+        $this->taskLocalizedData = $data['localization'];
+
+        if (!key_exists($this->lang, $data['localization'])) {
+            return false;
+        }
 
         $this->number = $data['number'];
-        $this->name = $data['name'];
-        $this->origin = $data['origin'];
-        $this->task = $data['task'];
+        $this->name = $data['localization'][$this->lang]['name'];
+        $this->origin = $data['localization'][$this->lang]['origin'];
+        $this->task = $data['localization'][$this->lang]['task'];
         $this->points = $data['points'];
-        $this->figures = $data['figures'];
+        $this->figures = $data['localization'][$this->lang]['figures'];
         $this->authors = $data['authors'];
         $this->solutionAuthors = $data['solution-authors'];
+
+        return true;
     }
 
     public function getPluginName() {
@@ -188,11 +200,40 @@ class Task {
     /**
      * @return mixed
      */
+    public function getYear() {
+        return $this->year;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getSeries() {
+        return $this->series;
+    }
+    /**
+     * @return mixed
+     */
+    public function getLabel() {
+        return $this->label;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getLang() {
+        return $this->lang;
+    }
+
+    /**
+     * Number is not an ID of the task
+     * @return mixed
+     */
     public function getNumber() {
         return $this->number;
     }
 
     /**
+     * Number is readonly field, but it is editable during XML import
      * @param mixed $number
      */
     public function setNumber($number) {
@@ -202,15 +243,43 @@ class Task {
     /**
      * @return mixed
      */
-    public function getLabel() {
-        return $this->label;
+    public function getPoints() {
+        return $this->points;
     }
 
     /**
-     * @param mixed $label
+     * @param int $points
      */
-    public function setLabel($label) {
-        $this->label = $label;
+    public function setPoints($points) {
+        $this->points = $points;
+    }
+
+    /**
+     * @return array
+     */
+    public function getAuthors() {
+        return $this->authors;
+    }
+
+    /**
+     * @param array $authors
+     */
+    public function setAuthors($authors) {
+        $this->authors = $authors;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getSolutionAuthors() {
+        return $this->solutionAuthors;
+    }
+
+    /**
+     * @param mixed $solutionAuthors
+     */
+    public function setSolutionAuthors($solutionAuthors) {
+        $this->solutionAuthors = $solutionAuthors;
     }
 
     /**
@@ -225,20 +294,6 @@ class Task {
      */
     public function setName($name) {
         $this->name = $name;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getLang() {
-        return $this->lang;
-    }
-
-    /**
-     * @param mixed $lang
-     */
-    public function setLang($lang) {
-        $this->lang = $lang;
     }
 
     /**
@@ -275,55 +330,17 @@ class Task {
     }
 
     /**
-     * @return mixed
-     */
-    public function getPoints() {
-        return $this->points;
-    }
-
-    /**
-     * @param mixed $points
-     */
-    public function setPoints($points) {
-        $this->points = $points;
-    }
-
-    /**
-     * @return mixed
+     * @return array
      */
     public function getFigures() {
-        return $this->figures ?: [];
+        return $this->figures;
     }
 
     /**
      * @param mixed $figures
      */
     public function setFigures($figures) {
-        $this->figures = array();
-        foreach ($figures as $figure) {
-            $path = trim($figure['path']);
-            $caption = trim($figure['caption']);
-            if ($path == '') continue; // $caption can be omitted
-            $this->figures[] = array(
-                'path' => $path,
-                'caption' => $caption,
-            );
-        }
+        $this->figures = $figures;
     }
-
-    /**
-     * @return mixed
-     */
-    public function getAuthors() {
-        return $this->authors ?: [];
-    }
-
-    /**
-     * @param mixed $authors
-     */
-    public function setAuthors($authors) {
-        $this->authors = $authors;
-    }
-
 
 }
