@@ -50,7 +50,11 @@ $lang['batch_select'] = 'Select batch';
 $lang['brochure'] = "Brochure";
 $lang['brochure_original'] = "Brochure in Czech";
 $lang['solution'] = "Solution";
-$lang['solution_origina'] = "Solution in Czech";
+$lang['solution_original'] = "Solution in Czech";
+//$lang['year_book'] = 'Year book';
+//$lang['serial'] = 'Serial';
+$lang['year_book'] = 'Year book in Czech';
+$lang['serial'] = 'Serial in Czech';
 
 $lang['batch_select'] = 'Select year';
 

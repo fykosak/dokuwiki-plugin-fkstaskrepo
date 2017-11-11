@@ -106,12 +106,12 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
             $form->addTagOpen('div')->addClass('form-group');
             switch ($field) {
                 case 'task':
-                    $form->addTextarea('problem[task]', $this->getLang($field))->attrs(['class' => 'form-control', 'rows' => 15])
+                    $form->addTextarea('problem[task]', $this->helper->getSpecLang($field, 'cs'))->attrs(['class' => 'form-control', 'rows' => 15])
                         ->val($problem->getTask());
                     $form->addHTML('<small class="form-text">Přílohy přidávejte externě, samy se zobrazí.</small>');
                     break;
                 case 'figures':
-                    $form->addFieldsetOpen($this->getLang('figures'));
+                    $form->addFieldsetOpen($this->helper->getSpecLang('figures', 'cs'));
                     $form->addTag('div')->addClass('figures mb-3')->attr('data-value', json_encode($problem->getFigures()));
                     $form->addFieldsetClose();
                     $mediaLink = vsprintf($this->getConf('attachment_path_' . $problem->getLang()), [$problem->getYear(), $problem->getSeries(), $problem->getLabel()]);
@@ -119,29 +119,29 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
                     $form->addHTML('<small class="form-text">Defaultní adresa pro ukládání je <code>' . $mediaLink . '</code></small>');
                     break;
                 case 'name':
-                    $form->addTextInput('problem[name]', $this->getLang($field))
+                    $form->addTextInput('problem[name]', $this->helper->getSpecLang($field, 'cs'))
                         ->attrs(['class' => 'form-control'])->val($problem->getName());
                     $form->addHTML('<small class="form-text">Podle konvence začíná název úlohy malým písmenem pokud se nejedná o vlastní jméno. Taktéž nekončí tečkou. Jméno úlohy bude potřeba opravit i ve FKSDB.</small>');
                     break;
                 case 'origin':
-                    $form->addTextInput('problem[origin]', $this->getLang($field))
+                    $form->addTextInput('problem[origin]', $this->helper->getSpecLang($field, 'cs'))
                         ->attrs(['class' => 'form-control'])->val($problem->getOrigin());
                     break;
                 case 'authors':
                     $value = implode(', ', $problem->getAuthors());
-                    $form->addTextInput('problem[authors]', $this->getLang($field))
+                    $form->addTextInput('problem[authors]', $this->helper->getSpecLang($field, 'cs'))
                         ->attrs(['class' => 'form-control'])->val($value);
                     $form->addHTML('<small class="form-text">Autory oddělujte čárkou.</small>');
                     break;
 
                 case 'solution-authors':
                     $value = implode(', ', $problem->getSolutionAuthors());
-                    $form->addTextInput('problem[solution-authors]', $this->getLang($field))
+                    $form->addTextInput('problem[solution-authors]', $this->helper->getSpecLang($field, 'cs'))
                         ->attrs(['class' => 'form-control'])->val($value);
                     $form->addHTML('<small class="form-text">Autory oddělujte čárkou.</small>');
                     break;
                 case 'points':
-                    $inputElement = new dokuwiki\Form\InputElement('number', 'problem[points]', $this->getLang($field));
+                    $inputElement = new dokuwiki\Form\InputElement('number', 'problem[points]', $this->helper->getSpecLang($field, 'cs'));
                     $inputElement->val($problem->getPoints() ?: '');
                     $inputElement->attrs(['class' => 'form-control']);
                     $form->addElement($inputElement);
@@ -161,20 +161,26 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         preg_match('/^(.*):[^:]*/', $brochureFilename, $brochurePath);
         $brochurePath = $brochurePath[1];
 
+        // Only in Czech
+        $serialFilename = vsprintf($this->getConf('serial_path_cs'), [$problem->getYear(), $problem->getSeries()]);
+        preg_match('/^(.*):[^:]*/', $serialFilename, $serialPath);
+        $serialPath = $serialPath[1];
+
 
         $form->addHTML('<p>Název, zadání, origin a figures jsou pro každý překlad unikátní, proto nezapomeň upravit všechny jazykové mutace.</p>');
         $form->addHTML('<p>Řešení této úlohy v PDF nahrajte jako <code><a href="#" class="dwmediaselector-open" data-media-path="' . $solutionPath . '">' . $solutionFilename . '</a></code>. Brožurku celé této série jako <code><a href="#" class="dwmediaselector-open" data-media-path="' . $brochurePath . '">' . $brochureFilename . '</a></code>.</p>');
-        $form->addButton('submit', $this->getLang('save'))->addClass('btn btn-primary');
+        $form->addHTML('<p class="font-italic">Případnou seriálovou úlohu této série nahrajte jako <code><a href="#" class="dwmediaselector-open" data-media-path="' . $serialPath . '">' . $serialFilename . '</a></code>.</p>');
+        $form->addButton('submit', 'Uložit')->addClass('btn btn-primary');
         echo $form->toHTML();
     }
 
     private function addStaticField(\dokuwiki\Form\Form &$form, $field, $value) {
-        $form->addTextInput('problem[' . $field . ']', $this->getLang($field))
+        $form->addTextInput('problem[' . $field . ']', $this->helper->getSpecLang($field, 'cs'))
             ->attrs(['class' => 'form-control', 'readonly' => 'readonly'])->val($value);
     }
 
     private function addTagsField(\dokuwiki\Form\Form $form, \PluginFKSTaskRepo\Task $data) {
-        $form->addFieldsetOpen($this->getLang('tags'));
+        $form->addFieldsetOpen($this->helper->getSpecLang('tags', 'cs'));
 
         $form->addTagOpen('div')->addClass('row');
         $topics = $this->helper->loadTags($data->getYear(), $data->getSeries(), $data->getLabel());
@@ -184,7 +190,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
             if (is_array($topics)) {
                 $isIn = in_array($tag, $topics);
             }
-            $input = $form->addCheckbox('problem[topics][]', $this->getLang('tag__' . $tag))->val($tag);
+            $input = $form->addCheckbox('problem[topics][]', $this->helper->getSpecLang('tag__' . $tag, 'cs'))->val($tag);
             if ($isIn) {
                 $input->attr('checked', 'checked');
             }

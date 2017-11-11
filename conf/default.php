@@ -20,6 +20,9 @@ $conf['brochure_path_en']='year%1$02d:tasks:pdf:%2$d:brochure_%1$02d_%2$d.pdf';
 $conf['solution_path_cs']='rocnik%1$02d:ulohy:pdf:%2$d:priklad_%1$02d_%2$d_%3$s.pdf';
 $conf['solution_path_en']='year%1$02d:tasks:pdf:%2$d:task_%1$02d_%2$d_%3$s.pdf';
 
+$conf['yearbook_path_cs']='rocnik%1$02d:ulohy:pdf:rocenka%1$02d.pdf';
+$conf['serial_path_cs']='rocnik%1$02d:ulohy:pdf:serial%1$02d_%2$d.pdf';
+
 $conf['attachment_path_cs'] = 'rocnik%1$02d:ulohy:prilohy:%2$d:%3$s';
 $conf['attachment_path_en'] = 'year%1$02d:tasks:attachments:%2$d:%3$s';
 
