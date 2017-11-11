@@ -112,10 +112,9 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
                     break;
                 case 'figures':
                     $form->addFieldsetOpen($this->getLang('figures'));
-                    $form->addTag('div')->addClass('figures')->attr('data-value', json_encode($problem->getFigures()));
-                    $mediaLink = vsprintf($this->getConf('attachment_path_' . $problem->getLang()), [$problem->getYear(), $problem->getSeries(), $problem->getLabel()]);
-                    $form->addHTML('<textarea style="display: none;" id="wiki__text"></textarea>');
+                    $form->addTag('div')->addClass('figures mb-3')->attr('data-value', json_encode($problem->getFigures()));
                     $form->addFieldsetClose();
+                    $mediaLink = vsprintf($this->getConf('attachment_path_' . $problem->getLang()), [$problem->getYear(), $problem->getSeries(), $problem->getLabel()]);
                     $form->addHTML('<button type="button" class="btn btn-primary btn-small" id="addmedia" data-folder-id="' . $mediaLink . '">Otevřít / Nahrát přílohy</a></button>');
                     $form->addHTML('<small class="form-text">Defaultní adresa pro ukládání je <code>' . $mediaLink . '</code></small>');
                     break;
@@ -153,7 +152,18 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         }
         $this->addTagsField($form, $problem);
         $form->addHTML('<hr>');
+
+        $solutionFilename = vsprintf($this->getConf('solution_path_' . $problem->getLang()), [$problem->getYear(), $problem->getSeries(), $problem->getLabel()]);
+        preg_match('/^(.*):[^:]*/', $solutionFilename, $solutionPath);
+        $solutionPath = $solutionPath[1];
+
+        $brochureFilename = vsprintf($this->getConf('brochure_path_' . $problem->getLang()), [$problem->getYear(), $problem->getSeries()]);
+        preg_match('/^(.*):[^:]*/', $brochureFilename, $brochurePath);
+        $brochurePath = $brochurePath[1];
+
+
         $form->addHTML('<p>Název, zadání, origin a figures jsou pro každý překlad unikátní, proto nezapomeň upravit všechny jazykové mutace.</p>');
+        $form->addHTML('<p>Řešení této úlohy v PDF nahrajte jako <code><a href="#" class="dwmediaselector-open" data-media-path="' . $solutionPath . '">' . $solutionFilename . '</a></code>. Brožurku celé této série jako <code><a href="#" class="dwmediaselector-open" data-media-path="' . $brochurePath . '">' . $brochureFilename . '</a></code>.</p>');
         $form->addButton('submit', $this->getLang('save'))->addClass('btn btn-primary');
         echo $form->toHTML();
     }
@@ -219,7 +229,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
 
         $problem->setName(trim($INPUT->param('problem')['name']));
         $problem->setOrigin(trim($INPUT->param('problem')['origin']));
-        $problem->setTask(trim(cleanText($INPUT->param('problem')['task'])), false);
+        $problem->setTask(cleanText($INPUT->param('problem')['task']), false);
         $problem->setFigures($this->processFigures($INPUT->param('problem')['figures']));
         $problem->save();
         $this->helper->storeTags($problem->getYear(), $problem->getSeries(), $problem->getLabel(), $INPUT->param('problem')['topics']);
@@ -228,15 +238,15 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
 
 
     private function processFigures($figures) {
-        $out = array();
+        $out = [];
         foreach ($figures as $figure) {
             $path = trim($figure['path']);
             $caption = trim($figure['caption']);
             if ($path == '') continue; // $caption can be omitted
-            $out[] = array(
+            $out[] = [
                 'path' => $path,
                 'caption' => $caption,
-            );
+            ];
         }
 
         return $out;

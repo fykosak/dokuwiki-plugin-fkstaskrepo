@@ -125,7 +125,9 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
         $this->renderFileAttachments($renderer, $data);
         $hasSolution = $this->renderSolutions($renderer, $data);
         $this->renderTags($renderer, $data);
-        $hasSolution && $this->renderOrigin($renderer, $data);
+        if ($hasSolution) {
+            $this->renderOrigin($renderer, $data);
+        }
         global $ID;
         if (auth_quickaclcheck($ID) >= AUTH_EDIT) {
             $this->renderEditButton($renderer, $data);
@@ -153,13 +155,14 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
     private function renderImageFigures(Doku_Renderer &$renderer, \PluginFKSTaskRepo\Task $data) {
         if (is_array($data->getFigures())) {
             foreach ($data->getFigures() as $figure) {
-                if(!$this->isImage(ml($figure['path']))) continue; // Checks if it is an image
-                $renderer->doc .= '<figure class="col-xl-4 col-lg-5 col-md-6 col-sm-12">';
-                $renderer->doc .= '<img src="' . ml($figure['path']) . '" alt="figure" />';
-                $renderer->doc .= '<figcaption data-lang="' . $data->getLang() . '" >';
-                $renderer->doc .= $renderer->render_text($figure['caption']);
-                $renderer->doc .= '</figcaption>';
-                $renderer->doc .= '</figure>';
+                if($this->isImage(ml($figure['path']))) { // Checks if it is an image
+                    $renderer->doc .= '<figure class="col-xl-4 col-lg-5 col-md-6 col-sm-12">';
+                    $renderer->doc .= '<img src="' . ml($figure['path']) . '" alt="figure" />';
+                    $renderer->doc .= '<figcaption data-lang="' . $data->getLang() . '" >';
+                    $renderer->doc .= $renderer->render_text($figure['caption']);
+                    $renderer->doc .= '</figcaption>';
+                    $renderer->doc .= '</figure>';
+                }
             }
         }
     }
@@ -173,10 +176,11 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
         if (is_array($data->getFigures())) {
             $renderer->doc .= '<div class="task-fileattachments">';
             foreach ($data->getFigures() as $figure) {
-                if($this->isImage(ml($figure['path']))) continue; // Checks if it is an image
-                $renderer->doc .= '<div class="task-fileattachments-file">';
-                $renderer->internalmedia($figure['path'], $figure['caption'] ?: null,null,null,null,null,'linkonly');
-                $renderer->doc .= '</div>';
+                if(!$this->isImage(ml($figure['path']))) { // Checks if it is an image
+                    $renderer->doc .= '<div class="task-fileattachments-file">';
+                    $renderer->internalmedia($figure['path'], $figure['caption'] ?: null, null, null, null, null, 'linkonly');
+                    $renderer->doc .= '</div>';
+                }
             }
             $renderer->doc .= '</div>';
         }
@@ -190,7 +194,7 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
     }
 
     private function renderOrigin(Doku_Renderer &$renderer, \PluginFKSTaskRepo\Task $data) {
-        $renderer->doc .= '<div class="origin">' . $renderer->render_text($data->getOrigin()) . '</div>';
+        $renderer->doc .= '<div class="font-italic pull-right">' . $renderer->render_text($data->getOrigin()) . '</div>';
     }
 
     private function renderTask(Doku_Renderer &$renderer, \PluginFKSTaskRepo\Task $data) {
@@ -211,7 +215,7 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
 
         // Include original cs PDF to en (if exists obviously)
         $original = vsprintf($this->getConf('solution_path_cs'), [$data->getYear(), $data->getSeries(), $data->getLabel()]); // Add path
-        $original = file_exists(mediaFN($original)) && $conf['lang'] != 'cs' ? $original : null;
+        $original = file_exists(mediaFN($original)) && $conf['lang'] !== 'cs' ? $original : null;
 
         if ($original) {
             $renderer->doc .= '<div class="solution solution-original">';
@@ -262,7 +266,9 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
     }
 
     private function getPointsLabel(\PluginFKSTaskRepo\Task $data) {
-        if (!$data->getPoints()) return null;
+        if (!$data->getPoints()) {
+            return null;
+        }
 
         $pointsLabel = $data->getPoints() . ' ';
         switch ($data->getPoints()) {
@@ -353,12 +359,14 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
      * @return bool is image
      */
     private function isImage($file) {
-        $supported_image = array(
+        $supported_image = [
             'gif',
             'jpg',
             'jpeg',
-            'png'
-        );
+            'png',
+            'svg',
+            'ico',
+        ];
 
         $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION)); // Using strtolower to overcome case sensitive
         return in_array($ext, $supported_image);

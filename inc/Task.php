@@ -135,8 +135,7 @@ class Task {
      * @return string path of file
      */
     private function getFileName() {
-        global $conf;
-        return $conf['metadir'] . '/' . vsprintf($this->helper->getConf('task_data_meta_path'), [$this->year, $this->series, $this->label]);
+        return MetaFN(vsprintf($this->helper->getConf('task_data_meta_path'), [$this->year, $this->series, $this->label]), null);
     }
 
     /**
@@ -191,10 +190,6 @@ class Task {
         $this->solutionAuthors = $data['solution-authors'];
 
         return true;
-    }
-
-    public function getPluginName() {
-        return 'fkstaskrepo';
     }
 
     /**
