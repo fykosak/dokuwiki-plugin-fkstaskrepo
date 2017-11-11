@@ -65,7 +65,7 @@ class Task {
         $this->texPreproc = new TexPreproc();
         $this->year = $year;
         $this->series = $series;
-        $this->label = $label;
+        $this->label = strtoupper($label);
         $this->lang = $lang;
         $this->helper = $helper;
     }
