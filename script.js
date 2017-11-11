@@ -20,7 +20,7 @@ jQuery(function () {
 
         const addRow = (index, path = '', cation = '') => {
             maxIndex = index;
-            return '<div class="row">' +
+            return '<div class="row mb-2">' +
                 '<div class="col-6"><input type="text" class="form-control" name="problem[figures][' + index + '][path]" value="' + path + '"/></div>' +
                 '<div class="col-6"><input type="text" class="form-control" name="problem[figures][' + index + '][caption]" value="' + cation + '"/></div>' +
                 '</div>';
@@ -50,4 +50,17 @@ jQuery(function () {
         element.innerHTML += (addRow(maxIndex + 1));
     });
 
+    const addMediaEl = document.getElementById('addmedia');
+    if(addMediaEl){
+        addMediaEl.addEventListener('click',(event)=>{
+            window.DWMediaSelector.execute((url) => {
+                $('.figures .row:last input:first').val(url).trigger('input');
+            }, addMediaEl.getAttribute('data-folder-id'));
+        });
+    }
+
+    $('.dwmediaselector-open').click((event)=>{
+        window.DWMediaSelector.execute(null, event.target.getAttribute('data-media-path'));
+        return false;
+    });
 });

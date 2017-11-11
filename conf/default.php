@@ -14,13 +14,13 @@ $conf['task_template_search'] = 'system:task_template';
 $conf['page_path_mask_cs'] = "rocnik@year@:ulohy:serie@series@";
 $conf['page_path_mask_en'] = "year@year@:tasks:series@series@";
 
-$conf['brochure_path_cs']="rocnik@year@:ulohy:serie@series@.pdf";
-$conf['brochure_path_en']="year@year@:tasks:series@series@.pdf";
+$conf['brochure_path_cs']='rocnik%1$02d:ulohy:pdf:%2$d:brozurka_%1$02d_%2$d.pdf';
+$conf['brochure_path_en']='year%1$02d:tasks:pdf:%2$d:brochure_%1$02d_%2$d.pdf';
 
-$conf['solution_path_cs']=":rocnik@year@:ulohy:problem@label@.pdf";
-$conf['solution_path_en']=":year@year@:tasks:problems@label@.pdf";
+$conf['solution_path_cs']='rocnik%1$02d:ulohy:pdf:%2$d:priklad_%1$02d_%2$d_%3$s.pdf';
+$conf['solution_path_en']='year%1$02d:tasks:pdf:%2$d:task_%1$02d_%2$d_%3$s.pdf';
 
-$conf['archive_path_cs']='ulohy:start';
-$conf['archive_path_en']='ulohy:start';
+$conf['attachment_path_cs'] = 'rocnik%1$02d:ulohy:prilohy:%2$d:%3$s';
+$conf['attachment_path_en'] = 'year%1$02d:tasks:attachments:%2$d:%3$s';
 
-$conf['im_convert']='';
+$conf['task_data_meta_path'] = 'tasks:%1$d:%2$d:%3$s.json';

@@ -95,6 +95,7 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
      * @return bool If rendering was successful.
      */
     public function render($mode, Doku_Renderer $renderer, $data) {
+        $renderer->nocache();
         global $ID;
         list($state, list($pages, $lang)) = $data;
         list($currentYear, $currentSeries) = $this->extractPathParameters($ID, $lang);

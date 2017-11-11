@@ -23,10 +23,6 @@ $lang['authors'] = 'Autoři';
 $lang['solution-authors'] = 'Autoři rešení';
 $lang['figures'] = 'Přílohy';
 
-$lang['edit_form_title'] = 'Úprava úlohy';
-$lang['edit_form_name_warning'] = 'Jméno úlohy bude potřeba opravit i ve FKSDB.';
-$lang['edit_form_points_warning'] = 'Body za úlohu budou potřeba opravit i ve FKSDB.';
-$lang['edit_form_submit_warning'] = 'Nezapomeňte upravit všechny jazykové verze.';
 $lang['save'] = 'Uložit';
 
 
@@ -54,7 +50,7 @@ $lang['hard_update'] = 'Tvrdý update';
 
 $lang['batch_select'] = 'Výběr série';
 
-$lang['brochure'] = 'Brožurka se zadáním';
+$lang['brochure'] = 'Brožurka série';
 $lang['solution'] = 'Řešení';
 
 $lang['edit'] = 'Upravit úlohu';
