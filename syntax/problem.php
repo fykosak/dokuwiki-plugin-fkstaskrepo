@@ -82,10 +82,11 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
                             $parameters['series'],
                             $parameters['problem'],
                             $parameters['lang']);
-                        $problemData->load();
-                        $renderer->doc .= '<div class="task-repo task">';
-                        $this->renderContent($renderer, $problemData, !!$parameters['full']);
-                        $renderer->doc .= '</div>';
+                        if ($problemData->load()) {
+                            $renderer->doc .= '<div class="task-repo task">';
+                            $this->renderContent($renderer, $problemData, !!$parameters['full']);
+                            $renderer->doc .= '</div>';
+                        }
                         return false;
                     case 'text':
                         $problemData = new \PluginFKSTaskRepo\Task(
@@ -94,11 +95,11 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
                             $parameters['series'],
                             $parameters['problem'],
                             $parameters['lang']);
-
-                        $renderer->doc .= $problemData->getName();
-                        $renderer->doc .= "\n";
-                        $renderer->doc .= $problemData->getTask();
-
+                        if ($problemData->load()) {
+                            $renderer->doc .= $problemData->getName();
+                            $renderer->doc .= "\n";
+                            $renderer->doc .= $problemData->getTask();
+                        }
                         break;
                     default:
                         return false;

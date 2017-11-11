@@ -78,7 +78,7 @@ class syntax_plugin_fkstaskrepo_batchpdf extends DokuWiki_Syntax_Plugin {
         $attr['brochure_path'] = file_exists(mediaFN( $attr['brochure_path'])) ?  $attr['brochure_path'] : null; // Remove path if not exists
         // Include original cs brochure to en (if exists obviously)
         $attr['brochure_original'] = vsprintf($this->getConf('brochure_path_cs'), [$attr['year'], $attr['series']]);
-        $attr['brochure_original'] = file_exists(mediaFN( $attr['brochure_original'])) && $attr['brochure_lang'] != 'cs' ?  $attr['brochure_original'] : null; // Remove path to original brochure if not exists, or in case lang == cs
+        $attr['brochure_original'] = file_exists(mediaFN( $attr['brochure_original'])) && $attr['lang'] !== 'cs' ?  $attr['brochure_original'] : null; // Remove path to original brochure if not exists, or in case lang == cs
 
         // Czech Yearbook
         $attr['yearbook_original'] = vsprintf($this->getConf('yearbook_path_cs'), [$attr['year']]);

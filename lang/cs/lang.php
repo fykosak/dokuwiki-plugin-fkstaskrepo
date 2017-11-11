@@ -50,10 +50,10 @@ $lang['hard_update'] = 'Tvrdý update';
 
 $lang['batch_select'] = 'Výběr série';
 
-$lang['brochure'] = 'Brožurka série v PDF';
-$lang['solution'] = 'Řešení v PDF';
-$lang['year_book'] = 'Ročenka v PDF';
-$lang['serial'] = 'Text seriálu v PDF';
+$lang['brochure'] = 'Brožurka série';
+$lang['solution'] = 'Řešení';
+$lang['year_book'] = 'Ročenka';
+$lang['serial'] = 'Text seriálu';
 
 $lang['edit'] = 'Upravit úlohu';
 
