@@ -74,19 +74,25 @@ class syntax_plugin_fkstaskrepo_batchpdf extends DokuWiki_Syntax_Plugin {
 
         $attr['lang'] = $attr['lang'] ? $attr['lang'] : $conf['lang']; // Modify lang
 
-        $attr['brochure_path'] = vsprintf($this->getConf('brochure_path_' . $attr['lang']), [$attr['year'], $attr['series']]); // Add path
-        $attr['brochure_path'] = file_exists(mediaFN( $attr['brochure_path'])) ?  $attr['brochure_path'] : null; // Remove path if not exists
-        // Include original cs brochure to en (if exists obviously)
-        $attr['brochure_original'] = vsprintf($this->getConf('brochure_path_cs'), [$attr['year'], $attr['series']]);
-        $attr['brochure_original'] = file_exists(mediaFN( $attr['brochure_original'])) && $attr['lang'] !== 'cs' ?  $attr['brochure_original'] : null; // Remove path to original brochure if not exists, or in case lang == cs
+        if (!$attr['prefer'] || $attr['prefer'] === 'brochure') {
+            $attr['brochure_path'] = vsprintf($this->getConf('brochure_path_' . $attr['lang']), [$attr['year'], $attr['series']]); // Add path
+            $attr['brochure_path'] = file_exists(mediaFN( $attr['brochure_path'])) ?  $attr['brochure_path'] : null; // Remove path if not exists
+            // Include original cs brochure to en (if exists obviously)
+            $attr['brochure_original'] = vsprintf($this->getConf('brochure_path_cs'), [$attr['year'], $attr['series']]);
+            $attr['brochure_original'] = file_exists(mediaFN( $attr['brochure_original'])) && $attr['lang'] !== 'cs' ?  $attr['brochure_original'] : null; // Remove path to original brochure if not exists, or in case lang == cs
+        }
 
         // Czech Yearbook
-        $attr['yearbook_original'] = vsprintf($this->getConf('yearbook_path_cs'), [$attr['year']]);
-        $attr['yearbook_original'] = file_exists(mediaFN( $attr['yearbook_original']))?  $attr['yearbook_original'] : null; // Remove path to if not exists
+        if (!$attr['prefer'] || $attr['prefer'] === 'yearbook') {
+            $attr['yearbook_original'] = vsprintf($this->getConf('yearbook_path_cs'), [$attr['year']]);
+            $attr['yearbook_original'] = file_exists(mediaFN($attr['yearbook_original'])) ? $attr['yearbook_original'] : null; // Remove path to if not exists
+        }
 
         // Czech Serial
-        $attr['serial_original'] = vsprintf($this->getConf('serial_path_cs'), [$attr['year'], $attr['series']]);
-        $attr['serial_original'] = file_exists(mediaFN( $attr['serial_original']))?  $attr['serial_original'] : null; // Remove path to if not exists
+        if (!$attr['prefer'] || $attr['prefer'] === 'serial') {
+            $attr['serial_original'] = vsprintf($this->getConf('serial_path_cs'), [$attr['year'], $attr['series']]);
+            $attr['serial_original'] = file_exists(mediaFN($attr['serial_original'])) ? $attr['serial_original'] : null; // Remove path to if not exists
+        }
 
         return $attr;
     }

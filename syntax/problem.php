@@ -124,7 +124,7 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
         $this->renderImageFigures($renderer, $data);
         $this->renderTask($renderer, $data);
         $this->renderFileAttachments($renderer, $data);
-        $renderer->doc .= '<div class="mb-3">';
+        $renderer->doc .= '<div class="mb-3 d-inline-block">';
         $hasSolution = $this->renderSolutions($renderer, $data);
         $this->renderTags($renderer, $data);
         $renderer->doc .= '</div>';
@@ -176,16 +176,23 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
      * @param \PluginFKSTaskRepo\Task $data
      */
     private function renderFileAttachments(Doku_Renderer &$renderer, \PluginFKSTaskRepo\Task $data) {
+        $wrapperRendered = false;
         if (is_array($data->getFigures())) {
-            $renderer->doc .= '<div class="task-fileattachments">';
+
             foreach ($data->getFigures() as $figure) {
                 if(!$this->isImage(ml($figure['path']))) { // Checks if it is an image
+                    if (!$wrapperRendered) {
+                        $renderer->doc .= '<div class="task-fileattachments mb-3">';
+                        $wrapperRendered = true;
+                    }
                     $renderer->doc .= '<div class="task-fileattachments-file">';
                     $renderer->internalmedia($figure['path'], $figure['caption'] ?: null, null, null, null, null, 'linkonly');
                     $renderer->doc .= '</div>';
                 }
             }
-            $renderer->doc .= '</div>';
+            if ($wrapperRendered) {
+                $renderer->doc .= '</div>';
+            }
         }
     }
 
