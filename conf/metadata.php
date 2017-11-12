@@ -22,3 +22,6 @@ $meta['attachment_path_cs'] = ['string'];
 $meta['attachment_path_en'] = ['string'];
 
 $meta['task_data_meta_path'] = ['string'];
+
+$meta['archive_path_cs'] = ['string'];
+$meta['archive_path_en'] = ['string'];
