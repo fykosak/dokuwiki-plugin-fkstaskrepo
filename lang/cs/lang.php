@@ -55,6 +55,9 @@ $lang['solution'] = 'Řešení úlohy';
 $lang['year_book'] = 'Ročenka %1$d. ročníku';
 $lang['serial'] = '%2$d. díl seriálu';
 
+$lang['archive_year'] = '%d. ročník';
+$lang['archive_series'] = 'Série %d';
+
 $lang['edit'] = 'Upravit úlohu';
 
 $lang['tag__mechHmBodu'] = 'mechanika hmotného bodu';

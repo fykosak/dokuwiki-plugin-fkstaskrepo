@@ -56,6 +56,9 @@ $lang['solution_original'] = "Solution in Czech";
 $lang['year_book'] = 'Year book in Czech';
 $lang['serial'] = 'Serial in Czech';
 
+$lang['archive_year'] = 'Year %d';
+$lang['archive_series'] = 'Series %d';
+
 $lang['batch_select'] = 'Select year';
 
 $lang['edit'] = 'Edit problem';
