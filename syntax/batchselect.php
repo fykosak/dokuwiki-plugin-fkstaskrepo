@@ -121,7 +121,7 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
     private function renderSeries(Doku_Renderer &$renderer, $pages, $lang, $currentYear = null, $currentSeries = null) {
         foreach ($pages as $year => $batches) {
             $renderer->doc .= '<div class="year" ' . ($currentYear == $year ? '' : 'style="display:none"') . ' data-year="' . $year . '">';
-            $renderer->doc .= $this->helper->getSpecLang('series', $lang);
+            //$renderer->doc .= $this->helper->getSpecLang('series', $lang);
             $renderer->doc .= '<ul class="pagination">';
             foreach ($batches as $batch => $page) {
                 $renderer->doc .= '<li class="page-item ' . ($currentSeries == $batch && $currentYear == $year ? 'active' : '') . '"><a class="page-link" href="' . wl($page) . '" >' . $batch . '</a></li>';
@@ -132,7 +132,7 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
     }
 
     private function renderYearSelect(Doku_Renderer &$renderer, $pages, $lang, $currentYear = null) {
-        $renderer->doc .= '<select class="form-control" size="">';
+        $renderer->doc .= '<select class="form-control mb-2" size="">';
         foreach ($pages as $year => $batches) {
             $renderer->doc .= ' <option value="' . $year . '" ' . ($year == $currentYear ? 'selected' : '') . '>' . $this->helper->getSpecLang('year', $lang) . ' ' . $year . '</option>';
         }

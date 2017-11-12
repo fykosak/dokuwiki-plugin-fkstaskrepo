@@ -124,8 +124,10 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
         $this->renderImageFigures($renderer, $data);
         $this->renderTask($renderer, $data);
         $this->renderFileAttachments($renderer, $data);
+        $renderer->doc .= '<div class="mb-3">';
         $hasSolution = $this->renderSolutions($renderer, $data);
         $this->renderTags($renderer, $data);
+        $renderer->doc .= '</div>';
         if ($hasSolution) {
             $this->renderOrigin($renderer, $data);
         }
@@ -239,13 +241,13 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
         $seriesLabel = $this->getSeriesLabel($data);
         $yearLabel = $this->getYearLabel($data);
         $renderer->doc .= '<h3 class="task-headline task-headline-'.$this->getHeadlineClass($data).'">';
+        $renderer->doc .= $pointsLabel ? '<small class="pull-right ml-3">(' . $pointsLabel . ')</small>' : '';
         $renderer->doc .= $this->getProblemIcon($data);
         if ($full) {
             $renderer->doc .= $seriesLabel . ' ' . $yearLabel . ' - ' . $problemLabel . ' ' . $problemName;;
         } else {
             $renderer->doc .= $problemLabel . ' ' . $problemName;
         }
-        $renderer->doc .= $pointsLabel ? '<small class="pull-right">(' . $pointsLabel . ')</small>' : '';
         $renderer->doc .= '</h3>';
     }
 

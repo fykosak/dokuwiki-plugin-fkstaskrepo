@@ -102,26 +102,27 @@ class syntax_plugin_fkstaskrepo_batchpdf extends DokuWiki_Syntax_Plugin {
     public function render($mode, \Doku_Renderer $renderer, $data) {
         switch ($mode) {
             case 'xhtml':
+                // Year book and serial are only in Czech
+                if ($data['yearbook_original']) {
+                    $renderer->doc .= '<div class="seriespdf yearbook">';
+                    $renderer->internalmedia($data['yearbook_original'], vsprintf($this->helper->getSpecLang('year_book',$data['lang']), [$data['year'], $data['series']]),null,null,null,null,'linkonly');
+                    $renderer->doc .= '</div>';
+                }
+
                 if ($data['brochure_original']) {
                     $renderer->doc .= '<div class="seriespdf brochure brochure-original">';
-                    $renderer->internalmedia($data['brochure_original'], $this->helper->getSpecLang('brochure_original',$data['lang']),null,null,null,null,'linkonly');
+                    $renderer->internalmedia($data['brochure_original'], vsprintf($this->helper->getSpecLang('brochure_original',$data['lang']), [$data['year'], $data['series']]),null,null,null,null,'linkonly');
                     $renderer->doc .= '</div>';
                 }
                 if ($data['brochure_path']) {
                     $renderer->doc .= '<div class="seriespdf brochure brochure-default">';
-                    $renderer->internalmedia($data['brochure_path'], $this->helper->getSpecLang('brochure',$data['lang']),null,null,null,null,'linkonly');
+                    $renderer->internalmedia($data['brochure_path'], vsprintf($this->helper->getSpecLang('brochure',$data['lang']), [$data['year'], $data['series']]),null,null,null,null,'linkonly');
                     $renderer->doc .= '</div>';
                 }
 
-                // Year book and serial are only in Czech
-                if ($data['yearbook_original']) {
-                    $renderer->doc .= '<div class="seriespdf yearbook">';
-                    $renderer->internalmedia($data['yearbook_original'], $this->helper->getSpecLang('year_book',$data['lang']),null,null,null,null,'linkonly');
-                    $renderer->doc .= '</div>';
-                }
                 if ($data['serial_original']) {
                     $renderer->doc .= '<div class="seriespdf serial">';
-                    $renderer->internalmedia($data['serial_original'], $this->helper->getSpecLang('serial',$data['lang']),null,null,null,null,'linkonly');
+                    $renderer->internalmedia($data['serial_original'], vsprintf($this->helper->getSpecLang('serial',$data['lang']), [$data['year'], $data['series']]),null,null,null,null,'linkonly');
                     $renderer->doc .= '</div>';
                 }
                 return true;
