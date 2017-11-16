@@ -172,6 +172,7 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
     private function prepareProblem(SimpleXMLElement $problem, $year, $series, $lang) {
         // preprocess figure
         $task = new \PluginFKSTaskRepo\Task($this->helper, $year, $series, (string)$problem->label, $lang);
+        $exists = $task->load();
         $task->extractFigure($problem);
         /**
          * @var $child SimpleXMLElement

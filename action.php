@@ -228,6 +228,8 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
 
         $problem = new \PluginFKSTaskRepo\Task($this->helper, $problemData['year'], $problemData['series'], $problemData['label'], $problemData['lang']);
 
+        $problem->load();
+
         //$problem->setNumber((int)$INPUT->param('problem')['number']);
         $problem->setPoints((int)$INPUT->param('problem')['points'] ?: null);
         $problem->setAuthors(array_map('trim', explode(',', $INPUT->param('problem')['authors'])));
