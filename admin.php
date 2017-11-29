@@ -14,6 +14,8 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
     const DEFAULT_LANGUAGE = 'cs';
     static $availableVersions = [1];
 
+    const SUPPORTED_LANGUAGES = ['cs', 'en'];
+
     /**
      *
      * @var helper_plugin_fkstaskrepo
@@ -40,145 +42,184 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
 
     /**
      * Should carry out any processing required by the plugin.
+     * @todo Download XML, brochure, serial, tasks_sol
      */
     public function handle() {
         global $INPUT;
         $year = $INPUT->int('year', null);
         $series = $INPUT->int('series', null);
-        $language = $INPUT->str('language', null);
 
-        if ($year !== null && $series !== null && $language !== null) {
-            if ($language == "ALL") {
-                $language = null;
-            }
+        // Process XML upload
+        if ($INPUT->bool('uploadxml')) {
             if ($_FILES['xml_file'] && $_FILES['xml_file']['name']) {
                 if ($_FILES['xml_file']['error'] > 0) {
-                    msg('Upload failed.', -1);
+                    msg('Nepodařilo se nahrát XML soubor.', -1);
                     return;
                 }
-                $content = file_get_contents($_FILES['xml_file']['tmp_name']);
-            } else {
-                $content = $this->helper->getSeriesData($year, $series, helper_plugin_fksdownloader::EXPIRATION_FRESH);
-                if (!$content) {
-                    return;
-                }
+                $this->processSeries(
+                    file_get_contents($_FILES['xml_file']['tmp_name']),
+                    $INPUT->bool('uploadxmlhard')
+                );
             }
-            $this->processSeries($content, $year, $series, $language);
+        }
+
+        // Process Astrid download XML
+        if ($INPUT->bool('downloadtasks') && $year && $series) {
+            // Task XML
+            $data = $this->helper->getSeriesData($year, $series, helper_plugin_fksdownloader::EXPIRATION_FRESH);
+
+            if ($data) {
+                $this->processSeries(
+                    $data,
+                    $INPUT->bool('downloadtaskshard')
+                );
+            } else {
+                msg('Nepodařilo se nahrát XML soubor.', -1);
+            }
+
+            // Brochure
+            $st = $this->helper->downloadBrochure($year, $series);
+            msg(($st ? '<a href="' . ml($st) . '">' : null) . 'Brožurka série v PDF' . ($st ? '</a>' : null), $st ? 1 : -1);
+
+            // Serial
+            $st = $this->helper->downloadSerial($year, $series);
+            msg(($st ? '<a href="' . ml($st) . '">' : null) . 'Seriál série v PDF' . ($st ? '</a>' : null), $st ? 1 : -1);
+
+        }
+
+        // Process solution download
+        if ($INPUT->bool('downloadsolutions') && $year && $series) {
+            foreach ($this->helper->getSupportedTasks() as $task) {
+                $st = $this->helper->downloadSolution($year, $series, $task);
+                msg(($st ? '<a href="' . ml($st) . '">' : null) . 'Řešení úlohy ' . $task . ($st ? '</a>' : null), $st ? 1 : -1);
+            }
         }
     }
 
     public function html() {
         global $ID;
-        ptln('<h1>' . $this->getLang('menu') . '</h1>');
+        ptln('<h1>Stažení dat z Astrid</h1>');
         $form = new \dokuwiki\Form\Form();
-
+        $form->addClass('task-repo-edit');
         $form->attrs(['class' => $this->getPluginName(), 'enctype' => 'multipart/form-data']);
-        $form->addFieldsetOpen($this->getLang('update'));
+
+        $form->addHTML('<p>Vyberte číslo série a ročníku a klikněte na příslušné tlačítko. Dojde ke stažení, popřípadě aktualizaci, dat na webu z <a href="astrid.fykos.cz">astrid.fykos.cz</a>. Pokud přidáváte novou sérii, nezapomeňte upravit odkazy v hlavním menu jak v české, tak i v anglické verzi. Vše ostatní by mělo být automatické.</p>');
+
+        $form->addTagOpen('div')->addClass('form-group');
+        $inputElement = new dokuwiki\Form\InputElement('number', 'year', 'Číslo ročníku');
+        $inputElement->attrs(['class' => 'form-control']);
+        $form->addElement($inputElement);
+        $form->addTagClose('div');
+
+        $form->addTagOpen('div')->addClass('form-group');
+        $inputElement = new dokuwiki\Form\InputElement('number', 'series', 'Číslo série');
+        $inputElement->attrs(['class' => 'form-control']);
+        $form->addElement($inputElement);
+        $form->addTagClose('div');
+
+
+        $form->addHTML('<hr/>');
+
+        $form->addButton('downloadtasks', 'Importovat zadání, brožurku a seriál této série.')->addClass('btn btn-primary d-block');
+        $form->addCheckbox('downloadtaskshard', 'Přepsat existující příklady na webu.');
+        $form->addHTML('<small class="form-text">Stáhne z Astridu české a anglické zadání, brožurku v PDF a seriál v PDF.</small>');
+
+        $form->addHTML('<hr/>');
+
+        $form->addButton('downloadsolutions', 'Stáhnout a zobrazit na webu řešení této série.')->addClass('btn btn-danger');
+        $form->addHTML('<small class="form-text text-danger">Stáhne z Astridu řešení k jednotlivým příkladům v PDF a zobrazí je na webu.</small>');
+
         $form->setHiddenField('id', $ID);
         $form->setHiddenField('do', 'admin');
-        $form->addTextInput('year', $this->getLang('year'))->attr('pattern', '[0-9]+');
-        $form->addTextInput('series', $this->getLang('series'))->attr('pattern', '[0-9]+');
-        $form->addDropdown('language', ['ALL', 'cs', 'en'], $this->getLang('language'));
 
-        $form->addElement(new \dokuwiki\Form\InputElement('file', 'xml_file', $this->getLang('xml_file')));
-        $form->addCheckbox('hard', $this->getLang('hard_update'));
-        $form->addButton('submit', $this->getLang('update'));
+        $form->addHTML('<hr/>');
 
-        $form->addFieldsetClose();
+        $form->addButton('uploadxml', 'Nahrát XML ručně ze souboru.')->addClass('btn btn-warning d-block');
+        $form->addCheckbox('uploadxmlhard', 'Přepsat existující příklady na webu.');
+        $form->addElement((new \dokuwiki\Form\InputElement('file', 'xml_file'))->addClass('d-block mt-3'));
+
+        $form->addHTML('<small class="form-text">Tuto možnost používejte pouze tehdy, pokud není možné automaticky importovat z Astrid.</small>');
+
         echo $form->toHTML();
     }
 
-    private function processSeries($content, $year, $series, $language) {
-        global $INPUT;
-
+    /**
+     * Process XML and creates tasks
+     * @param $content string XML content
+     * @param $hard bool overwrite existing tasks
+     */
+    private function processSeries($content, $hard) {
         $seriesXML = simplexml_load_string($content);
-        if (!in_array((int)$seriesXML->attributes()->version, self::$availableVersions)) {
-            msg('Version not supported', -1);
-            return;
-        };
 
         $deadline = $seriesXML->deadline;
         $deadline_post = $seriesXML->{'deadline-post'};
 
-        if ($INPUT->int('hard') == 0) {
-            if ((int)$seriesXML->number != $series) {
-                msg('Series must be same as in the XML', -1);
-                return;
-            }
-            $m = [];
-            preg_match('/[0-9]+/', $seriesXML->contest, $m);
+        $m = [];
+        preg_match('/[0-9]+/', $seriesXML->contest, $m);
+        $year = (int)$m[0]; // FYKOSXX
 
-            if ((int)$m[0] != $year) {
-                msg('Year must be same as in the XML', -1);
-                return;
-            }
-        }
-        $languages = $this->getLanguages($seriesXML);
-        foreach ($languages as $lang) {
-            //$this->extractProblem($seriesXML, $lang);
+        $series = (int)$seriesXML->number;
 
-            if ($language && $lang != $language) {
-                continue;
-            }
+        foreach (self::SUPPORTED_LANGUAGES as $lang) {
             $pagePath = sprintf($this->getConf('page_path_mask_' . $lang), $year, $series);
             if ($pagePath == "") {
                 msg('No page path defined for language ' . $lang, -1);
                 continue;
             }
-            $this->setTranslations($pagePath, $year, $series, $languages, $lang);
+
+            // Loads template for page
             $pageTemplate = io_readFile(wikiFN($this->getConf('series_template')));
 
+            // Replace data in template
             $pageContent = $this->replaceVariables([
-                'human-series' => $series . '. ' . $this->helper->getSpecLang('series', $lang),
-                'label' => '@label@',
-                'brochure_path' => vsprintf($this->getConf('brochure_path_' . $lang), [$year, $series]),
                 'human-deadline' => $this->helper->getSpecLang('deadline', $lang) . ': ' .
                     date($this->helper->getSpecLang('deadline-format', $lang), strtotime($deadline)),
                 'human-deadline-post' => $this->helper->getSpecLang('deadline-post', $lang) . ': ' .
                     date($this->helper->getSpecLang('deadline-post-format', $lang), strtotime($deadline_post)),
-                'brochure' => $this->helper->getSpecLang('brochure', $lang),
-
-                'human-year' => $year . '. ' . $this->helper->getSpecLang('years', $lang),
                 'lang' => $lang,
                 'year' => $year,
                 'series' => $series,
             ],
                 $pageTemplate);
 
-            $pageContent = $this->replaceProblems($pageContent, $seriesXML, $year, $series, $lang);
+            // Saves problems
+            foreach ($seriesXML->problems->children() as $problem) {
+                $this->createTask($problem, $year, $series, $lang, $hard);
+            }
 
+            // Saves pages with problems
             io_saveFile(wikiFN($pagePath), $pageContent);
-            msg(sprintf('Updated <a href="%s">%s</a>.', wl($pagePath, null, true), $pagePath));
+
+            msg(sprintf('<a href="%s">Stránka série v jazyce ' . $lang . '</a>.', wl($pagePath, null, true), $pagePath), 1);
         }
-
     }
 
-    private function replaceProblems($pageContent, SimpleXMLElement $seriesXML, $year, $series, $lang) {
-        $that = $this;
-        return preg_replace_callback('/--\s*problem\s--(.*)--\s*endproblem\s*--/is',
-            function () use ($seriesXML, $that, $year, $series, $lang) {
-                $problemsString = '';
-                /**
-                 * @var $problem SimpleXMLElement
-                 */
-                foreach ($seriesXML->problems->children() as $problem) {
-                    $problemsString .= $this->prepareProblem($problem, $year, $series, $lang);
-                }
-                return $problemsString;
-            },
-            $pageContent);
-    }
-
-    private function prepareProblem(SimpleXMLElement $problem, $year, $series, $lang) {
-        // preprocess figure
+    /**
+     * Saves specific problem from XMLElement
+     * @param SimpleXMLElement $problem
+     * @param $year
+     * @param $series
+     * @param $lang
+     * @param bool $hard overwrite existing task
+     * @return bool
+     */
+    private function createTask(SimpleXMLElement $problem, $year, $series, $lang, $hard) {
         $task = new \PluginFKSTaskRepo\Task($this->helper, $year, $series, (string)$problem->label, $lang);
         $exists = $task->load();
-        $task->extractFigure($problem);
+
+        if (!$hard && $exists) {
+            msg("{$task->getName()} ($year-$series-{$task->getLabel()}-$lang) byla přeskočena.", 0);
+            return true;
+        }
+
+        // Save figures
+        $task->saveFiguresRawData($this->extractFigures($problem, $lang));
+
         /**
          * @var $child SimpleXMLElement
          */
         foreach ($problem->children() as $k => $child) {
-            if ($task->isActualLang($child)) {
+            if ($this->hasLang($child, $lang)) {
                 switch ($k) {
                     case 'number':
                         $task->setNumber((int)$child);
@@ -219,64 +260,58 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
             }
         }
         $task->save();
-        $this->helper->storeTags($task->getYear(), $task->getSeries(), $task->getLabel(), (array)$problem->topics->topic);
-        return '<fkstaskrepo lang="' . $task->getLang() . '" year="' . $task->getYear() . '" series="' . $task->getSeries() . '" problem="' .
-            $task->getLabel() . '"/>' . "\n";
 
+        msg("{$task->getName()} ($year-$series-{$task->getLabel()}-$lang)", 1);
+
+        $this->helper->storeTags($task->getYear(), $task->getSeries(), $task->getLabel(), (array)$problem->topics->topic);
+        return true;
     }
 
     /**
-     * @param $pagePath
-     * @param $year
-     * @param $series
-     * @param $languages
-     * @param $lang
-     * @deprecated
+     * Checks if the SimpleXMLElement $e has set the specific lang, or nothing
+     * @param SimpleXMLElement $e
+     * @param string $lang
+     * @return bool
      */
-    private function setTranslations($pagePath, $year, $series, $languages, $lang) {
-        global $INFO;
-
-        $file = wikiFN($pagePath);
-        $created = @filectime($file);
-        $meta = [];
-        $meta['date']['created'] = $created;
-        $user = $_SERVER['REMOTE_USER'];
-        if ($user) $meta['creator'] = $INFO['userinfo']['name'];
-        if ($lang != self::DEFAULT_LANGUAGE) {
-            ${self::DEFAULT_LANGUAGE . 'Path'} = sprintf($this->getConf('page_path_mask_' . self::DEFAULT_LANGUAGE),
-                $year,
-                $series);
-
-            $meta['relation']['istranslationof'][${self::DEFAULT_LANGUAGE . 'Path'}] = self::DEFAULT_LANGUAGE;
-        } else {
-            $meta['relation']['translations'] = [];
-            foreach ($languages as $l) {
-                $meta['relation']['translations'][sprintf($this->getConf('page_path_mask_' . $l), $year, $series)] = $l;
-            }
-
-        }
-        $meta['language'] = $lang;
-
-        p_set_metadata($pagePath, $meta);
+    private function hasLang(\SimpleXMLElement $e, $lang) {
+        return (($lang == (string)$e->attributes(\helper_plugin_fkstaskrepo::XMLNamespace)->lang) ||
+            (string)$e->attributes(\helper_plugin_fkstaskrepo::XMLNamespace)->lang == "");
     }
 
-    private function getLanguages(SimpleXMLElement $seriesXML) {
-        $languages = [];
-        /**
-         * @var $e SimpleXMLElement
-         */
-        foreach ($seriesXML->problems->xpath('*/*[@xml:lang]') as $e) {
-            $l = (string)$e->attributes('http://www.w3.org/XML/1998/namespace')->lang;
-            if (!in_array($l, $languages)) {
-                $languages[] = $l;
+    /**
+     * @param SimpleXMLElement $problem
+     * @param $lang
+     * @return array
+     * @todo Solve languages
+     */
+    private function extractFigures(\SimpleXMLElement $problem, $lang) {
+        $figuresData = [];
+        if ((string)$problem->figures != "") {
+            foreach ($problem->figures->figure as $figure) {
+                if ($this->hasLang($figure, $lang)) {
+                    $simpleFigure = [];
+                    $simpleFigure['caption'] = (string)$figure->caption;
+                    /**
+                     * @var $data \SimpleXMLElement
+                     */
+                    foreach ($figure->data as $data) {
+                        $type = (string)$data->attributes()->extension;
+                        $simpleFigure['data'][$type] = trim((string)$data);
+                    }
+                    $figuresData[] = $simpleFigure;
+                }
             }
         }
-        if (count($languages) == 0) {
-            msg('No language found!!', -1);
-        }
-        return $languages;
+
+        return $figuresData;
     }
 
+    /**
+     * Replaces data in string
+     * @param array $parameters
+     * @param string $template
+     * @return string
+     */
     private function replaceVariables($parameters, $template) {
         $that = $this;
 

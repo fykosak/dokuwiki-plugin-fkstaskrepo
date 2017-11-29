@@ -55,7 +55,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         return sprintf($mask, $year, $series);
     }
 
-    public function getSeriesData($year, $series, $expiration = helper_plugin_fksdownloader::EXPIRATION_NEVER) {
+    public function getSeriesData($year, $series, $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH) {
         $path = $this->getPath($year, $series);
         return $this->downloader->downloadWebServer($expiration, $path);
     }
@@ -63,6 +63,59 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
     public function getSeriesFilename($year, $series) {
         return $this->downloader->getCacheFilename($this->downloader->getWebServerFilename($this->getPath($year,
             $series)));
+    }
+
+    /**
+     * Downloads brochure from the web server and saves it according the path mask as a media.
+     * For now only Czech version is supported.
+     * @param int $year
+     * @param int $series
+     * @param int $expiration
+     * @return false|string
+     */
+    public function downloadBrochure($year, $series, $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH) {
+        $content = $this->downloader->downloadWebServer($expiration, sprintf($this->getConf('remote_brochure_path_mask'), $year, $series));
+
+        $res = io_saveFile(mediaFN($fileID = sprintf($this->getConf('brochure_path_cs'), $year, $series)), $content);
+
+        return ($content && $res) ? $fileID : false;
+    }
+
+    /**
+     * Downloads serial from the web server and saves it according the path mask as a media.
+     * For now only Czech version is supported.
+     * @param int $year
+     * @param int $series
+     * @param int $expiration
+     * @return false|string
+     */
+    public function downloadSerial($year, $series, $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH) {
+        $content = $this->downloader->downloadWebServer($expiration, sprintf($this->getConf('remote_serial_path_mask'), $year, $series));
+
+        $res = io_saveFile(mediaFN($fileID = sprintf($this->getConf('serial_path_cs'), $year, $series)), $content);
+
+        return ($content && $res) ? $fileID : false;
+    }
+
+    /**
+     * For now only Czech version is supported.
+     * @param int $year
+     * @param int $series
+     * @param string $task IT IS LABEL, NOT A NUMBER
+     * @param int $expiration
+     * @return bool|string
+     */
+    public function downloadSolution($year, $series, $task, $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH) {
+        $content = $this->downloader->downloadWebServer($expiration, vsprintf($this->getConf('remote_task_solution_path_mask'), [$year, $series, null, null, $this->labelToNumber($task)]));
+
+        $res = io_saveFile(
+            mediaFN($fileID = vsprintf(
+                $this->getConf('solution_path_cs'),
+                [$year, $series, strtolower($task)]
+            )), $content
+        );
+
+        return ($content && $res) ? $fileID : false;
     }
 
     /*
@@ -179,6 +232,39 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         }
         $html .= '</a>';
         return $html;
+    }
+
+
+    public function labelToNumber ($label) {
+        $dictionary = explode(',', $this->getConf('label_number_tasks_used'));
+        foreach ($dictionary as $pair) {
+            $pair = explode('/', $pair);
+            if ($pair[0] == $label) {
+                return $pair[1];
+            }
+        }
+        return null;
+    }
+
+    public function numberToLabel ($number) {
+        $dictionary = explode(',', $this->getConf('label_number_tasks_used'));
+        foreach ($dictionary as $pair) {
+            $pair = explode('/', $pair);
+            if ($pair[1] == $number) {
+                return (int)$pair[0];
+            }
+        }
+        return null;
+    }
+
+    public function getSupportedTasks () {
+        $dictionary = explode(',', $this->getConf('label_number_tasks_used'));
+        $list = [];
+        foreach ($dictionary as $pair) {
+            $pair = explode('/', $pair);
+            $list[(int)$pair[1]] = $pair[0];
+        }
+        return $list;
     }
 }
 
