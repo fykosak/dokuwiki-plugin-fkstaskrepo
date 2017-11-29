@@ -3,7 +3,7 @@
  * @var array $lang
  * @author Michal Koutny, Michal Červeňák
  */
-$lang['menu'] = 'Upload úloh';
+$lang['menu'] = 'Stažení úloh a řešení z Astrid';
 
 $lang['name'] = 'Název';
 $lang['language'] = 'Jazyk';

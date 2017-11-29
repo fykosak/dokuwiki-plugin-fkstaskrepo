@@ -70,46 +70,19 @@ class Task {
         $this->helper = $helper;
     }
 
-    public function isActualLang(\SimpleXMLElement $e) {
-        return (($this->lang == (string)$e->attributes(\helper_plugin_fkstaskrepo::XMLNamespace)->lang) ||
-            (string)$e->attributes(\helper_plugin_fkstaskrepo::XMLNamespace)->lang == "");
-    }
-
     /**
-     * @param \SimpleXMLElement $problem
+     * @param $figures
      */
-    public function extractFigure(\SimpleXMLElement $problem) {
-        if ((string)$problem->figures != "") {
-            foreach ($problem->figures->figure as $figure) {
-                if ($this->isActualLang($figure)) {
-                    $simpleFigure = [];
-                    $simpleFigure['caption'] = (string)$figure->caption;
-                    /**
-                     * @var $data \SimpleXMLElement
-                     */
-                    foreach ($figure->data as $data) {
-                        $type = (string)$data->attributes()->extension;
-                        $simpleFigure['data'][$type] = trim((string)$data);
-                    }
-                    $this->saveFigures($simpleFigure);
-                }
-            }
-        }
-    }
+    public function saveFiguresRawData($figures) {
+        $this->figures = [];
 
-    /**
-     * Saves figures to server
-     * @param $figure []
-     */
-    private function saveFigures($figure) {
-        if (!empty($figure) && !empty($figure['data'])) {
-            foreach ($figure['data'] as $type => $imgContent) {
-                if (!$type) {
-                    msg('invalid or empty extenson figure: ' . $type, -1);
-                    continue;
-                }
-                $name = $this->getAttachmentPath($figure['caption'], $type);
-                if (io_saveFile(mediaFN($name), (string)trim($imgContent))) {
+        foreach ($figures as $figure) {
+            $figureGoodForm = [];
+            $figureGoodForm['caption'] = $figure['caption'];
+
+            foreach ($figure as $ext => $data) {
+                $name = $this->getAttachmentPath($figure['caption'], $ext);
+                if (io_saveFile(mediaFN($name), (string)trim($data))) {
                     msg('Figure "' . $figure['caption'] . '" for language ' . $this->lang . ' has been saved', 1);
                 } else {
                     msg('Figure "' . $figure['caption'] . '" for language ' . $this->lang . ' has not saved properly!', -1);

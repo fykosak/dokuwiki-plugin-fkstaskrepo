@@ -226,7 +226,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         $problemData = $INPUT->param('problem');
 
 
-        $problem = new \PluginFKSTaskRepo\Task($this->helper, $problemData['year'], $problemData['series'], $problemData['label'], $problemData['lang']);
+        $problem = new \PluginFKSTaskRepo\Task($this->helper, (int)$problemData['year'], (int)$problemData['series'], (string)$problemData['label'], $problemData['lang']);
 
         $problem->load();
 
