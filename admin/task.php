@@ -1,20 +1,11 @@
 <?php
 
-/**
- * DokuWiki Plugin fkstaskrepo (Admin Component)
- *
- * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
- * @author  Michal Koutný <michal@fykos.cz>
- */
 // must be run within Dokuwiki
 if (!defined('DOKU_INC')) die();
 
-class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
+class admin_plugin_fkstaskrepo_task extends DokuWiki_Admin_Plugin {
 
-    const DEFAULT_LANGUAGE = 'cs';
     static $availableVersions = [1];
-
-    const SUPPORTED_LANGUAGES = ['cs', 'en'];
 
     /**
      *
@@ -24,6 +15,16 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
 
     public function __construct() {
         $this->helper = $this->loadHelper('fkstaskrepo');
+    }
+
+    public function getMenuText($language)
+    {
+        return 'Stáhnout zadání série z Astrid';
+    }
+
+    public function getMenuIcon() {
+        $plugin = $this->getPluginName();
+        return DOKU_PLUGIN . $plugin . '/task.svg';
     }
 
     /**
@@ -42,12 +43,13 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
 
     /**
      * Should carry out any processing required by the plugin.
-     * @todo Download XML, brochure, serial, tasks_sol
      */
     public function handle() {
         global $INPUT;
         $year = $INPUT->int('year', null);
         $series = $INPUT->int('series', null);
+
+        $taskSelect = $INPUT->arr('taskselect', null);
 
         // Process XML upload
         if ($INPUT->bool('uploadxml')) {
@@ -58,47 +60,41 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
                 }
                 $this->processSeries(
                     file_get_contents($_FILES['xml_file']['tmp_name']),
-                    $INPUT->bool('uploadxmlhard')
+                    $INPUT->bool('uploadxmlhard'),
+                    $taskSelect
                 );
             }
         }
 
         // Process Astrid download XML
-        if ($INPUT->bool('downloadtasks') && $year && $series) {
-            // Task XML
-            $data = $this->helper->getSeriesData($year, $series, helper_plugin_fksdownloader::EXPIRATION_FRESH);
+        if ($INPUT->bool('download') && $year && $series) {
+            // Tasks
+            if ($INPUT->bool('downloadtasks')) {
+                // Task XML
+                $data = $this->helper->getSeriesData($year, $series, helper_plugin_fksdownloader::EXPIRATION_FRESH);
 
-            if ($data) {
-                $this->processSeries(
-                    $data,
-                    $INPUT->bool('downloadtaskshard')
-                );
-            } else {
-                msg('Nepodařilo se nahrát XML soubor.', -1);
+                if ($data) {
+                    $this->processSeries(
+                        $data,
+                        $INPUT->bool('downloadtaskshard'),
+                        $taskSelect
+                    );
+                } else {
+                    msg('Nepodařilo se nahrát XML soubor.', -1);
+                }
             }
 
-            // Brochure
-            $st = $this->helper->downloadBrochure($year, $series);
-            msg(($st ? '<a href="' . ml($st) . '">' : null) . 'Brožurka série v PDF' . ($st ? '</a>' : null), $st ? 1 : -1);
-
-            // Serial
-            $st = $this->helper->downloadSerial($year, $series);
-            msg(($st ? '<a href="' . ml($st) . '">' : null) . 'Seriál série v PDF' . ($st ? '</a>' : null), $st ? 1 : -1);
-
-        }
-
-        // Process solution download
-        if ($INPUT->bool('downloadsolutions') && $year && $series) {
-            foreach ($this->helper->getSupportedTasks() as $task) {
-                $st = $this->helper->downloadSolution($year, $series, $task);
-                msg(($st ? '<a href="' . ml($st) . '">' : null) . 'Řešení úlohy ' . $task . ($st ? '</a>' : null), $st ? 1 : -1);
+            // Documents
+            foreach ($INPUT->arr('documentselect', null) ?: [] as $ID => $document) {
+                $st = $this->helper->downloadDocument($year, $series, $this->getSupportedDocuments()[$ID]['remotepathmask'], $this->getSupportedDocuments()[$ID]['localpathmask']);
+                msg(($st ? '<a href="' . ml($st) . '">' : null) . $this->getSupportedDocuments()[$ID]['name'] . ($st ? '</a>' : null), $st ? 1 : -1);
             }
         }
     }
 
     public function html() {
         global $ID;
-        ptln('<h1>Stažení dat z Astrid</h1>');
+        ptln('<h1>' . $this->getMenuText('cs') . '</h1>');
         $form = new \dokuwiki\Form\Form();
         $form->addClass('task-repo-edit');
         $form->attrs(['class' => $this->getPluginName(), 'enctype' => 'multipart/form-data']);
@@ -117,28 +113,33 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
         $form->addElement($inputElement);
         $form->addTagClose('div');
 
+        // List of tasks to download
+        $this->helper->addTaskSelectTable($form);
 
         $form->addHTML('<hr/>');
 
-        $form->addButton('downloadtasks', 'Importovat zadání, brožurku a seriál této série.')->addClass('btn btn-primary d-block');
-        $form->addCheckbox('downloadtaskshard', 'Přepsat existující příklady na webu.');
+        $form->addButton('download', 'Importovat zadání, brožurku a seriál této série.')->addClass('btn btn-primary d-block mb-3');
+
+        // Some stuff to decide what do to...
+            $form->addTagOpen('div');
+            $form->addCheckbox('downloadtasks', 'Stahovat vůbec zadání?')->attr('checked', 'checked');
+            $form->addTagClose('div');
+
+            $form->addTagOpen('div');
+            $form->addCheckbox('downloadtaskshard', 'Přepsat existující příklady na webu.');
+            $form->addTagClose('div');
+
+            $this->addDocumentSelectList($form);
+
         $form->addHTML('<small class="form-text">Stáhne z Astridu české a anglické zadání, brožurku v PDF a seriál v PDF.</small>');
 
         $form->addHTML('<hr/>');
 
-        $form->addButton('downloadsolutions', 'Stáhnout a zobrazit na webu řešení této série.')->addClass('btn btn-danger');
-        $form->addHTML('<small class="form-text text-danger">Stáhne z Astridu řešení k jednotlivým příkladům v PDF a zobrazí je na webu.</small>');
-
-        $form->setHiddenField('id', $ID);
-        $form->setHiddenField('do', 'admin');
-
-        $form->addHTML('<hr/>');
-
-        $form->addButton('uploadxml', 'Nahrát XML ručně ze souboru.')->addClass('btn btn-warning d-block');
+        $form->addButton('uploadxml', 'Nahrát XML ručně ze souboru.')->addClass('btn btn-warning d-block mb-3');
         $form->addCheckbox('uploadxmlhard', 'Přepsat existující příklady na webu.');
         $form->addElement((new \dokuwiki\Form\InputElement('file', 'xml_file'))->addClass('d-block mt-3'));
 
-        $form->addHTML('<small class="form-text">Tuto možnost používejte pouze tehdy, pokud není možné automaticky importovat z Astrid.</small>');
+        $form->addHTML('<small class="form-text">Tuto možnost používejte pouze tehdy, pokud není možné automaticky importovat z Astrid. Vyberte prosím pouze z tabulky příklady, které chcete importovat.</small>');
 
         echo $form->toHTML();
     }
@@ -147,8 +148,9 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
      * Process XML and creates tasks
      * @param $content string XML content
      * @param $hard bool overwrite existing tasks
+     * @param $taskSelect @see $this->helper->addTaskSelectTable()
      */
-    private function processSeries($content, $hard) {
+    private function processSeries($content, $hard, $taskSelect) {
         $seriesXML = simplexml_load_string($content);
 
         $deadline = $seriesXML->deadline;
@@ -160,7 +162,19 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
 
         $series = (int)$seriesXML->number;
 
-        foreach (self::SUPPORTED_LANGUAGES as $lang) {
+        foreach ($this->helper->getSupportedLanguages() as $lang) {
+            // Test if any task in current language is selected
+            $somethingChosen = false;
+            foreach ($taskSelect[$lang] ?: [] as $taskSelected) {
+                if ($taskSelected) {
+                    $somethingChosen = true;
+                    break;
+                }
+            }
+            if (!$somethingChosen) {
+                continue;
+            }
+
             $pagePath = sprintf($this->getConf('page_path_mask_' . $lang), $year, $series);
             if ($pagePath == "") {
                 msg('No page path defined for language ' . $lang, -1);
@@ -184,7 +198,7 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
 
             // Saves problems
             foreach ($seriesXML->problems->children() as $problem) {
-                $this->createTask($problem, $year, $series, $lang, $hard);
+                $this->createTask($problem, $year, $series, $lang, $hard, $taskSelect);
             }
 
             // Saves pages with problems
@@ -201,9 +215,15 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
      * @param $series
      * @param $lang
      * @param bool $hard overwrite existing task
+     * @param $taskSelect @see $this->helper->addTaskSelectTable()
      * @return bool
      */
-    private function createTask(SimpleXMLElement $problem, $year, $series, $lang, $hard) {
+    private function createTask(SimpleXMLElement $problem, $year, $series, $lang, $hard, $taskSelect) {
+        // Test, if the task is selected
+        if (!$taskSelect[$lang][$this->helper->labelToNumber($problem->label)]) {
+            return true;
+        }
+
         $task = new \PluginFKSTaskRepo\Task($this->helper, $year, $series, (string)$problem->label, $lang);
         $exists = $task->load();
 
@@ -327,5 +347,29 @@ class admin_plugin_fkstaskrepo extends DokuWiki_Admin_Plugin {
             },
             $template);
         return $result;
+    }
+
+    private function addDocumentSelectList(\dokuwiki\Form\Form $form) {
+        foreach ($this->getSupportedDocuments() as $ID => $document) {
+            $form->addTagOpen('div');
+            $form->addCheckbox('documentselect[' . $ID . ']', $document['name'])->attr('checked', 'checked');
+            $form->addTagClose('div');
+        }
+    }
+
+    private function getSupportedDocuments()
+    {
+        return [
+            [
+                'name' => 'Brožurka série v PDF',
+                'remotepathmask' => $this->getConf('remote_brochure_path_mask'),
+                'localpathmask' => $this->getConf('brochure_path_cs'),
+            ],
+            [
+                'name' => 'Zadání seriálu v PDF',
+                'remotepathmask' => $this->getConf('remote_serial_path_mask'),
+                'localpathmask' => $this->getConf('serial_path_cs'),
+            ],
+        ];
     }
 }
