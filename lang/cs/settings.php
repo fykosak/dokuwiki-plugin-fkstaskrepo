@@ -19,3 +19,4 @@ $lang['page_path_mask_cs'] = 'Maska, jak bude vypadat adresa nově vypálených 
 $lang['page_path_mask_en'] = 'Maska, jak bude vypadat adresa nově vypálených stránek se zadáním v daném jazyce.';
 
 $lang['label_number_tasks_used'] = 'Překlad mezi labelem a číslem příkladu oddělený "/". Jednotlivé překlady jsou odděleny "," a slouží také jako seznam používaných úloh.';
+$lang['languages_used'] = 'Používané jazyky. První je defaultní a je předpokládáno, že primárně v něm je většina příkladů.';

@@ -37,3 +37,6 @@
 
 // List of tasks labels and numbers used in the contest
     $conf['label_number_tasks_used'] = '1/1,2/2,3/3,4/4,5/5,P/6,E/7,S/8';
+
+// List of languages, first is default
+    $conf['languages_used'] = 'cs,en';

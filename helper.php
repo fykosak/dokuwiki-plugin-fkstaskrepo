@@ -66,33 +66,18 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
     }
 
     /**
-     * Downloads brochure from the web server and saves it according the path mask as a media.
-     * For now only Czech version is supported.
-     * @param int $year
-     * @param int $series
+     * Downloads document from the web server and saves it according the path mask as a media.
+     * @param $year
+     * @param $series
+     * @param $remotePathMask
+     * @param $localPathMask
      * @param int $expiration
-     * @return false|string
+     * @return bool|string
      */
-    public function downloadBrochure($year, $series, $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH) {
-        $content = $this->downloader->downloadWebServer($expiration, sprintf($this->getConf('remote_brochure_path_mask'), $year, $series));
+    public function downloadDocument($year, $series, $remotePathMask, $localPathMask, $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH) {
+        $content = $this->downloader->downloadWebServer($expiration, sprintf($remotePathMask, $year, $series));
 
-        $res = io_saveFile(mediaFN($fileID = sprintf($this->getConf('brochure_path_cs'), $year, $series)), $content);
-
-        return ($content && $res) ? $fileID : false;
-    }
-
-    /**
-     * Downloads serial from the web server and saves it according the path mask as a media.
-     * For now only Czech version is supported.
-     * @param int $year
-     * @param int $series
-     * @param int $expiration
-     * @return false|string
-     */
-    public function downloadSerial($year, $series, $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH) {
-        $content = $this->downloader->downloadWebServer($expiration, sprintf($this->getConf('remote_serial_path_mask'), $year, $series));
-
-        $res = io_saveFile(mediaFN($fileID = sprintf($this->getConf('serial_path_cs'), $year, $series)), $content);
+        $res = io_saveFile(mediaFN($fileID = sprintf($localPathMask, $year, $series)), $content);
 
         return ($content && $res) ? $fileID : false;
     }
@@ -265,6 +250,45 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
             $list[(int)$pair[1]] = $pair[0];
         }
         return $list;
+    }
+
+    public function getSupportedLanguages () {
+        return explode(',', $this->getConf('languages_used'));
+    }
+
+    public function getDefaultLanguage () {
+        return $this->getSupportedLanguages()[0];
+    }
+
+    /**
+     * Creates table, where you can select specific tasks to download
+     * @param \dokuwiki\Form\Form $form
+     * @param array $languages Preferred languages
+     */
+    public function addTaskSelectTable (\dokuwiki\Form\Form $form, array $languages = null) {
+        $form->addTagOpen('table')->addClass('table');
+        $form->addTagOpen('thead');
+        $form->addTagOpen('tr');
+        $form->addHTML('<td>#</td>');
+        foreach ($this->getSupportedTasks() as $taskNumber => $taskLabel) {
+            $form->addHTML('<td>' . $taskLabel . '</td>');
+        }
+        $form->addTagClose('tr');
+        $form->addTagClose('thead');
+
+        $form->addTagOpen('tbody');
+        foreach ($languages ?: $this->getSupportedLanguages() as $language) {
+            $form->addTagOpen('tr');
+            $form->addHTML('<td><b>' . $language . '</b></td>');
+            foreach ($this->getSupportedTasks() as $taskNumber => $taskLabel) {
+                $form->addTagOpen('td');
+                $form->addCheckbox('taskselect[' . $language . '][' . $taskNumber . ']')->attr('checked', 'checked');
+                $form->addTagClose('td');
+            }
+            $form->addTagClose('tr');
+        }
+        $form->addTagClose('tbody');
+        $form->addTagClose('table');
     }
 }
 
