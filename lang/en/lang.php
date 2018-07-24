@@ -86,3 +86,6 @@ $lang['tag__matematika'] = 'mathematics';
 $lang['tag__chemie'] = 'chemistry';
 $lang['tag__biofyzika'] = 'biophysics';
 $lang['tag__other'] = 'other';
+
+$lang['prev'] = 'Previous';
+$lang['next'] = 'Next';

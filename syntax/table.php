@@ -102,14 +102,23 @@ class syntax_plugin_fkstaskrepo_table extends DokuWiki_Syntax_Plugin {
     }
 
     private function showResults(&$renderer, $lang) {
-        global $INPUT;
+        global $INPUT, $ID;
         $tag = $INPUT->str(helper_plugin_fkstaskrepo::URL_PARAM);
         if ($tag) {
             $problems = $this->helper->getProblemsByTag($tag);
+            $total = count($problems);
+            $problems = array_slice($problems, 10*($INPUT->int('p', 1)-1), 10);
+
+            $renderer->doc .= '<h2> <span class="fa fa-tag"></span>' . hsc($this->getLang('tag__' . $tag)) . '</h2>';
+
+            $renderer->doc .= $paginator = $this->helper->renderSimplePaginator(ceil($total/10), $ID, [helper_plugin_fkstaskrepo::URL_PARAM => $tag]);;
+
             foreach ($problems as $problemDet) {
                 list($year, $series, $problem) = $problemDet;
                 $renderer->doc .= p_render('xhtml', p_get_instructions('<fkstaskrepo lang="' . $lang . '" full="true" year="' . $year . '" series="' . $series . '" problem="' . $problem . '"/>'), $info);
             }
+
+            $renderer->doc .= $paginator;
         }
     }
 }

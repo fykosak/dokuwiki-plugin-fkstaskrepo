@@ -14,6 +14,9 @@ $meta['solution_path_en'] = ['string'];
 $meta['yearbook_path_cs'] = ['string'];
 $meta['serial_path_cs'] = ['string'];
 
+$meta['archive_path_cs'] = ['string'];
+$meta['archive_path_en'] = ['string'];
+
 $meta['attachment_path_cs'] = ['string'];
 $meta['attachment_path_en'] = ['string'];
 

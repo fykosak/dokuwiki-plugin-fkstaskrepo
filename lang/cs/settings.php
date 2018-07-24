@@ -12,6 +12,9 @@ $lang['attachment_path_en'] = 'Media preferované místo pro nahrávání příl
 $lang['yearbook_path_cs']='Media odkaz na ročenku. Je podopována pouze česká.';
 $lang['serial_path_cs']='Media odkaz na seriálovou úlohu. Je podopována pouze česká.';
 
+$lang['archive_path_cs']='Stránka, kde je archiv úloh podle oboru (tagů).';
+$lang['archive_path_en']='Stránka, kde je archiv úloh podle oboru (tagů).';
+
 $lang['task_data_meta_path'] = 'Meta odkaz na soubor s úlohou';
 
 $lang['series_template'] = 'Odkaz na stránku se šablonou, ze které se vypalují stránky se zadáním.';

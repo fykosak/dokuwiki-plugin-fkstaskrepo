@@ -290,6 +290,30 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         $form->addTagClose('tbody');
         $form->addTagClose('table');
     }
+
+    /**
+     * @param int $total
+     * @param string $page
+     * @param array $urlParameters
+     * @param string $pageNumberParamName
+     * @return string
+     */
+    public function renderSimplePaginator($total, $page, $urlParameters, $pageNumberParamName = 'p' ) {
+        global $INPUT;
+        if ($total < 2) return null;
+
+        $actual = $INPUT->int($pageNumberParamName,1);
+
+        $html = '<ul class="pagination justify-content-end">';
+        $html .=  '<li class="page-item' . ($actual === 1 ? ' disabled' : '') . '"><a class="page-link" href="' . wl($page, array_merge($urlParameters,[$pageNumberParamName => $actual-1])) . '">' . $this->getLang('prev') . '</a></li>';
+        for ($i = 1; $i <= $total; $i++) {
+            $html .= '<li class="page-item' . ($actual === $i ? ' active' : '') . '"><a class="page-link" href="' . wl($page, array_merge($urlParameters,[$pageNumberParamName => $i])) . '">' . $i . '</a></li>';
+        }
+        $html .=  '<li class="page-item' . ($actual === $total ? ' disabled' : '') . '"><a class="page-link" href="' . wl($page, array_merge($urlParameters,[$pageNumberParamName => $actual+1])) . '">' . $this->getLang('next') . '</a></li>';
+        $html .= '</ul>';
+
+        return $html;
+    }
 }
 
 class fkstaskrepo_exception extends RuntimeException {
