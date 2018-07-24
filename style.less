@@ -33,10 +33,6 @@
     }
 }
 
-body {
-    counter-reset: probfig;
-}
-
 .task-repo.task {
     clear: both;
     .tag {
@@ -63,19 +59,12 @@ body {
     figure {
         float: right;
         figcaption {
-            &[data-lang="cs"]::before {
-                content: "Obr. " counter(probfig) " ";
-            }
-            &[data-lang="en"]::before {
-                content: "Fig. " counter(probfig) " ";
-            }
-            &::before {
-                counter-increment: probfig;
-            }
             text-align: center;
         }
         img {
             width: 100%;
+            max-height: 20rem;
+            object-fit: contain;
         }
     }
 }
