@@ -69,7 +69,7 @@ class syntax_plugin_fkstaskrepo_archive extends DokuWiki_Syntax_Plugin {
         $lang = $m[1];
 
         $path = $this->getRegExpPath($lang);
-        search($data, $conf['datadir'], 'search_allpages', [], '', -1);
+        search($data, $conf['datadir'], 'search_allpages', [], '', -1, '');
 
         $data = array_filter($data, function ($a) use ($path) {
             return preg_match('/' . $path . '/', $a['id']);
@@ -78,6 +78,10 @@ class syntax_plugin_fkstaskrepo_archive extends DokuWiki_Syntax_Plugin {
             list($a['year'], $a['series']) = $this->extractPathParameters($a['id'], $lang);
             return $a;
         }, $data);
+        usort($data, function ($a, $b) {
+	    // year decreasing, series increasing
+            return ($b['year'] - $a['year']) ?: ($a['series'] - $b['series']);
+        });
 
         $pages = [];
         foreach ($data as $page) {
