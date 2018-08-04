@@ -36,9 +36,6 @@ $lang['update'] = 'Update';
 $lang['xml_file'] = 'XML soubor';
 $lang['xml_source_help'] = 'Nechej prázdné pro download souboru z přednastaveného serveru (Astrid).';
 
-$lang['deadline'] = 'Termín uploadu';
-$lang['deadline-post'] = 'Termín odeslání poštou';
-
 $lang['deadline-post-format'] = 'j. n. Y';
 $lang['deadline-format'] = 'j. n. Y H:i:s';
 

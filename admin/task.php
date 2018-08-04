@@ -186,10 +186,8 @@ class admin_plugin_fkstaskrepo_task extends DokuWiki_Admin_Plugin {
 
             // Replace data in template
             $pageContent = $this->replaceVariables([
-                'human-deadline' => $this->helper->getSpecLang('deadline', $lang) . ': ' .
-                    date($this->helper->getSpecLang('deadline-format', $lang), strtotime($deadline)),
-                'human-deadline-post' => $this->helper->getSpecLang('deadline-post', $lang) . ': ' .
-                    date($this->helper->getSpecLang('deadline-post-format', $lang), strtotime($deadline_post)),
+                'human-deadline' => date($this->helper->getSpecLang('deadline-format', $lang), strtotime($deadline)),
+                'human-deadline-post' => date($this->helper->getSpecLang('deadline-post-format', $lang), strtotime($deadline_post)),
                 'lang' => $lang,
                 'year' => $year,
                 'series' => $series,

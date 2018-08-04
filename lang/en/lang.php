@@ -33,9 +33,6 @@ $lang['update'] = 'Update';
 $lang['xml_file'] = 'XML file';
 $lang['xml_source_help'] = 'Leave empty to download XML from configured server.';
 
-$lang['deadline'] = "Upload deadline";
-$lang['deadline-post'] = "Post deadline";
-
 $lang['deadline-post-format'] = "jS F Y";
 $lang['deadline-format'] = "jS F Y h:i:s A";
 
