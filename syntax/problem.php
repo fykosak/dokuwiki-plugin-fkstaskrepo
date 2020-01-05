@@ -208,7 +208,12 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
     }
 
     private function renderTask(Doku_Renderer &$renderer, \PluginFKSTaskRepo\Task $data) {
-        $renderer->doc .= '<div>' . $renderer->render_text(trim($data->getTask())) . '</div>';
+        global $conf;
+        if ($data->getTask()) {
+            $renderer->doc .= '<div>' . $renderer->render_text($data->getTask()) . '</div>';
+        } else {
+            $renderer->doc .= '<div>' . $renderer->render_text($this->helper->getSpecLang('no_translation',$conf['lang'])) . '</div>';
+        }
     }
 
     /**

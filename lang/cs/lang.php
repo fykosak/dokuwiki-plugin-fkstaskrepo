@@ -55,6 +55,9 @@ $lang['serial'] = '%2$d. díl seriálu';
 $lang['archive_year'] = '%d. ročník';
 $lang['archive_series'] = 'Série %d';
 
+$lang['no_translation'] = '//Úlohu brzy zveřejníme.//';
+
+
 $lang['edit'] = 'Upravit úlohu';
 
 $lang['tag__mechHmBodu'] = 'mechanika hmotného bodu';

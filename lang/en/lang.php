@@ -56,6 +56,8 @@ $lang['serial'] = 'Serial in Czech';
 $lang['archive_year'] = 'Year %d';
 $lang['archive_series'] = 'Series %d';
 
+$lang['no_translation'] = '//We are sorry. This type of task is not translated to English.//';
+
 $lang['batch_select'] = 'Select year';
 
 $lang['edit'] = 'Edit problem';
