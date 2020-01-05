@@ -122,6 +122,7 @@ class TexPreproc {
         '\smallskip' => '',
         '\vspace:1' => '',
         '\vspace*:1' => '',
+        '\taskhint:2' => '**\1:** \2'
     );
     private $variantArity = array();
     private $maxMaskArity = array();
@@ -166,7 +167,7 @@ class TexPreproc {
     public function preproc($text) {
         $text = str_replace(array('[m]','[i]','[o]','~'),array('{m}','{i}','{o}',' '),$text); // simple solution
         // units macro
-        $text = preg_replace_callback('#"(([+-]?[0-9\\\,]+(\.[0-9\\\,]+)?)(e([+-]?[0-9]+))?)((\s*)([^"]+))?"#',function($matches) {
+        $text = preg_replace_callback('#"(([+-]?[0-9\\\, ]+(\.[0-9\\\, ]+)?)(e([+-]?[0-9 ]+))?)((\s*)([^"]+))?"#',function($matches) {
             $mantissa = $matches[2];
             $exp = $matches[5];
             $unit = $matches[8];
@@ -176,7 +177,7 @@ class TexPreproc {
             }else{
                 $num = $mantissa;
             }
-            $num = str_replace('.','{,}',$num);
+            $num = str_replace(array('.', ' '), array('{,}', '\;'),$num);
             if($unit && $space != ''){
                 $unit = '\,\mathrm{'.str_replace('.','\cdot ',$unit).'}';
             }
@@ -184,7 +185,7 @@ class TexPreproc {
         },$text);
 
         $ast = $this->parse($text);
-      
+
         return $this->process($ast);
     }
 
@@ -251,8 +252,8 @@ class TexPreproc {
             }
             next($ast);
         }
-        
-   
+
+
         return $result;
     }
 
