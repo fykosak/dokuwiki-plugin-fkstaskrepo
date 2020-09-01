@@ -1,28 +1,26 @@
 <?php
 
 // must be run within Dokuwiki
+use dokuwiki\Extension\AdminPlugin;
+use dokuwiki\Form\Form;
+
 if (!defined('DOKU_INC')) die();
 
-class admin_plugin_fkstaskrepo_solution extends DokuWiki_Admin_Plugin {
+class admin_plugin_fkstaskrepo_solution extends AdminPlugin {
 
-    static $availableVersions = [1];
+    static array $availableVersions = [1];
 
-    /**
-     *
-     * @var helper_plugin_fkstaskrepo
-     */
-    private $helper;
+    private helper_plugin_fkstaskrepo $helper;
 
     public function __construct() {
         $this->helper = $this->loadHelper('fkstaskrepo');
     }
 
-    public function getMenuText($language)
-    {
+    public function getMenuText($language): string {
         return 'Stáhnout vzorová řešení z Astrid';
     }
 
-    public function getMenuIcon() {
+    public function getMenuIcon(): string {
         $plugin = $this->getPluginName();
         return DOKU_PLUGIN . $plugin . '/solution.svg';
     }
@@ -30,21 +28,21 @@ class admin_plugin_fkstaskrepo_solution extends DokuWiki_Admin_Plugin {
     /**
      * @return int sort number in admin menu
      */
-    public function getMenuSort() {
+    public function getMenuSort(): int {
         return 10;
     }
 
     /**
      * @return bool true if only access for superuser, false is for superusers and moderators
      */
-    public function forAdminOnly() {
+    public function forAdminOnly(): bool {
         return false;
     }
 
     /**
      * Should carry out any processing required by the plugin.
      */
-    public function handle() {
+    public function handle(): void {
         global $INPUT;
         $year = $INPUT->int('year', null);
         $series = $INPUT->int('series', null);
@@ -65,10 +63,10 @@ class admin_plugin_fkstaskrepo_solution extends DokuWiki_Admin_Plugin {
         }
     }
 
-    public function html() {
+    public function html(): void {
         global $ID;
         ptln('<h1>' . $this->getMenuText('cs') . '</h1>');
-        $form = new \dokuwiki\Form\Form();
+        $form = new Form();
         $form->addClass('task-repo-edit');
         $form->attrs(['class' => $this->getPluginName(), 'enctype' => 'multipart/form-data']);
 
@@ -98,5 +96,4 @@ class admin_plugin_fkstaskrepo_solution extends DokuWiki_Admin_Plugin {
 
         echo $form->toHTML();
     }
-
 }

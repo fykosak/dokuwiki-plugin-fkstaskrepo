@@ -6,42 +6,33 @@
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Michal Červeňák <miso@fykos.cz>
  */
-// must be run within Dokuwiki
-if (!defined('DOKU_INC')) {
-    die();
-}
 
 class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
 
-    /**
-     *
-     * @var helper_plugin_fkstaskrepo
-     */
-    private $helper;
+    private helper_plugin_fkstaskrepo $helper;
 
     function __construct() {
         $this->helper = $this->loadHelper('fkstaskrepo');
-
     }
 
     /**
      * @return string Syntax mode type
      */
-    public function getType() {
+    public function getType(): string {
         return 'substition';
     }
 
     /**
      * @return string Paragraph type
      */
-    public function getPType() {
+    public function getPType(): string {
         return 'block';
     }
 
     /**
      * @return int Sort order - Low numbers go before high numbers
      */
-    public function getSort() {
+    public function getSort(): int {
         return 164; // whatever
     }
 
@@ -50,7 +41,7 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
      *
      * @param string $mode Parser mode
      */
-    public function connectTo($mode) {
+    public function connectTo($mode): void {
         $this->Lexer->addSpecialPattern('<fkstaskreposelect\s.*?/>', $mode, 'plugin_fkstaskrepo_batchselect');
     }
 
@@ -75,7 +66,7 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
             return preg_match('/' . $path . '/', $a['id']);
         });
         $data = array_map(function ($a) use ($path, $lang) {
-            list($a['year'], $a['series']) = $this->extractPathParameters($a['id'], $lang);
+            [$a['year'], $a['series']] = $this->extractPathParameters($a['id'], $lang);
             return $a;
         }, $data);
 
@@ -98,7 +89,7 @@ class syntax_plugin_fkstaskrepo_batchselect extends DokuWiki_Syntax_Plugin {
         $renderer->nocache();
         global $ID;
         list($state, list($pages, $lang)) = $data;
-        list($currentYear, $currentSeries) = $this->extractPathParameters($ID, $lang);
+        [$currentYear, $currentSeries] = $this->extractPathParameters($ID, $lang);
 
         switch ($state) {
             case DOKU_LEXER_SPECIAL:

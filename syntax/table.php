@@ -10,49 +10,46 @@
 if (!defined('DOKU_INC')) die();
 
 class syntax_plugin_fkstaskrepo_table extends DokuWiki_Syntax_Plugin {
-    /**
-     *
-     * @var helper_plugin_fkstaskrepo
-     */
-    private $helper;
+
+    private helper_plugin_fkstaskrepo $helper;
 
     function __construct() {
         $this->helper = $this->loadHelper('fkstaskrepo');
     }
 
-    public function getType() {
+    public function getType(): string {
         return 'substition';
     }
 
-    public function getPType() {
+    public function getPType(): string {
         return 'block';
     }
 
-    public function getSort() {
+    public function getSort(): int {
         return 165; // whatever
     }
 
-    public function connectTo($mode) {
+    public function connectTo($mode): void {
         $this->Lexer->addSpecialPattern('<fkstaskrepotable\b.*?/>', $mode, 'plugin_fkstaskrepo_table');
     }
 
-    public function handle($match, $state, $pos, Doku_Handler &$handler) {
+    public function handle($match, $state, $pos, Doku_Handler $handler): array {
         preg_match('/lang="([a-z]+)"/', substr($match, 18, -2), $m);
         $lang = $m[1];
         return [$state, $lang];
     }
 
-    public function render($mode, Doku_Renderer &$renderer, $data) {
-        list($state, $lang) = $data;
+    public function render($mode, Doku_Renderer $renderer, $data): bool {
+        [$state, $lang] = $data;
         switch ($state) {
             case DOKU_LEXER_SPECIAL:
                 if ($mode == 'xhtml') {
                     $renderer->nocache();
-                    $this->showMainSearch($renderer, null, $lang);
+                    // $this->showMainSearch($renderer, null, $lang);
                     $this->showTagSearch($renderer, null, $lang);
                     $this->showResults($renderer, $lang);
                     return true;
-                } else if ($mode == 'metadata') {
+                } elseif ($mode == 'metadata') {
                     return true;
                 }
                 break;
@@ -62,28 +59,28 @@ class syntax_plugin_fkstaskrepo_table extends DokuWiki_Syntax_Plugin {
         return false;
     }
 
-    private function showMainSearch(Doku_Renderer &$renderer, $data, $lang) {
-        global $ID, $lang;
-        // if(substr($ID,-1,1) == 's'){
-        // $searchNS = substr($ID,0,-1);
-        // }else{
-        // $searchNS = $ID;
-        // }
-        // $form = new \dokuwiki\Form\Form();
-        // form->setHiddenField('do',"search");
-        // $form->addTextInput('tag',$this->getLang('Search!'));
-        // $form->attr('id','taskrepo-search');
-        // $R->doc .= $form->toHTML();
-        // $R->doc .= '<form action="' . wl() . '" accept-charset="utf-8" class="fkstaskrepo-search" id="dw__search2" method="get"><div class="no">' . NL;
-        // $R->doc .= '  <input type="hidden" name="do" value="search" />' . NL;
-        // $R->doc .= '  <input type="hidden" id="dw__ns" name="ns" value="' . $searchNS . '" />' . NL;
-        // $R->doc .= '  <input type="text" id="qsearch2__in" accesskey="f" name="id" class="edit" />' . NL;
-        // $R->doc .= '  <input type="submit" value="' . $lang['btn_search'] . '" class="button" />' . NL;
-        // $R->doc .= '  <div id="qsearch2__out" class="ajax_qsearch JSpopup"></div>' . NL;
-        // $R->doc .= '</div></form>' . NL;
-    }
+    /* private function showMainSearch(Doku_Renderer $renderer, $data, $lang): void {
+         global $ID, $lang;
+         // if(substr($ID,-1,1) == 's'){
+         // $searchNS = substr($ID,0,-1);
+         // }else{
+         // $searchNS = $ID;
+         // }
+         // $form = new \dokuwiki\Form\Form();
+         // form->setHiddenField('do',"search");
+         // $form->addTextInput('tag',$this->getLang('Search!'));
+         // $form->attr('id','taskrepo-search');
+         // $R->doc .= $form->toHTML();
+         // $R->doc .= '<form action="' . wl() . '" accept-charset="utf-8" class="fkstaskrepo-search" id="dw__search2" method="get"><div class="no">' . NL;
+         // $R->doc .= '  <input type="hidden" name="do" value="search" />' . NL;
+         // $R->doc .= '  <input type="hidden" id="dw__ns" name="ns" value="' . $searchNS . '" />' . NL;
+         // $R->doc .= '  <input type="text" id="qsearch2__in" accesskey="f" name="id" class="edit" />' . NL;
+         // $R->doc .= '  <input type="submit" value="' . $lang['btn_search'] . '" class="button" />' . NL;
+         // $R->doc .= '  <div id="qsearch2__out" class="ajax_qsearch JSpopup"></div>' . NL;
+         // $R->doc .= '</div></form>' . NL;
+     }*/
 
-    private function showTagSearch(&$renderer, $data, $lang) {
+    private function showTagSearch(Doku_Renderer $renderer, $data, $lang): void {
         global $INPUT;
         $renderer->doc .= '<p class="task-repo tag-cloud">';
         $tags = $this->helper->getTags();
@@ -101,20 +98,20 @@ class syntax_plugin_fkstaskrepo_table extends DokuWiki_Syntax_Plugin {
         }
     }
 
-    private function showResults(&$renderer, $lang) {
+    private function showResults(Doku_Renderer $renderer, $lang): void {
         global $INPUT, $ID;
         $tag = $INPUT->str(helper_plugin_fkstaskrepo::URL_PARAM);
         if ($tag) {
             $problems = $this->helper->getProblemsByTag($tag);
             $total = count($problems);
-            $problems = array_slice($problems, 10*($INPUT->int('p', 1)-1), 10);
+            $problems = array_slice($problems, 10 * ($INPUT->int('p', 1) - 1), 10);
 
             $renderer->doc .= '<h2> <span class="fa fa-tag"></span>' . hsc($this->getLang('tag__' . $tag)) . '</h2>';
 
-            $renderer->doc .= $paginator = $this->helper->renderSimplePaginator(ceil($total/10), $ID, [helper_plugin_fkstaskrepo::URL_PARAM => $tag]);;
+            $renderer->doc .= $paginator = $this->helper->renderSimplePaginator(ceil($total / 10), $ID, [helper_plugin_fkstaskrepo::URL_PARAM => $tag]);;
 
             foreach ($problems as $problemDet) {
-                list($year, $series, $problem) = $problemDet;
+                [$year, $series, $problem] = $problemDet;
                 $renderer->doc .= p_render('xhtml', p_get_instructions('<fkstaskrepo lang="' . $lang . '" full="true" year="' . $year . '" series="' . $series . '" problem="' . $problem . '"/>'), $info);
             }
 

@@ -1,29 +1,23 @@
 <?php
 
+use dokuwiki\Extension\Plugin;
+use dokuwiki\Form\Form;
+
+require_once __DIR__ . '/inc/TexLexer.php';
+require_once __DIR__ . '/inc/TexPreproc.php';
+require_once __DIR__ . '/inc/Task.php';
+
 /**
  * DokuWiki Plugin fkstaskrepo (Helper Component)
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Michal Koutný <michal@fykos.cz>
  */
-// must be run within Dokuwiki
-if (!defined('DOKU_INC')) die();
+class helper_plugin_fkstaskrepo extends Plugin {
 
-require_once 'tex_preproc.php';
+    private helper_plugin_fksdownloader $downloader;
 
-require_once 'inc/Task.php';
-
-class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
-
-    /**
-     * @var helper_plugin_fksdownloader
-     */
-    private $downloader;
-
-    /**
-     * @var helper_plugin_sqlite
-     */
-    private $sqlite;
+    private helper_plugin_sqlite $sqlite;
 
     const URL_PARAM = 'tasktag';
 
@@ -50,7 +44,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
     /*     * **************
      * XML data
      */
-    private function getPath($year, $series) {
+    private function getPath($year, $series): string {
         $mask = $this->getConf('remote_path_mask');
         return sprintf($mask, $year, $series);
     }
@@ -107,7 +101,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
      * Tags
      */
 
-    public function storeTags($year, $series, $problem, $tags) {
+    public function storeTags(int $year, int $series, string $problem, array $tags): void {
         // const tableProblem="problem";
         // allocate problem ID
         $sql = 'SELECT problem_id FROM problem WHERE year = ? AND series = ? AND problem = ?';
@@ -143,13 +137,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         $this->sqlite->query('commit transaction');
     }
 
-    /**
-     * @param $year
-     * @param $series
-     * @param $problem
-     * @return array
-     */
-    public function loadTags($year, $series, $problem) {
+    public function loadTags(int $year, int $series, string $problem): array {
         $sql = 'SELECT problem_id FROM problem WHERE year = ? AND series = ? AND problem = ?';
         $res = $this->sqlite->query($sql, $year, $series, $problem);
         $problemId = $this->sqlite->res2single($res);
@@ -167,13 +155,13 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         return $result;
     }
 
-    public function getTags() {
+    public function getTags(): array {
         $sql = 'SELECT t.tag_cs AS tag, count(pt.problem_id) AS count FROM tag t LEFT JOIN problem_tag pt ON pt.tag_id = t.tag_id GROUP BY t.tag_id ORDER BY 1';
         $res = $this->sqlite->query($sql);
         return $this->sqlite->res2arr($res);
     }
 
-    public function getProblemsByTag($tag) {
+    public function getProblemsByTag(string $tag): array {
         $sql = 'SELECT tag_id FROM tag WHERE tag_cs = ?';
         $res = $this->sqlite->query($sql, $tag);
         $tagId = $this->sqlite->res2single($res);
@@ -204,7 +192,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         return $l;
     }
 
-    public function getTagLink($tag, $size = 5, $lang = 'cs', $count = 0, $active = false) {
+    public function getTagLink($tag, ?int $size = 5, string $lang = 'cs', int $count = 0, bool $active = false) {
         $page = $this->getConf('archive_path_' . $lang);
         $html = '<a data-tag="' . $tag . '" href="' . wl($page, [self::URL_PARAM => $tag]) . '" class="tag size' .
             $size . ' ' . ($active ? '' : '') . '">';
@@ -220,7 +208,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
     }
 
 
-    public function labelToNumber ($label) {
+    public function labelToNumber($label) {
         $dictionary = explode(',', $this->getConf('label_number_tasks_used'));
         foreach ($dictionary as $pair) {
             $pair = explode('/', $pair);
@@ -231,7 +219,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         return null;
     }
 
-    public function numberToLabel ($number) {
+    public function numberToLabel($number) {
         $dictionary = explode(',', $this->getConf('label_number_tasks_used'));
         foreach ($dictionary as $pair) {
             $pair = explode('/', $pair);
@@ -242,7 +230,7 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         return null;
     }
 
-    public function getSupportedTasks () {
+    public function getSupportedTasks(): array {
         $dictionary = explode(',', $this->getConf('label_number_tasks_used'));
         $list = [];
         foreach ($dictionary as $pair) {
@@ -252,20 +240,20 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
         return $list;
     }
 
-    public function getSupportedLanguages () {
+    public function getSupportedLanguages(): array {
         return explode(',', $this->getConf('languages_used'));
     }
 
-    public function getDefaultLanguage () {
+    public function getDefaultLanguage(): string {
         return $this->getSupportedLanguages()[0];
     }
 
     /**
      * Creates table, where you can select specific tasks to download
-     * @param \dokuwiki\Form\Form $form
+     * @param Form $form
      * @param array $languages Preferred languages
      */
-    public function addTaskSelectTable (\dokuwiki\Form\Form $form, array $languages = null) {
+    public function addTaskSelectTable(Form $form, array $languages = null) {
         $form->addTagOpen('table')->addClass('table');
         $form->addTagOpen('thead');
         $form->addTagOpen('tr');
@@ -298,24 +286,20 @@ class helper_plugin_fkstaskrepo extends DokuWiki_Plugin {
      * @param string $pageNumberParamName
      * @return string
      */
-    public function renderSimplePaginator($total, $page, $urlParameters, $pageNumberParamName = 'p' ) {
+    public function renderSimplePaginator($total, $page, array $urlParameters, string $pageNumberParamName = 'p'): ?string {
         global $INPUT;
         if ($total < 2) return null;
 
-        $actual = $INPUT->int($pageNumberParamName,1);
+        $actual = $INPUT->int($pageNumberParamName, 1);
 
         $html = '<ul class="pagination justify-content-end">';
-        $html .=  '<li class="page-item' . ($actual === 1 ? ' disabled' : '') . '"><a class="page-link" href="' . wl($page, array_merge($urlParameters,[$pageNumberParamName => $actual-1])) . '">' . $this->getLang('prev') . '</a></li>';
+        $html .= '<li class="page-item' . ($actual === 1 ? ' disabled' : '') . '"><a class="page-link" href="' . wl($page, array_merge($urlParameters, [$pageNumberParamName => $actual - 1])) . '">' . $this->getLang('prev') . '</a></li>';
         for ($i = 1; $i <= $total; $i++) {
-            $html .= '<li class="page-item' . ($actual === $i ? ' active' : '') . '"><a class="page-link" href="' . wl($page, array_merge($urlParameters,[$pageNumberParamName => $i])) . '">' . $i . '</a></li>';
+            $html .= '<li class="page-item' . ($actual === $i ? ' active' : '') . '"><a class="page-link" href="' . wl($page, array_merge($urlParameters, [$pageNumberParamName => $i])) . '">' . $i . '</a></li>';
         }
-        $html .=  '<li class="page-item' . ($actual === $total ? ' disabled' : '') . '"><a class="page-link" href="' . wl($page, array_merge($urlParameters,[$pageNumberParamName => $actual+1])) . '">' . $this->getLang('next') . '</a></li>';
+        $html .= '<li class="page-item' . ($actual === $total ? ' disabled' : '') . '"><a class="page-link" href="' . wl($page, array_merge($urlParameters, [$pageNumberParamName => $actual + 1])) . '">' . $this->getLang('next') . '</a></li>';
         $html .= '</ul>';
 
         return $html;
     }
-}
-
-class fkstaskrepo_exception extends RuntimeException {
-
 }
