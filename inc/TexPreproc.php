@@ -2,11 +2,10 @@
 
 namespace FYKOS\dokuwiki\Extenstion\PluginTaskRepo;
 
-use PluginFKSTaskRepo\TexLexer;
-
 /**
  * Macro -- control sequence in text neglecting arguments
  * Variant -- control sequence with particular no. of arguments
+ * @author Michal Koutný <michal@fykos.cz>
  */
 class TexPreproc {
 

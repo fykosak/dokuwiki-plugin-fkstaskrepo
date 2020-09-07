@@ -2,16 +2,15 @@
 
 namespace FYKOS\dokuwiki\Extenstion\PluginTaskRepo;
 
+use Iterator;
+
 /**
  * DokuWiki Plugin fkstaskrepo (TeX preprocessor for FKS macros)
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Michal Koutný <michal@fykos.cz>
  */
-
-namespace PluginFKSTaskRepo;
-
-class TexLexer implements \Iterator {
+class TexLexer implements Iterator {
 
     const TOKEN_LBRACE = 0;
     const TOKEN_RBRACE = 1;

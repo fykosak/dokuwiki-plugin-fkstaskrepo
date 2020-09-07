@@ -1,15 +1,16 @@
 <?php
 
+use dokuwiki\Extension\SyntaxPlugin;
+
 /**
  * DokuWiki Plugin fkstaskrepo (Syntax Component)
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
- * @author  Michal Koutný <michal@fykos.cz>
+ * @author Michal Koutný <michal@fykos.cz>
+ * @author Michal Červeňák <miso@fykos.cz>
+ * @author Štěpán Stenchlák <stenchlak@fykos.cz>
  */
-// must be run within Dokuwiki
-if (!defined('DOKU_INC')) die();
-
-class syntax_plugin_fkstaskrepo_table extends DokuWiki_Syntax_Plugin {
+class syntax_plugin_fkstaskrepo_table extends SyntaxPlugin {
 
     private helper_plugin_fkstaskrepo $helper;
 
@@ -46,7 +47,7 @@ class syntax_plugin_fkstaskrepo_table extends DokuWiki_Syntax_Plugin {
                 if ($mode == 'xhtml') {
                     $renderer->nocache();
                     // $this->showMainSearch($renderer, null, $lang);
-                    $this->showTagSearch($renderer, null, $lang);
+                    $this->showTagSearch($renderer, $lang);
                     $this->showResults($renderer, $lang);
                     return true;
                 } elseif ($mode == 'metadata') {
@@ -80,7 +81,7 @@ class syntax_plugin_fkstaskrepo_table extends DokuWiki_Syntax_Plugin {
          // $R->doc .= '</div></form>' . NL;
      }*/
 
-    private function showTagSearch(Doku_Renderer $renderer, $data, $lang): void {
+    private function showTagSearch(Doku_Renderer $renderer, string $lang): void {
         global $INPUT;
         $renderer->doc .= '<p class="task-repo tag-cloud">';
         $tags = $this->helper->getTags();
@@ -98,7 +99,7 @@ class syntax_plugin_fkstaskrepo_table extends DokuWiki_Syntax_Plugin {
         }
     }
 
-    private function showResults(Doku_Renderer $renderer, $lang): void {
+    private function showResults(Doku_Renderer $renderer, string $lang): void {
         global $INPUT, $ID;
         $tag = $INPUT->str(helper_plugin_fkstaskrepo::URL_PARAM);
         if ($tag) {
@@ -108,7 +109,7 @@ class syntax_plugin_fkstaskrepo_table extends DokuWiki_Syntax_Plugin {
 
             $renderer->doc .= '<h2> <span class="fa fa-tag"></span>' . hsc($this->getLang('tag__' . $tag)) . '</h2>';
 
-            $renderer->doc .= $paginator = $this->helper->renderSimplePaginator(ceil($total / 10), $ID, [helper_plugin_fkstaskrepo::URL_PARAM => $tag]);;
+            $renderer->doc .= $paginator = $this->helper->renderSimplePaginator(ceil($total / 10), $ID, [helper_plugin_fkstaskrepo::URL_PARAM => $tag]);
 
             foreach ($problems as $problemDet) {
                 [$year, $series, $problem] = $problemDet;

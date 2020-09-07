@@ -12,7 +12,9 @@ use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\Task;
  * DokuWiki Plugin fkstaskrepo (Action Component)
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
- * @author  Michal Koutný <michal@fykos.cz>
+ * @author Michal Koutný <michal@fykos.cz>
+ * @author Michal Červeňák <miso@fykos.cz>
+ * @author Štěpán Stenchlák <stenchlak@fykos.cz>
  */
 class action_plugin_fkstaskrepo extends ActionPlugin {
 
@@ -55,10 +57,8 @@ class action_plugin_fkstaskrepo extends ActionPlugin {
      * @return void
      */
     public function register(EventHandler $controller): void {
-
         $controller->register_hook('TPL_ACT_UNKNOWN', 'BEFORE', $this, 'tplEditForm');
         $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'editTask');
-
         $controller->register_hook('PARSER_CACHE_USE', 'BEFORE', $this, 'handleParserCacheUse');
     }
 

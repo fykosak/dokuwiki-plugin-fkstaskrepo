@@ -6,12 +6,16 @@ use dokuwiki\Form\Form;
 require_once __DIR__ . '/inc/TexLexer.php';
 require_once __DIR__ . '/inc/TexPreproc.php';
 require_once __DIR__ . '/inc/Task.php';
+require_once __DIR__ . '/inc/Renderer/AbstractRenderer.php';
+require_once __DIR__ . '/inc/Renderer/FYKOSRenderer.php';
 
 /**
  * DokuWiki Plugin fkstaskrepo (Helper Component)
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
- * @author  Michal Koutný <michal@fykos.cz>
+ * @author Michal Koutný <michal@fykos.cz>
+ * @author Michal Červeňák <miso@fykos.cz>
+ * @author Štěpán Stenchlák <stenchlak@fykos.cz>
  */
 class helper_plugin_fkstaskrepo extends Plugin {
 

@@ -6,7 +6,9 @@ use helper_plugin_fkstaskrepo;
 
 /**
  * Class Task
- * @package PluginFKSTaskRepo
+ * @author Michal Koutný <michal@fykos.cz>
+ * @author Michal Červeňák <miso@fykos.cz>
+ * @author Štěpán Stenchlák <stenchlak@fykos.cz>
  */
 class Task {
 

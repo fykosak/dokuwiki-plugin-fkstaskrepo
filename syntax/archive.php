@@ -6,7 +6,8 @@ use dokuwiki\Extension\SyntaxPlugin;
  * DokuWiki Plugin fkstaskrepo (Syntax Component)
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
- * @author  Michal Červeňák <miso@fykos.cz>, Štěpán Stenchlák <stenchlak@fykos.cz>
+ * @author Michal Červeňák <miso@fykos.cz>
+ * @author Štěpán Stenchlák <stenchlak@fykos.cz>
  */
 class syntax_plugin_fkstaskrepo_archive extends SyntaxPlugin {
 

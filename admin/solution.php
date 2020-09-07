@@ -1,11 +1,15 @@
 <?php
 
-// must be run within Dokuwiki
 use dokuwiki\Extension\AdminPlugin;
 use dokuwiki\Form\Form;
 
 if (!defined('DOKU_INC')) die();
 
+/**
+ * Class admin_plugin_fkstaskrepo_solution
+ * @author Štěpán Stenchlák <stenchlak@fykos.cz>
+ * @author  Michal Červeňák <miso@fykos.cz> PHP7.4 compatiblity
+ */
 class admin_plugin_fkstaskrepo_solution extends AdminPlugin {
 
     static array $availableVersions = [1];

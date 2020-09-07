@@ -1,4 +1,7 @@
 <?php
+
+use dokuwiki\Extension\SyntaxPlugin;
+
 /**
  * This syntax plugin replaces <fkstaskrepobatchpdf year="" series="" lang="" /> with link to brochure, serial and
  * yearbook if exists.
@@ -7,10 +10,10 @@
  * DokuWiki Plugin fkstaskrepo (Syntax Component)
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
- * @author  Štěpán Stenchlák <stenchlak@fykos.cz>
+ * @author Štěpán Stenchlák <stenchlak@fykos.cz>
+ * @author Michal Červeňák <miso@fykos.cz> PHP7.4 compatibility
  */
-
-class syntax_plugin_fkstaskrepo_batchpdf extends DokuWiki_Syntax_Plugin {
+class syntax_plugin_fkstaskrepo_batchpdf extends SyntaxPlugin {
 
     private helper_plugin_fkstaskrepo $helper;
 
@@ -101,7 +104,7 @@ class syntax_plugin_fkstaskrepo_batchpdf extends DokuWiki_Syntax_Plugin {
      * @param array $data The data from the handler() function
      * @return bool If rendering was successful.
      */
-    public function render($mode, \Doku_Renderer $renderer, $data) {
+    public function render($mode, Doku_Renderer $renderer, $data): bool {
         switch ($mode) {
             case 'xhtml':
                 // Year book and serial are only in Czech

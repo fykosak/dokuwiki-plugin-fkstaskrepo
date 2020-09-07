@@ -5,6 +5,12 @@ use dokuwiki\Form\Form;
 use dokuwiki\Form\InputElement;
 use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\Task;
 
+/**
+ * Class admin_plugin_fkstaskrepo_task
+ * @author Michal Koutný <michal@fykos.cz>
+ * @author Štěpán Stenchlák <stenchlak@fykos.cz>
+ * @author Michal Červeňák <miso@fykos.cz> PHP7.4 compatiblity
+ */
 class admin_plugin_fkstaskrepo_task extends AdminPlugin {
 
     static array $availableVersions = [1];
@@ -146,7 +152,7 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
      * @param $hard bool overwrite existing tasks
      * @param $taskSelect @see $this->helper->addTaskSelectTable()
      */
-    private function processSeries($content, $hard, $taskSelect) {
+    private function processSeries(string $content, bool $hard, $taskSelect): void {
         $seriesXML = simplexml_load_string($content);
 
         $deadline = $seriesXML->deadline;
@@ -212,7 +218,7 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
      * @param $taskSelect @see $this->helper->addTaskSelectTable()
      * @return bool
      */
-    private function createTask(SimpleXMLElement $problem, int $year, int $series, string $lang, bool $hard, $taskSelect) {
+    private function createTask(SimpleXMLElement $problem, int $year, int $series, string $lang, bool $hard, $taskSelect): bool {
         // Test, if the task is selected
         if (!$taskSelect[$lang][$this->helper->labelToNumber($problem->label)]) {
             return true;
@@ -284,7 +290,7 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
      * @param string $lang
      * @return bool
      */
-    private function hasLang(SimpleXMLElement $e, $lang) {
+    private function hasLang(SimpleXMLElement $e, string $lang): bool {
         return (($lang == (string)$e->attributes(helper_plugin_fkstaskrepo::XMLNamespace)->lang) ||
             (string)$e->attributes(helper_plugin_fkstaskrepo::XMLNamespace)->lang == "");
     }
@@ -295,7 +301,7 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
      * @return array
      * @todo Solve languages
      */
-    private function extractFigures(SimpleXMLElement $problem, $lang) {
+    private function extractFigures(SimpleXMLElement $problem, string $lang): array {
         $figuresData = [];
         if ((string)$problem->figures != "") {
             foreach ($problem->figures->figure as $figure) {
@@ -320,7 +326,7 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
      * @param string $template
      * @return string
      */
-    private function replaceVariables($parameters, $template) {
+    private function replaceVariables(array $parameters, string $template): string {
         $that = $this;
 
         return preg_replace_callback('/@([^@]+)@/',
