@@ -27,7 +27,7 @@ class syntax_plugin_fkstaskrepo_table extends SyntaxPlugin {
     }
 
     public function getSort(): int {
-        return 165; // whatever
+        return 165;
     }
 
     public function connectTo($mode): void {
@@ -47,8 +47,8 @@ class syntax_plugin_fkstaskrepo_table extends SyntaxPlugin {
                 if ($mode == 'xhtml') {
                     $renderer->nocache();
                     // $this->showMainSearch($renderer, null, $lang);
-                    $this->showTagSearch($renderer, $lang);
-                    $this->showResults($renderer, $lang);
+                    $renderer->doc .= $this->showTagSearch($lang);
+                    $renderer->doc .= $this->showResults($lang);
                     return true;
                 } elseif ($mode == 'metadata') {
                     return true;
@@ -81,9 +81,9 @@ class syntax_plugin_fkstaskrepo_table extends SyntaxPlugin {
          // $R->doc .= '</div></form>' . NL;
      }*/
 
-    private function showTagSearch(Doku_Renderer $renderer, string $lang): void {
+    private function showTagSearch(string $lang): string {
         global $INPUT;
-        $renderer->doc .= '<p class="task-repo tag-cloud">';
+        $html = '<p class="task-repo tag-cloud">';
         $tags = $this->helper->getTags();
         $max = array_reduce($tags, function ($max, $row) {
             return ($row['count'] > $max) ? $row['count'] : $max;
@@ -95,28 +95,30 @@ class syntax_plugin_fkstaskrepo_table extends SyntaxPlugin {
         $selectedTag = $INPUT->str(helper_plugin_fkstaskrepo::URL_PARAM);
         foreach ($tags as $row) {
             $size = ceil(10 * $row['count'] / $max);
-            $renderer->doc .= $this->helper->getTagLink($row['tag'], $size, $lang, $row['count'], ($selectedTag == $row['tag']));
+            $html .= $this->helper->getTagLink($row['tag'], $size, $lang, $row['count'], ($selectedTag == $row['tag']));
         }
+        return $html;
     }
 
-    private function showResults(Doku_Renderer $renderer, string $lang): void {
+    private function showResults(string $lang): string {
         global $INPUT, $ID;
         $tag = $INPUT->str(helper_plugin_fkstaskrepo::URL_PARAM);
+        $html = '';
         if ($tag) {
             $problems = $this->helper->getProblemsByTag($tag);
             $total = count($problems);
             $problems = array_slice($problems, 10 * ($INPUT->int('p', 1) - 1), 10);
 
-            $renderer->doc .= '<h2> <span class="fa fa-tag"></span>' . hsc($this->getLang('tag__' . $tag)) . '</h2>';
-
-            $renderer->doc .= $paginator = $this->helper->renderSimplePaginator(ceil($total / 10), $ID, [helper_plugin_fkstaskrepo::URL_PARAM => $tag]);
+            $html .= '<h2> <span class="fa fa-tag"></span>' . hsc($this->getLang('tag__' . $tag)) . '</h2>';
+            $html .= $paginator = $this->helper->renderSimplePaginator(ceil($total / 10), $ID, [helper_plugin_fkstaskrepo::URL_PARAM => $tag]);
 
             foreach ($problems as $problemDet) {
                 [$year, $series, $problem] = $problemDet;
-                $renderer->doc .= p_render('xhtml', p_get_instructions('<fkstaskrepo lang="' . $lang . '" full="true" year="' . $year . '" series="' . $series . '" problem="' . $problem . '"/>'), $info);
+                $html .= p_render('xhtml', p_get_instructions('<fkstaskrepo lang="' . $lang . '" full="true" year="' . $year . '" series="' . $series . '" problem="' . $problem . '"/>'), $info);
             }
 
-            $renderer->doc .= $paginator;
+            $html .= $paginator;
         }
+        return $html;
     }
 }

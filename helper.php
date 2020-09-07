@@ -45,34 +45,34 @@ class helper_plugin_fkstaskrepo extends Plugin {
         }
     }
 
-    /*     * **************
+    /* **************
      * XML data
      */
-    private function getPath($year, $series): string {
+    private function getPath(int $year, int $series): string {
         $mask = $this->getConf('remote_path_mask');
         return sprintf($mask, $year, $series);
     }
 
-    public function getSeriesData($year, $series, $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH) {
+    public function getSeriesData(int $year, int $series, int $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH) {
         $path = $this->getPath($year, $series);
         return $this->downloader->downloadWebServer($expiration, $path);
     }
 
-    public function getSeriesFilename($year, $series) {
+    public function getSeriesFilename(int $year, int $series): string {
         return $this->downloader->getCacheFilename($this->downloader->getWebServerFilename($this->getPath($year,
             $series)));
     }
 
     /**
      * Downloads document from the web server and saves it according the path mask as a media.
-     * @param $year
-     * @param $series
-     * @param $remotePathMask
-     * @param $localPathMask
+     * @param int $year
+     * @param int $series
+     * @param string $remotePathMask
+     * @param string $localPathMask
      * @param int $expiration
-     * @return bool|string
+     * @return false|string
      */
-    public function downloadDocument($year, $series, $remotePathMask, $localPathMask, $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH) {
+    public function downloadDocument(int $year, int $series, string $remotePathMask, string $localPathMask, int $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH) {
         $content = $this->downloader->downloadWebServer($expiration, sprintf($remotePathMask, $year, $series));
 
         $res = io_saveFile(mediaFN($fileID = sprintf($localPathMask, $year, $series)), $content);
@@ -88,7 +88,7 @@ class helper_plugin_fkstaskrepo extends Plugin {
      * @param int $expiration
      * @return bool|string
      */
-    public function downloadSolution($year, $series, $task, $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH) {
+    public function downloadSolution(int $year, int $series, string $task, int $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH) {
         $content = $this->downloader->downloadWebServer($expiration, vsprintf($this->getConf('remote_task_solution_path_mask'), [$year, $series, null, null, $this->labelToNumber($task)]));
 
         $res = io_saveFile(
@@ -196,7 +196,7 @@ class helper_plugin_fkstaskrepo extends Plugin {
         return $l;
     }
 
-    public function getTagLink($tag, ?int $size = 5, string $lang = 'cs', int $count = 0, bool $active = false) {
+    public function getTagLink(string $tag, ?int $size = 5, string $lang = 'cs', int $count = 0, bool $active = false) {
         $page = $this->getConf('archive_path_' . $lang);
         $html = '<a data-tag="' . $tag . '" href="' . wl($page, [self::URL_PARAM => $tag]) . '" class="tag size' .
             $size . ' ' . ($active ? '' : '') . '">';
@@ -212,23 +212,23 @@ class helper_plugin_fkstaskrepo extends Plugin {
     }
 
 
-    public function labelToNumber($label) {
+    public function labelToNumber(string $label): ?int {
         $dictionary = explode(',', $this->getConf('label_number_tasks_used'));
         foreach ($dictionary as $pair) {
             $pair = explode('/', $pair);
             if ($pair[0] == $label) {
-                return $pair[1];
+                return (int)$pair[1];
             }
         }
         return null;
     }
 
-    public function numberToLabel($number) {
+    public function numberToLabel(int $number): ?string {
         $dictionary = explode(',', $this->getConf('label_number_tasks_used'));
         foreach ($dictionary as $pair) {
             $pair = explode('/', $pair);
             if ($pair[1] == $number) {
-                return (int)$pair[0];
+                return (string)$pair[0];
             }
         }
         return null;
@@ -257,7 +257,7 @@ class helper_plugin_fkstaskrepo extends Plugin {
      * @param Form $form
      * @param array $languages Preferred languages
      */
-    public function addTaskSelectTable(Form $form, array $languages = null) {
+    public function addTaskSelectTable(Form $form, array $languages = null): void {
         $form->addTagOpen('table')->addClass('table');
         $form->addTagOpen('thead');
         $form->addTagOpen('tr');
@@ -290,9 +290,11 @@ class helper_plugin_fkstaskrepo extends Plugin {
      * @param string $pageNumberParamName
      * @return string
      */
-    public function renderSimplePaginator($total, $page, array $urlParameters, string $pageNumberParamName = 'p'): ?string {
+    public function renderSimplePaginator(int $total, string $page, array $urlParameters, string $pageNumberParamName = 'p'): ?string {
         global $INPUT;
-        if ($total < 2) return null;
+        if ($total < 2) {
+            return null;
+        }
 
         $actual = $INPUT->int($pageNumberParamName, 1);
 

@@ -111,7 +111,7 @@ class syntax_plugin_fkstaskrepo_archive extends SyntaxPlugin {
     }
 
 // TODO $currentYear and $currentSeries is never used
-    private function renderSeries(Doku_Renderer $renderer, $pages, $lang, $currentYear = null, $currentSeries = null) {
+    private function renderSeries(Doku_Renderer $renderer, array $pages, string $lang, $currentYear = null, $currentSeries = null) {
         foreach ($pages as $year => $batches) {
             $renderer->doc .= '<div class="mb-3 col-lg-3 col-md-4 col-sm-6 col-xs-12">';
 
