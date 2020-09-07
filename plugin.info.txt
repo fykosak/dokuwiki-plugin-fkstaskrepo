@@ -1,7 +1,7 @@
 base   fkstaskrepo
 author Michal Koutný, Michal Červeňák, Štěpán Stenchlák
 email  webmaster@fykos.cz
-date   2014-04-22
+date   2020-09-07
 name   fkstaskrepo plugin
 desc   Management of problems.
 url    http://git@fykos.cz:dokuwiki/plugin-fkstaskrepo.git
