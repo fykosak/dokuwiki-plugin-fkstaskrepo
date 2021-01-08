@@ -1,17 +1,24 @@
 <?php
+
+use dokuwiki\Extension\ActionPlugin;
+use dokuwiki\Extension\Event;
+use dokuwiki\Extension\EventHandler;
+use dokuwiki\Form\Form;
+use dokuwiki\Form\InputElement;
+use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\Task;
+
 /**
  * Action plugin for exiting tasks on the web
  * DokuWiki Plugin fkstaskrepo (Action Component)
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
- * @author  Michal Koutný <michal@fykos.cz>
+ * @author Michal Koutný <michal@fykos.cz>
+ * @author Michal Červeňák <miso@fykos.cz>
+ * @author Štěpán Stenchlák <stenchlak@fykos.cz>
  */
-// must be run within Dokuwiki
-if (!defined('DOKU_INC')) die();
+class action_plugin_fkstaskrepo extends ActionPlugin {
 
-class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
-
-    private static $tags = [
+    private static array $tags = [
         'mechHmBodu',
         'mechTuhTel',
         'hydroMech',
@@ -36,10 +43,8 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         'biofyzika',
         'other',
     ];
-    /**
-     * @var helper_plugin_fkstaskrepo
-     */
-    private $helper;
+
+    private helper_plugin_fkstaskrepo $helper;
 
     public function __construct() {
         $this->helper = $this->loadHelper('fkstaskrepo');
@@ -48,26 +53,24 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
     /**
      * Registers a callback function for a given event
      *
-     * @param Doku_Event_Handler $controller DokuWiki's event controller object
+     * @param EventHandler $controller DokuWiki's event controller object
      * @return void
      */
-    public function register(Doku_Event_Handler $controller) {
-
+    public function register(EventHandler $controller): void {
         $controller->register_hook('TPL_ACT_UNKNOWN', 'BEFORE', $this, 'tplEditForm');
         $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'editTask');
-
-        $controller->register_hook('PARSER_CACHE_USE', 'BEFORE', $this, 'handle_parser_cache_use');
+        $controller->register_hook('PARSER_CACHE_USE', 'BEFORE', $this, 'handleParserCacheUse');
     }
 
-    public function tplEditForm(Doku_Event &$event) {
-        global $INPUT, $conf;
+    public function tplEditForm(Event $event): void {
+        global $INPUT;
         if ($event->data !== 'plugin_fkstaskrepo' || !$this->isLogged()) {
             return;
         }
         $event->preventDefault();
         echo '<h1>Úprava úlohy</h1>';
 
-        $problem = new \PluginFKSTaskRepo\Task(
+        $problem = new Task(
             $this->helper,
             $INPUT->param('task')['year'],
             $INPUT->param('task')['series'],
@@ -76,12 +79,12 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         );
         $problem->load();
 
-        $form = new \dokuwiki\Form\Form();
+        $form = new Form();
         $form->addClass('task-repo-edit');
         $form->setHiddenField('task[do]', 'update');
         $form->setHiddenField('do', 'plugin_fkstaskrepo');
 
-        foreach (\PluginFKSTaskRepo\Task::$readonlyFields as $field) {
+        foreach (Task::$readonlyFields as $field) {
             $form->addTagOpen('div')->addClass('form-group');
             switch ($field) {
                 case 'year':
@@ -102,7 +105,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
             }
             $form->addTagClose('div');
         }
-        foreach (\PluginFKSTaskRepo\Task::$editableFields as $field) {
+        foreach (Task::$editableFields as $field) {
             $form->addTagOpen('div')->addClass('form-group');
             switch ($field) {
                 case 'task':
@@ -141,7 +144,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
                     $form->addHTML('<small class="form-text">Autory oddělujte čárkou.</small>');
                     break;
                 case 'points':
-                    $inputElement = new dokuwiki\Form\InputElement('number', 'problem[points]', $this->helper->getSpecLang($field, 'cs'));
+                    $inputElement = new InputElement('number', 'problem[points]', $this->helper->getSpecLang($field, 'cs'));
                     $inputElement->val($problem->getPoints() ?: '');
                     $inputElement->attrs(['class' => 'form-control']);
                     $form->addElement($inputElement);
@@ -174,12 +177,12 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         echo $form->toHTML();
     }
 
-    private function addStaticField(\dokuwiki\Form\Form &$form, $field, $value) {
+    private function addStaticField(Form $form, string $field, $value): void {
         $form->addTextInput('problem[' . $field . ']', $this->helper->getSpecLang($field, 'cs'))
             ->attrs(['class' => 'form-control', 'readonly' => 'readonly'])->val($value);
     }
 
-    private function addTagsField(\dokuwiki\Form\Form $form, \PluginFKSTaskRepo\Task $data) {
+    private function addTagsField(Form $form, Task $data): void {
         $form->addFieldsetOpen($this->helper->getSpecLang('tags', 'cs'));
 
         $form->addTagOpen('div')->addClass('row');
@@ -200,7 +203,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         $form->addFieldsetClose();
     }
 
-    public function editTask(Doku_Event &$event) {
+    public function editTask(Event $event): void {
         global $INPUT;
         if ($event->data !== 'plugin_fkstaskrepo' || !$this->isLogged()) {
             return;
@@ -210,23 +213,22 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         switch ($INPUT->param('task')['do']) {
             case 'update':
                 $this->updateProblem($event);
-                break;
+                return;
             case 'edit':
-                break;
+                return;
         }
     }
 
-    private function updateProblem(Doku_Event &$event) {
+    private function updateProblem(Event $event): void {
         global $INPUT;
 
         if (!$this->isLogged()) {
-            return false;
+            return;
         }
 
         $problemData = $INPUT->param('problem');
 
-
-        $problem = new \PluginFKSTaskRepo\Task($this->helper, (int)$problemData['year'], (int)$problemData['series'], (string)$problemData['label'], $problemData['lang']);
+        $problem = new Task($this->helper, (int)$problemData['year'], (int)$problemData['series'], (string)$problemData['label'], $problemData['lang']);
 
         $problem->load();
 
@@ -245,7 +247,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
     }
 
 
-    private function processFigures($figures) {
+    private function processFigures(iterable $figures): array {
         $out = [];
         foreach ($figures as $figure) {
             $path = trim($figure['path']);
@@ -260,7 +262,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
         return $out;
     }
 
-    public function handle_parser_cache_use(Doku_Event &$event) {
+    public function handleParserCacheUse(Event $event): void {
         $cache = &$event->data;
 
         // we're only interested in wiki pages
@@ -280,10 +282,7 @@ class action_plugin_fkstaskrepo extends DokuWiki_Action_Plugin {
             $depends) : $depends;
     }
 
-    /**
-     * @return bool
-     */
-    private function isLogged() {
+    private function isLogged(): bool {
         global $ID;
         return auth_quickaclcheck($ID) >= AUTH_EDIT;
     }

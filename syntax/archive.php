@@ -1,47 +1,40 @@
 <?php
 
+use dokuwiki\Extension\SyntaxPlugin;
+
 /**
  * DokuWiki Plugin fkstaskrepo (Syntax Component)
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
- * @author  Michal Červeňák <miso@fykos.cz>, Štěpán Stenchlák <stenchlak@fykos.cz>
+ * @author Michal Červeňák <miso@fykos.cz>
+ * @author Štěpán Stenchlák <stenchlak@fykos.cz>
  */
-// must be run within Dokuwiki
-if (!defined('DOKU_INC')) {
-    die();
-}
+class syntax_plugin_fkstaskrepo_archive extends SyntaxPlugin {
 
-class syntax_plugin_fkstaskrepo_archive extends DokuWiki_Syntax_Plugin {
-
-    /**
-     *
-     * @var helper_plugin_fkstaskrepo
-     */
-    private $helper;
+    private helper_plugin_fkstaskrepo $helper;
 
     function __construct() {
         $this->helper = $this->loadHelper('fkstaskrepo');
-
     }
 
     /**
      * @return string Syntax mode type
      */
-    public function getType() {
+    public function getType(): string {
         return 'substition';
     }
 
     /**
      * @return string Paragraph type
      */
-    public function getPType() {
+    public function getPType(): string {
         return 'block';
     }
 
     /**
      * @return int Sort order - Low numbers go before high numbers
      */
-    public function getSort() {
+    public function getSort(): int {
         return 164; // whatever
     }
 
@@ -50,7 +43,7 @@ class syntax_plugin_fkstaskrepo_archive extends DokuWiki_Syntax_Plugin {
      *
      * @param string $mode Parser mode
      */
-    public function connectTo($mode) {
+    public function connectTo($mode): void {
         $this->Lexer->addSpecialPattern('<fkstaskarchive\s.*?/>', $mode, 'plugin_fkstaskrepo_archive');
     }
 
@@ -63,7 +56,7 @@ class syntax_plugin_fkstaskrepo_archive extends DokuWiki_Syntax_Plugin {
      * @param Doku_Handler $handler The handler
      * @return array Data for the renderer
      */
-    public function handle($match, $state, $pos, Doku_Handler $handler) {
+    public function handle($match, $state, $pos, Doku_Handler $handler): array {
         global $conf;
         preg_match('/lang="([a-z]+)"/', substr($match, 0, -2), $m);
         $lang = $m[1];
@@ -75,11 +68,11 @@ class syntax_plugin_fkstaskrepo_archive extends DokuWiki_Syntax_Plugin {
             return preg_match('/' . $path . '/', $a['id']);
         });
         $data = array_map(function ($a) use ($path, $lang) {
-            list($a['year'], $a['series']) = $this->extractPathParameters($a['id'], $lang);
+            [$a['year'], $a['series']] = $this->extractPathParameters($a['id'], $lang);
             return $a;
         }, $data);
         usort($data, function ($a, $b) {
-	    // year decreasing, series increasing
+            // year decreasing, series increasing
             return ($b['year'] - $a['year']) ?: ($a['series'] - $b['series']);
         });
 
@@ -87,7 +80,7 @@ class syntax_plugin_fkstaskrepo_archive extends DokuWiki_Syntax_Plugin {
         foreach ($data as $page) {
             $pages[$page['year']][$page['series']] = $page['id'];
         }
-        
+
         return [$state, [$pages, $lang]];
     }
 
@@ -99,11 +92,11 @@ class syntax_plugin_fkstaskrepo_archive extends DokuWiki_Syntax_Plugin {
      * @param array $data The data from the handler() function
      * @return bool If rendering was successful.
      */
-    public function render($mode, Doku_Renderer $renderer, $data) {
+    public function render($mode, Doku_Renderer $renderer, $data): bool {
         $renderer->nocache();
         global $ID;
         list($state, list($pages, $lang)) = $data;
-        list($currentYear, $currentSeries) = $this->extractPathParameters($ID, $lang);
+        [$currentYear, $currentSeries] = $this->extractPathParameters($ID, $lang);
 
         switch ($state) {
             case DOKU_LEXER_SPECIAL:
@@ -117,12 +110,13 @@ class syntax_plugin_fkstaskrepo_archive extends DokuWiki_Syntax_Plugin {
         }
     }
 
-    private function renderSeries(Doku_Renderer &$renderer, $pages, $lang, $currentYear = null, $currentSeries = null) {
+// TODO $currentYear and $currentSeries is never used
+    private function renderSeries(Doku_Renderer $renderer, array $pages, string $lang, $currentYear = null, $currentSeries = null) {
         foreach ($pages as $year => $batches) {
             $renderer->doc .= '<div class="mb-3 col-lg-3 col-md-4 col-sm-6 col-xs-12">';
 
             // Title
-            $renderer->doc .= '<h2>' . sprintf($this->helper->getSpecLang('archive_year', $lang),$year) . '</h2>';
+            $renderer->doc .= '<h2>' . sprintf($this->helper->getSpecLang('archive_year', $lang), $year) . '</h2>';
 
             foreach ($batches as $batch => $page) {
                 $renderer->doc .= '<li><a href="' . wl($page) . '">' . sprintf($this->helper->getSpecLang('archive_series', $lang), $batch) . '</a></li>';
@@ -131,11 +125,11 @@ class syntax_plugin_fkstaskrepo_archive extends DokuWiki_Syntax_Plugin {
         }
     }
 
-    private function getRegExpPath($lang) {
+    private function getRegExpPath(string $lang): string {
         return preg_replace('/%[0-9]\$s/', '([0-9]+)', $this->getConf('page_path_mask_' . $lang));
     }
 
-    private function extractPathParameters($id, $lang) {
+    private function extractPathParameters(string $id, string $lang): array {
         preg_match('/' . $this->getRegExpPath($lang) . '/', $id, $m);
         $currentYear = $m[1];
         $currentSeries = $m[2];

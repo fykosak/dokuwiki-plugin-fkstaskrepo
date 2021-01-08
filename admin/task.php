@@ -1,28 +1,31 @@
 <?php
 
-// must be run within Dokuwiki
-if (!defined('DOKU_INC')) die();
+use dokuwiki\Extension\AdminPlugin;
+use dokuwiki\Form\Form;
+use dokuwiki\Form\InputElement;
+use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\Task;
 
-class admin_plugin_fkstaskrepo_task extends DokuWiki_Admin_Plugin {
+/**
+ * Class admin_plugin_fkstaskrepo_task
+ * @author Michal Koutný <michal@fykos.cz>
+ * @author Štěpán Stenchlák <stenchlak@fykos.cz>
+ * @author Michal Červeňák <miso@fykos.cz> PHP7.4 compatiblity
+ */
+class admin_plugin_fkstaskrepo_task extends AdminPlugin {
 
-    static $availableVersions = [1];
+    static array $availableVersions = [1];
 
-    /**
-     *
-     * @var helper_plugin_fkstaskrepo
-     */
-    private $helper;
+    private helper_plugin_fkstaskrepo $helper;
 
     public function __construct() {
         $this->helper = $this->loadHelper('fkstaskrepo');
     }
 
-    public function getMenuText($language)
-    {
+    public function getMenuText($language): string {
         return 'Stáhnout zadání série z Astrid';
     }
 
-    public function getMenuIcon() {
+    public function getMenuIcon(): string {
         $plugin = $this->getPluginName();
         return DOKU_PLUGIN . $plugin . '/task.svg';
     }
@@ -30,21 +33,21 @@ class admin_plugin_fkstaskrepo_task extends DokuWiki_Admin_Plugin {
     /**
      * @return int sort number in admin menu
      */
-    public function getMenuSort() {
+    public function getMenuSort(): int {
         return 10;
     }
 
     /**
      * @return bool true if only access for superuser, false is for superusers and moderators
      */
-    public function forAdminOnly() {
+    public function forAdminOnly(): bool {
         return false;
     }
 
     /**
      * Should carry out any processing required by the plugin.
      */
-    public function handle() {
+    public function handle(): void {
         global $INPUT;
         $year = $INPUT->int('year', null);
         $series = $INPUT->int('series', null);
@@ -92,10 +95,9 @@ class admin_plugin_fkstaskrepo_task extends DokuWiki_Admin_Plugin {
         }
     }
 
-    public function html() {
-        global $ID;
+    public function html(): void {
         ptln('<h1>' . $this->getMenuText('cs') . '</h1>');
-        $form = new \dokuwiki\Form\Form();
+        $form = new Form();
         $form->addClass('task-repo-edit');
         $form->attrs(['class' => $this->getPluginName(), 'enctype' => 'multipart/form-data']);
 
@@ -121,15 +123,15 @@ class admin_plugin_fkstaskrepo_task extends DokuWiki_Admin_Plugin {
         $form->addButton('download', 'Importovat zadání, brožurku a seriál této série.')->addClass('btn btn-primary d-block mb-3');
 
         // Some stuff to decide what do to...
-            $form->addTagOpen('div');
-            $form->addCheckbox('downloadtasks', 'Stahovat vůbec zadání?')->attr('checked', 'checked');
-            $form->addTagClose('div');
+        $form->addTagOpen('div');
+        $form->addCheckbox('downloadtasks', 'Stahovat vůbec zadání?')->attr('checked', 'checked');
+        $form->addTagClose('div');
 
-            $form->addTagOpen('div');
-            $form->addCheckbox('downloadtaskshard', 'Přepsat existující příklady na webu.');
-            $form->addTagClose('div');
+        $form->addTagOpen('div');
+        $form->addCheckbox('downloadtaskshard', 'Přepsat existující příklady na webu.');
+        $form->addTagClose('div');
 
-            $this->addDocumentSelectList($form);
+        $this->addDocumentSelectList($form);
 
         $form->addHTML('<small class="form-text">Stáhne z Astridu české a anglické zadání, brožurku v PDF a seriál v PDF.</small>');
 
@@ -137,7 +139,7 @@ class admin_plugin_fkstaskrepo_task extends DokuWiki_Admin_Plugin {
 
         $form->addButton('uploadxml', 'Nahrát XML ručně ze souboru.')->addClass('btn btn-warning d-block mb-3');
         $form->addCheckbox('uploadxmlhard', 'Přepsat existující příklady na webu.');
-        $form->addElement((new \dokuwiki\Form\InputElement('file', 'xml_file'))->addClass('d-block mt-3'));
+        $form->addElement((new InputElement('file', 'xml_file'))->addClass('d-block mt-3'));
 
         $form->addHTML('<small class="form-text">Tuto možnost používejte pouze tehdy, pokud není možné automaticky importovat z Astrid. Vyberte prosím pouze z tabulky příklady, které chcete importovat.</small>');
 
@@ -150,7 +152,7 @@ class admin_plugin_fkstaskrepo_task extends DokuWiki_Admin_Plugin {
      * @param $hard bool overwrite existing tasks
      * @param $taskSelect @see $this->helper->addTaskSelectTable()
      */
-    private function processSeries($content, $hard, $taskSelect) {
+    private function processSeries(string $content, bool $hard, $taskSelect): void {
         $seriesXML = simplexml_load_string($content);
 
         $deadline = $seriesXML->deadline;
@@ -216,13 +218,13 @@ class admin_plugin_fkstaskrepo_task extends DokuWiki_Admin_Plugin {
      * @param $taskSelect @see $this->helper->addTaskSelectTable()
      * @return bool
      */
-    private function createTask(SimpleXMLElement $problem, $year, $series, $lang, $hard, $taskSelect) {
+    private function createTask(SimpleXMLElement $problem, int $year, int $series, string $lang, bool $hard, $taskSelect): bool {
         // Test, if the task is selected
         if (!$taskSelect[$lang][$this->helper->labelToNumber($problem->label)]) {
             return true;
         }
 
-        $task = new \PluginFKSTaskRepo\Task($this->helper, $year, $series, (string)$problem->label, $lang);
+        $task = new Task($this->helper, $year, $series, (string)$problem->label, $lang);
         $exists = $task->load();
 
         if (!$hard && $exists) {
@@ -233,9 +235,6 @@ class admin_plugin_fkstaskrepo_task extends DokuWiki_Admin_Plugin {
         // Save figures
         $task->saveFiguresRawData($this->extractFigures($problem, $lang));
 
-        /**
-         * @var $child SimpleXMLElement
-         */
         foreach ($problem->children() as $k => $child) {
             if ($this->hasLang($child, $lang)) {
                 switch ($k) {
@@ -262,7 +261,7 @@ class admin_plugin_fkstaskrepo_task extends DokuWiki_Admin_Plugin {
                             } else {
                                 $task->setAuthors($authors['author']);
                             }
-                        };
+                        }
                         break;
                     case 'solution-authors':
                         $solutionAuthors = (array)$child->children();
@@ -272,7 +271,7 @@ class admin_plugin_fkstaskrepo_task extends DokuWiki_Admin_Plugin {
                             } else {
                                 $task->setSolutionAuthors($solutionAuthors['solution-author']);
                             }
-                        };
+                        }
                         break;
                 }
             }
@@ -291,9 +290,9 @@ class admin_plugin_fkstaskrepo_task extends DokuWiki_Admin_Plugin {
      * @param string $lang
      * @return bool
      */
-    private function hasLang(\SimpleXMLElement $e, $lang) {
-        return (($lang == (string)$e->attributes(\helper_plugin_fkstaskrepo::XMLNamespace)->lang) ||
-            (string)$e->attributes(\helper_plugin_fkstaskrepo::XMLNamespace)->lang == "");
+    private function hasLang(SimpleXMLElement $e, string $lang): bool {
+        return (($lang == (string)$e->attributes(helper_plugin_fkstaskrepo::XMLNamespace)->lang) ||
+            (string)$e->attributes(helper_plugin_fkstaskrepo::XMLNamespace)->lang == "");
     }
 
     /**
@@ -302,16 +301,13 @@ class admin_plugin_fkstaskrepo_task extends DokuWiki_Admin_Plugin {
      * @return array
      * @todo Solve languages
      */
-    private function extractFigures(\SimpleXMLElement $problem, $lang) {
+    private function extractFigures(SimpleXMLElement $problem, string $lang): array {
         $figuresData = [];
         if ((string)$problem->figures != "") {
             foreach ($problem->figures->figure as $figure) {
                 if ($this->hasLang($figure, $lang)) {
                     $simpleFigure = [];
                     $simpleFigure['caption'] = (string)$figure->caption;
-                    /**
-                     * @var $data \SimpleXMLElement
-                     */
                     foreach ($figure->data as $data) {
                         $type = (string)$data->attributes()->extension;
                         $simpleFigure['data'][$type] = trim((string)$data);
@@ -330,10 +326,10 @@ class admin_plugin_fkstaskrepo_task extends DokuWiki_Admin_Plugin {
      * @param string $template
      * @return string
      */
-    private function replaceVariables($parameters, $template) {
+    private function replaceVariables(array $parameters, string $template): string {
         $that = $this;
 
-        $result = preg_replace_callback('/@([^@]+)@/',
+        return preg_replace_callback('/@([^@]+)@/',
             function ($match) use ($parameters, $that) {
                 $key = $match[1];
                 if (!isset($parameters[$key])) {
@@ -344,10 +340,9 @@ class admin_plugin_fkstaskrepo_task extends DokuWiki_Admin_Plugin {
                 }
             },
             $template);
-        return $result;
     }
 
-    private function addDocumentSelectList(\dokuwiki\Form\Form $form) {
+    private function addDocumentSelectList(Form $form): void {
         foreach ($this->getSupportedDocuments() as $ID => $document) {
             $form->addTagOpen('div');
             $form->addCheckbox('documentselect[' . $ID . ']', $document['name'])->attr('checked', 'checked');
@@ -355,8 +350,7 @@ class admin_plugin_fkstaskrepo_task extends DokuWiki_Admin_Plugin {
         }
     }
 
-    private function getSupportedDocuments()
-    {
+    private function getSupportedDocuments(): array {
         return [
             [
                 'name' => 'Brožurka série v PDF',

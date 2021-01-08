@@ -1,4 +1,7 @@
 <?php
+
+use dokuwiki\Extension\SyntaxPlugin;
+
 /**
  * This syntax plugin replaces <fkstaskrepobatchpdf year="" series="" lang="" /> with link to brochure, serial and
  * yearbook if exists.
@@ -7,16 +10,12 @@
  * DokuWiki Plugin fkstaskrepo (Syntax Component)
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
- * @author  Štěpán Stenchlák <stenchlak@fykos.cz>
+ * @author Štěpán Stenchlák <stenchlak@fykos.cz>
+ * @author Michal Červeňák <miso@fykos.cz> PHP7.4 compatibility
  */
+class syntax_plugin_fkstaskrepo_batchpdf extends SyntaxPlugin {
 
-class syntax_plugin_fkstaskrepo_batchpdf extends DokuWiki_Syntax_Plugin {
-
-    /**
-     *
-     * @var helper_plugin_fkstaskrepo
-     */
-    private $helper;
+    private helper_plugin_fkstaskrepo $helper;
 
     function __construct() {
         $this->helper = $this->loadHelper('fkstaskrepo');
@@ -25,21 +24,21 @@ class syntax_plugin_fkstaskrepo_batchpdf extends DokuWiki_Syntax_Plugin {
     /**
      * @return string Syntax mode type
      */
-    public function getType() {
+    public function getType(): string {
         return 'substition';
     }
 
     /**
      * @return string Paragraph type
      */
-    public function getPType() {
+    public function getPType(): string {
         return 'block';
     }
 
     /**
      * @return int Sort order - Low numbers go before high numbers
      */
-    public function getSort() {
+    public function getSort(): int {
         return 164; // whatever
     }
 
@@ -48,7 +47,7 @@ class syntax_plugin_fkstaskrepo_batchpdf extends DokuWiki_Syntax_Plugin {
      *
      * @param string $mode Parser mode
      */
-    public function connectTo($mode) {
+    public function connectTo($mode): void {
         $this->Lexer->addSpecialPattern('<fkstaskrepobatchpdf\s.*?/>', $mode, 'plugin_fkstaskrepo_batchpdf');
     }
 
@@ -61,25 +60,25 @@ class syntax_plugin_fkstaskrepo_batchpdf extends DokuWiki_Syntax_Plugin {
      * @param Doku_Handler $handler The handler
      * @return array Data for the renderer
      */
-    public function handle($match, $state, $pos, Doku_Handler &$handler) {
+    public function handle($match, $state, $pos, Doku_Handler $handler): array {
         global $conf;
 
         // Extract attributes from $match to $attr
-            $attr = [];
-            // @see https://stackoverflow.com/a/38305337
-            preg_match_all("/((?:(?!\\s|=).)*)\\s*?=\\s*?[\"']?((?:(?<=\")(?:(?<=\\\\)\"|[^\"])*|(?<=')(?:(?<=\\\\)'|[^'])*)|(?:(?!\"|')(?:(?!\\/>|>|\\s).)+))/", $match, $rawattributes);
-            foreach ($rawattributes[1] as $i => $j) {
-                $attr[$j] = $rawattributes[2][$i];
-            }
+        $attr = [];
+        // @see https://stackoverflow.com/a/38305337
+        preg_match_all("/((?:(?!\\s|=).)*)\\s*?=\\s*?[\"']?((?:(?<=\")(?:(?<=\\\\)\"|[^\"])*|(?<=')(?:(?<=\\\\)'|[^'])*)|(?:(?!\"|')(?:(?!\\/>|>|\\s).)+))/", $match, $rawattributes);
+        foreach ($rawattributes[1] as $i => $j) {
+            $attr[$j] = $rawattributes[2][$i];
+        }
 
         $attr['lang'] = $attr['lang'] ? $attr['lang'] : $conf['lang']; // Modify lang
 
         if (!$attr['prefer'] || $attr['prefer'] === 'brochure') {
             $attr['brochure_path'] = vsprintf($this->getConf('brochure_path_' . $attr['lang']), [$attr['year'], $attr['series']]); // Add path
-            $attr['brochure_path'] = file_exists(mediaFN( $attr['brochure_path'])) ?  $attr['brochure_path'] : null; // Remove path if not exists
+            $attr['brochure_path'] = file_exists(mediaFN($attr['brochure_path'])) ? $attr['brochure_path'] : null; // Remove path if not exists
             // Include original cs brochure to en (if exists obviously)
             $attr['brochure_original'] = vsprintf($this->getConf('brochure_path_cs'), [$attr['year'], $attr['series']]);
-            $attr['brochure_original'] = file_exists(mediaFN( $attr['brochure_original'])) && $attr['lang'] !== 'cs' ?  $attr['brochure_original'] : null; // Remove path to original brochure if not exists, or in case lang == cs
+            $attr['brochure_original'] = file_exists(mediaFN($attr['brochure_original'])) && $attr['lang'] !== 'cs' ? $attr['brochure_original'] : null; // Remove path to original brochure if not exists, or in case lang == cs
         }
 
         // Czech Yearbook
@@ -105,30 +104,30 @@ class syntax_plugin_fkstaskrepo_batchpdf extends DokuWiki_Syntax_Plugin {
      * @param array $data The data from the handler() function
      * @return bool If rendering was successful.
      */
-    public function render($mode, \Doku_Renderer $renderer, $data) {
+    public function render($mode, Doku_Renderer $renderer, $data): bool {
         switch ($mode) {
             case 'xhtml':
                 // Year book and serial are only in Czech
                 if ($data['yearbook_original']) {
                     $renderer->doc .= '<div class="seriespdf yearbook">';
-                    $renderer->internalmedia($data['yearbook_original'], vsprintf($this->helper->getSpecLang('year_book',$data['lang']), [$data['year'], $data['series']]),null,null,null,null,'linkonly');
+                    $renderer->internalmedia($data['yearbook_original'], vsprintf($this->helper->getSpecLang('year_book', $data['lang']), [$data['year'], $data['series']]), null, null, null, null, 'linkonly');
                     $renderer->doc .= '</div>';
                 }
 
                 if ($data['brochure_original']) {
                     $renderer->doc .= '<div class="seriespdf brochure brochure-original">';
-                    $renderer->internalmedia($data['brochure_original'], vsprintf($this->helper->getSpecLang('brochure_original',$data['lang']), [$data['year'], $data['series']]),null,null,null,null,'linkonly');
+                    $renderer->internalmedia($data['brochure_original'], vsprintf($this->helper->getSpecLang('brochure_original', $data['lang']), [$data['year'], $data['series']]), null, null, null, null, 'linkonly');
                     $renderer->doc .= '</div>';
                 }
                 if ($data['brochure_path']) {
                     $renderer->doc .= '<div class="seriespdf brochure brochure-default">';
-                    $renderer->internalmedia($data['brochure_path'], vsprintf($this->helper->getSpecLang('brochure',$data['lang']), [$data['year'], $data['series']]),null,null,null,null,'linkonly');
+                    $renderer->internalmedia($data['brochure_path'], vsprintf($this->helper->getSpecLang('brochure', $data['lang']), [$data['year'], $data['series']]), null, null, null, null, 'linkonly');
                     $renderer->doc .= '</div>';
                 }
 
                 if ($data['serial_original']) {
                     $renderer->doc .= '<div class="seriespdf serial">';
-                    $renderer->internalmedia($data['serial_original'], vsprintf($this->helper->getSpecLang('serial',$data['lang']), [$data['year'], $data['series']]),null,null,null,null,'linkonly');
+                    $renderer->internalmedia($data['serial_original'], vsprintf($this->helper->getSpecLang('serial', $data['lang']), [$data['year'], $data['series']]), null, null, null, null, 'linkonly');
                     $renderer->doc .= '</div>';
                 }
                 return true;

@@ -1,21 +1,18 @@
 <?php
-/**
- * Created by IntelliJ IDEA.
- * User: miso
- * Date: 23.8.2017
- * Time: 16:09
- */
 
-namespace PluginFKSTaskRepo;
+namespace FYKOS\dokuwiki\Extenstion\PluginTaskRepo;
+
+use helper_plugin_fkstaskrepo;
 
 /**
  * Class Task
- * @package PluginFKSTaskRepo
+ * @author Michal Koutný <michal@fykos.cz>
+ * @author Michal Červeňák <miso@fykos.cz>
+ * @author Štěpán Stenchlák <stenchlak@fykos.cz>
  */
-
 class Task {
 
-    public static $editableFields = [
+    public static array $editableFields = [
         'name',
         'points',
         'origin',
@@ -25,43 +22,37 @@ class Task {
         'figures',
     ];
 
-    public static $readonlyFields = [
+    public static array $readonlyFields = [
         'year',
         'number',
         'series',
         'label',
         'lang',
     ];
-    private $number;
-    private $label;
-    private $name;
-    private $lang;
-    private $origin;
-    private $task;
-    private $points;
-    private $figures;
-    private $authors;
-    private $solutionAuthors;
-    private $year;
-    private $series;
+    private int $number;
+    private string $label;
+    private string $name;
+    private string $lang;
+    private ?string $origin;
+    private string $task;
+    private ?int $points;
+    private ?array $figures;
+    private ?array $authors;
+    private ?array $solutionAuthors;
+    private int $year;
+    private int $series;
 
-    /**
-     * @var \PluginFKSTaskRepo\TexPreproc;
-     */
-    private $texPreproc;
+    private TexPreproc $texPreproc;
 
     /**
      * name, origin, task, figures
      * @var array localized data stored in the file
      */
-    private $taskLocalizedData = [];
+    private array $taskLocalizedData = [];
 
-    /**
-     * @var \helper_plugin_fkstaskrepo Helper plugin
-     */
-    private $helper;
+    private helper_plugin_fkstaskrepo $helper;
 
-    public function __construct(\helper_plugin_fkstaskrepo $helper, $year, $series, $label, $lang = 'cs') {
+    public function __construct(helper_plugin_fkstaskrepo $helper, int $year, int $series, string $label, string $lang = 'cs') {
         $this->texPreproc = new TexPreproc();
         $this->year = $year;
         $this->series = $series;
@@ -70,15 +61,12 @@ class Task {
         $this->helper = $helper;
     }
 
-    /**
-     * @param $figures
-     */
-    public function saveFiguresRawData($figures) {
+    public function saveFiguresRawData(array $figures): void {
         $this->figures = [];
 
         foreach ($figures as $figure) {
             $figureGoodForm = [];
-            $figureGoodForm['caption'] = $figure['caption'];
+            $figureGoodForm['caption'] = $figure['caption']; // TODO never used!!!
 
             foreach ($figure as $ext => $data) {
                 $name = $this->getAttachmentPath($figure['caption'], $ext);
@@ -98,8 +86,8 @@ class Task {
      * @param $type string File type
      * @return string ID
      */
-    private function getAttachmentPath($caption, $type) {
-        $name = substr(preg_replace("/[^a-zA-Z0-9_-]+/", '-', $caption), 0, 30) . '_' . substr(md5($caption.$type),0,5);
+    private function getAttachmentPath(string $caption, string $type): string {
+        $name = substr(preg_replace("/[^a-zA-Z0-9_-]+/", '-', $caption), 0, 30) . '_' . substr(md5($caption . $type), 0, 5);
         return vsprintf($this->helper->getConf('attachment_path_' . $this->lang), [$this->year, $this->series, $this->label]) . ':' . $name . '.' . $type;
     }
 
@@ -107,14 +95,14 @@ class Task {
      * Returns the path of .json file with task data.
      * @return string path of file
      */
-    private function getFileName() {
+    private function getFileName(): string {
         return MetaFN(vsprintf($this->helper->getConf('task_data_meta_path'), [$this->year, $this->series, $this->label]), null);
     }
 
     /**
      * Saves task
      */
-    public function save() {
+    public function save(): void {
         $data = [
             'year' => $this->year,
             'series' => $this->series,
@@ -140,7 +128,7 @@ class Task {
      * Loads task
      * @return bool Success
      */
-    public function load() {
+    public function load(): bool {
         $content = io_readFile($this->getFileName(), false);
         if (!$content) {
             return false;
@@ -165,131 +153,83 @@ class Task {
         return true;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getYear() {
+    public function getYear(): int {
         return $this->year;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getSeries() {
+    public function getSeries(): int {
         return $this->series;
     }
-    /**
-     * @return mixed
-     */
-    public function getLabel() {
+
+    public function getLabel(): string {
         return $this->label;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getLang() {
+    public function getLang(): string {
         return $this->lang;
     }
 
     /**
      * Number is not an ID of the task
-     * @return mixed
+     * @return int
      */
-    public function getNumber() {
+    public function getNumber(): int {
         return $this->number;
     }
 
     /**
      * Number is readonly field, but it is editable during XML import
-     * @param mixed $number
+     * @param int $number
      */
-    public function setNumber($number) {
+    public function setNumber(int $number): void {
         $this->number = $number;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getPoints() {
+    public function getPoints(): ?int {
         return $this->points;
     }
 
-    /**
-     * @param int $points
-     */
-    public function setPoints($points) {
+    public function setPoints(?int $points): void {
         $this->points = $points;
     }
 
-    /**
-     * @return array
-     */
-    public function getAuthors() {
+    public function getAuthors(): ?array {
         return $this->authors;
     }
 
-    /**
-     * @param array $authors
-     */
-    public function setAuthors($authors) {
+    public function setAuthors(array $authors): void {
         $this->authors = $authors;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getSolutionAuthors() {
+    public function getSolutionAuthors(): ?array {
         return $this->solutionAuthors;
     }
 
-    /**
-     * @param mixed $solutionAuthors
-     */
-    public function setSolutionAuthors($solutionAuthors) {
+    public function setSolutionAuthors(array $solutionAuthors): void {
         $this->solutionAuthors = $solutionAuthors;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getName() {
+    public function getName(): string {
         return $this->name;
     }
 
-    /**
-     * @param mixed $name
-     */
-    public function setName($name) {
+    public function setName(string $name): void {
         $this->name = $name;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getOrigin() {
+    public function getOrigin(): ?string {
         return $this->origin;
     }
 
-    /**
-     * @param mixed $origin
-     */
-    public function setOrigin($origin) {
+    public function setOrigin(string $origin): void {
         $this->origin = $origin;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getTask() {
+    public function getTask(): string {
         return $this->task;
     }
 
-    /**
-     * @param string $task
-     * @param boolean $preProc
-     */
-    public function setTask($task, $preProc = true) {
+    public function setTask(string $task, bool $preProc = true): void {
         if ($preProc) {
             $this->task = $this->texPreproc->preproc($task);
         } else {
@@ -297,18 +237,11 @@ class Task {
         }
     }
 
-    /**
-     * @return array
-     */
-    public function getFigures() {
+    public function getFigures(): ?array {
         return $this->figures;
     }
 
-    /**
-     * @param mixed $figures
-     */
-    public function setFigures($figures) {
+    public function setFigures(array $figures): void {
         $this->figures = $figures;
     }
-
 }
