@@ -49,9 +49,9 @@ $lang['brochure_original'] = "Brochure in Czech";
 $lang['solution'] = "Solution";
 $lang['solution_original'] = "Solution in Czech";
 //$lang['year_book'] = 'Year book';
-//$lang['serial'] = 'Serial';
+$lang['serial'] = 'Serial';
 $lang['year_book'] = 'Year book in Czech';
-$lang['serial'] = 'Serial in Czech';
+//$lang['serial'] = 'Serial in Czech';
 
 $lang['archive_year'] = 'Year %d';
 $lang['archive_series'] = 'Series %d';

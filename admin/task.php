@@ -133,7 +133,7 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
 
         $this->addDocumentSelectList($form);
 
-        $form->addHTML('<small class="form-text">Stáhne z Astridu české a anglické zadání, brožurku v PDF a seriál v PDF.</small>');
+        $form->addHTML('<small class="form-text">Stáhne z Astrid české a anglické zadání, brožurku v PDF a seriál v PDF.</small>');
 
         $form->addHTML('<hr/>');
 
@@ -358,9 +358,14 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
                 'localpathmask' => $this->getConf('brochure_path_cs'),
             ],
             [
-                'name' => 'Zadání seriálu v PDF',
-                'remotepathmask' => $this->getConf('remote_serial_path_mask'),
+                'name' => 'Český text seriálu v PDF',
+                'remotepathmask' => $this->getConf('remote_serial_path_mask_cs'),
                 'localpathmask' => $this->getConf('serial_path_cs'),
+            ],
+            [
+                'name' => 'Anglický text seriálu v PDF',
+                'remotepathmask' => $this->getConf('remote_serial_path_mask_en'),
+                'localpathmask' => $this->getConf('serial_path_en'),
             ],
         ];
     }

@@ -87,10 +87,12 @@ class syntax_plugin_fkstaskrepo_batchpdf extends SyntaxPlugin {
             $attr['yearbook_original'] = file_exists(mediaFN($attr['yearbook_original'])) ? $attr['yearbook_original'] : null; // Remove path to if not exists
         }
 
-        // Czech Serial
+        // Serial
         if (!$attr['prefer'] || $attr['prefer'] === 'serial') {
+            $attr['serial_path'] = vsprintf(this->getConf('serial_path_' . $attr['lang']), [$attr['year'], $attr['series']]); //Add path
+            $attr['serial_path'] = file_exists(mediaFN($attr['brochure_path'])) ? $attr['brochure_path'] : null; // Remove path if not exists
             $attr['serial_original'] = vsprintf($this->getConf('serial_path_cs'), [$attr['year'], $attr['series']]);
-            $attr['serial_original'] = file_exists(mediaFN($attr['serial_original'])) ? $attr['serial_original'] : null; // Remove path to if not exists
+            $attr['serial_original'] = file_exists(mediaFN($attr['serial_original'])) && $attr['lang'] !== 'cs' ? $attr['brochure_original'] : null; // Remove path to original serial if not exists, or in case lang == cs    
         }
 
         return $attr;
@@ -126,8 +128,13 @@ class syntax_plugin_fkstaskrepo_batchpdf extends SyntaxPlugin {
                 }
 
                 if ($data['serial_original']) {
-                    $renderer->doc .= '<div class="seriespdf serial">';
-                    $renderer->internalmedia($data['serial_original'], vsprintf($this->helper->getSpecLang('serial', $data['lang']), [$data['year'], $data['series']]), null, null, null, null, 'linkonly');
+                    $renderer->doc .= '<div class="seriespdf serial serial-original">';
+                    $renderer->internalmedia($data['serial_original'], vsprintf($this->helper->getSpecLang('serial_original', $data['lang']), [$data['year'], $data['series']]), null, null, null, null, 'linkonly');
+                    $renderer->doc .= '</div>';
+                }
+                if ($data['serial_path']) {
+                    $renderer->doc .= '<div class="seriespdf serial serial-default">';
+                    $renderer->internalmedia($data['serial_path'], vsprintf($this->helper->getSpecLang('serial', $data['lang']), [$data['year'], $data['series']]), null, null, null, null, 'linkonly');
                     $renderer->doc .= '</div>';
                 }
                 return true;
