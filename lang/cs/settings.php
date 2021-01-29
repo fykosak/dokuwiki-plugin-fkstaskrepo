@@ -9,8 +9,9 @@ $lang['solution_path_en']="Media odkaz na PDF řešení konkrétního příkladu
 $lang['attachment_path_cs'] = 'Media preferované místo pro nahrávání příloh';
 $lang['attachment_path_en'] = 'Media preferované místo pro nahrávání příloh';
 
-$lang['yearbook_path_cs']='Media odkaz na ročenku. Je podopována pouze česká.';
-$lang['serial_path_cs']='Media odkaz na seriálovou úlohu. Je podopována pouze česká.';
+$lang['yearbook_path_cs']='Media odkaz na ročenku. Je podporována pouze česká.';
+$lang['serial_path_cs']='Media odkaz na seriálovou úlohu.';
+$lang['serial_path_en']='Media odkaz na seriálovou úlohu.';
 
 $lang['archive_path_cs']='Stránka, kde je archiv úloh podle oboru (tagů).';
 $lang['archive_path_en']='Stránka, kde je archiv úloh podle oboru (tagů).';
