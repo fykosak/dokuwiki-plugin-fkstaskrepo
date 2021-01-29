@@ -89,10 +89,10 @@ class syntax_plugin_fkstaskrepo_batchpdf extends SyntaxPlugin {
 
         // Serial
         if (!$attr['prefer'] || $attr['prefer'] === 'serial') {
-            $attr['serial_path'] = vsprintf(this->getConf('serial_path_' . $attr['lang']), [$attr['year'], $attr['series']]); //Add path
+            $attr['serial_path'] = vsprintf($this->getConf('serial_path_' . $attr['lang']), [$attr['year'], $attr['series']]); //Add path
             $attr['serial_path'] = file_exists(mediaFN($attr['brochure_path'])) ? $attr['brochure_path'] : null; // Remove path if not exists
             $attr['serial_original'] = vsprintf($this->getConf('serial_path_cs'), [$attr['year'], $attr['series']]);
-            $attr['serial_original'] = file_exists(mediaFN($attr['serial_original'])) && $attr['lang'] !== 'cs' ? $attr['brochure_original'] : null; // Remove path to original serial if not exists, or in case lang == cs    
+            $attr['serial_original'] = file_exists(mediaFN($attr['serial_original'])) && $attr['lang'] !== 'cs' ? $attr['brochure_original'] : null; // Remove path to original serial if not exists, or in case lang == cs
         }
 
         return $attr;
