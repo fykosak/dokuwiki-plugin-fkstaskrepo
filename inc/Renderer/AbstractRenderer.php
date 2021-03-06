@@ -21,7 +21,7 @@ abstract class AbstractRenderer {
         'ico',
     ];
 
-    protected helper_plugin_fkstaskrepo $helper;
+    protected $helper;
 
     public function __construct(helper_plugin_fkstaskrepo $helper) {
         $this->helper = $helper;

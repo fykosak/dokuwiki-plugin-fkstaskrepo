@@ -11,7 +11,7 @@ use dokuwiki\Extension\SyntaxPlugin;
  */
 class syntax_plugin_fkstaskrepo_archive extends SyntaxPlugin {
 
-    private helper_plugin_fkstaskrepo $helper;
+    private $helper;
 
     function __construct() {
         $this->helper = $this->loadHelper('fkstaskrepo');

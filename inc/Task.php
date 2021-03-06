@@ -12,7 +12,7 @@ use helper_plugin_fkstaskrepo;
  */
 class Task {
 
-    public static array $editableFields = [
+    public static $editableFields = [
         'name',
         'points',
         'origin',
@@ -22,35 +22,35 @@ class Task {
         'figures',
     ];
 
-    public static array $readonlyFields = [
+    public static $readonlyFields = [
         'year',
         'number',
         'series',
         'label',
         'lang',
     ];
-    private int $number;
-    private string $label;
-    private string $name;
-    private string $lang;
-    private ?string $origin;
-    private string $task;
-    private ?int $points;
-    private ?array $figures;
-    private ?array $authors;
-    private ?array $solutionAuthors;
-    private int $year;
-    private int $series;
+    private $number;
+    private $label;
+    private $name;
+    private $lang;
+    private $origin;
+    private $task;
+    private $points;
+    private $figures;
+    private $authors;
+    private $solutionAuthors;
+    private $year;
+    private $series;
 
-    private TexPreproc $texPreproc;
+    private $texPreproc;
 
     /**
      * name, origin, task, figures
      * @var array localized data stored in the file
      */
-    private array $taskLocalizedData = [];
+    private $taskLocalizedData = [];
 
-    private helper_plugin_fkstaskrepo $helper;
+    private $helper;
 
     public function __construct(helper_plugin_fkstaskrepo $helper, int $year, int $series, string $label, string $lang = 'cs') {
         $this->texPreproc = new TexPreproc();

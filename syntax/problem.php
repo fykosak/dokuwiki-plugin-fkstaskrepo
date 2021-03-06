@@ -12,9 +12,9 @@ use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\Task;
  */
 class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
 
-    private helper_plugin_fkstaskrepo $helper;
+    private $helper;
 
-    private AbstractRenderer $problemRenderer;
+    private $problemRenderer;
 
     function __construct() {
         $this->helper = $this->loadHelper('fkstaskrepo');

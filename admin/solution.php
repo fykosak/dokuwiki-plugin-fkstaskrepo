@@ -12,9 +12,9 @@ if (!defined('DOKU_INC')) die();
  */
 class admin_plugin_fkstaskrepo_solution extends AdminPlugin {
 
-    static array $availableVersions = [1];
+    static $availableVersions = [1];
 
-    private helper_plugin_fkstaskrepo $helper;
+    private $helper;
 
     public function __construct() {
         $this->helper = $this->loadHelper('fkstaskrepo');

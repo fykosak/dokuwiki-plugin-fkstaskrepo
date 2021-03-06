@@ -18,7 +18,7 @@ use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\Task;
  */
 class action_plugin_fkstaskrepo extends ActionPlugin {
 
-    private static array $tags = [
+    private static $tags = [
         'mechHmBodu',
         'mechTuhTel',
         'hydroMech',
@@ -44,7 +44,7 @@ class action_plugin_fkstaskrepo extends ActionPlugin {
         'other',
     ];
 
-    private helper_plugin_fkstaskrepo $helper;
+    private $helper;
 
     public function __construct() {
         $this->helper = $this->loadHelper('fkstaskrepo');

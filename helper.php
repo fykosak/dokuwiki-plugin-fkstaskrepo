@@ -19,9 +19,9 @@ require_once __DIR__ . '/inc/Renderer/FYKOSRenderer.php';
  */
 class helper_plugin_fkstaskrepo extends Plugin {
 
-    private helper_plugin_fksdownloader $downloader;
+    private $downloader;
 
-    private helper_plugin_sqlite $sqlite;
+    private $sqlite;
 
     const URL_PARAM = 'tasktag';
 

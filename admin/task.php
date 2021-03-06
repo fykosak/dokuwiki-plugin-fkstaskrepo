@@ -13,9 +13,9 @@ use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\Task;
  */
 class admin_plugin_fkstaskrepo_task extends AdminPlugin {
 
-    static array $availableVersions = [1];
+    static $availableVersions = [1];
 
-    private helper_plugin_fkstaskrepo $helper;
+    private $helper;
 
     public function __construct() {
         $this->helper = $this->loadHelper('fkstaskrepo');
