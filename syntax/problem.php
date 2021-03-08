@@ -1,8 +1,8 @@
 <?php
 
-use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\AbstractRenderer;
 use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\FYKOSRenderer;
 use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\Task;
+use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\VyfukRenderer;
 
 /**
  * Class syntax_plugin_fkstaskrepo_problem
@@ -18,7 +18,7 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
 
     function __construct() {
         $this->helper = $this->loadHelper('fkstaskrepo');
-        $this->problemRenderer = new FYKOSRenderer($this->helper);
+        $this->problemRenderer = new VyfukRenderer($this->helper);
     }
 
     /**

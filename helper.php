@@ -8,6 +8,7 @@ require_once __DIR__ . '/inc/TexPreproc.php';
 require_once __DIR__ . '/inc/Task.php';
 require_once __DIR__ . '/inc/Renderer/AbstractRenderer.php';
 require_once __DIR__ . '/inc/Renderer/FYKOSRenderer.php';
+require_once __DIR__ . '/inc/Renderer/VyfukRenderer.php';
 
 /**
  * DokuWiki Plugin fkstaskrepo (Helper Component)
