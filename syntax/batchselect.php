@@ -94,6 +94,11 @@ class syntax_plugin_fkstaskrepo_batchselect extends SyntaxPlugin {
         list($state, list($pages, $lang)) = $data;
         [$currentYear, $currentSeries] = $this->extractPathParameters($ID, $lang);
 
+        if ($ID == $this->getConf('start_path_cs')) {
+            $currentYear = max(array_keys($pages));
+            $currentSeries = max(array_keys($pages[$currentYear]));
+        }
+
         switch ($state) {
             case DOKU_LEXER_SPECIAL:
                 $renderer->nocache();
@@ -109,35 +114,53 @@ class syntax_plugin_fkstaskrepo_batchselect extends SyntaxPlugin {
     }
 
     private function renderHeadline(string $lang): string {
-        return '<h4>' . $this->helper->getSpecLang('batch_select', $lang) . '</h4>';
+        return '<h4 class="text-center">' . $this->helper->getSpecLang('batch_select', $lang) . '</h4>';
     }
 
     private function renderSeries(array $pages, ?int $currentYear = null, ?int $currentSeries = null): string {
-        $html = '';
+        $html = '<span>Výběr série</span>';
         foreach ($pages as $year => $batches) {
             $html .= '<div class="year" ' . ($currentYear == $year ? '' : 'style="display:none"') . ' data-year="' . $year . '">';
-            //$renderer->doc .= $this->helper->getSpecLang('series', $lang);
+
             $html .= '<ul class="pagination">';
+
+            $pr_batches = [];
             foreach ($batches as $batch => $page) {
-                $html .= '<li class="page-item ' . ($currentSeries == $batch && $currentYear == $year ? 'active' : '') . '"><a class="page-link" href="' . wl($page) . '" >' . $batch . '</a></li>';
+                if ($batch > 6) {
+                    $pr_batches[] = $batches[$batch];
+                } else {
+                    $html .= '<li class="page-item ' . ($currentSeries == $batch && $currentYear == $year ? 'active' : '') . '"><a class="page-link" href="' . wl($page) . '" >' . $batch . '</a></li>';
+                }
             }
             $html .= '</ul>';
+            if (count($pr_batches)) {
+                $html .= '<ul class="pagination second">';
+                foreach ($pr_batches as $pr_batch => $page) {
+                    $name = (int)$pr_batch + 1;
+                    $name = (string)$name . '. pr. série';
+                    $html .= '<li class="page-item ' . ($currentSeries == $pr_batch && $currentYear == $year ? 'active' : '') . '"><a class="page-link" href="' . wl($page) . '" >' . $name . '</a></li>';
+                }
+
+                $html .= '</ul>';
+            }
             $html .= '</div>';
         }
         return $html;
     }
 
     private function renderYearSelect(array $pages, string $lang, ?int $currentYear = null): string {
-        $html = '<select class="form-control mb-2" size="">';
+        $html = '<span>Výběr ročníku</span>';
+        $html .= '<select class="form-control mb-2" size="">';
         foreach ($pages as $year => $batches) {
-            $html .= ' <option value="' . $year . '" ' . ($year == $currentYear ? 'selected' : '') . '>' . $this->helper->getSpecLang('year', $lang) . ' ' . $year . '</option>';
+            $html .= ' <option value="' . $year . '" ' . ($year == $currentYear ? 'selected' : '') . '>' . $year . '. ' . $this->helper->getSpecLang('year', $lang) . '</option>';
         }
         $html .= '</select>';
         return $html;
     }
 
     private function getRegExpPath(string $lang): string {
-        return preg_replace('/%[0-9]\$s/', '([0-9]+)', $this->getConf('page_path_mask_' . $lang));
+        $test = preg_replace('/%\d*\$\d*d/', '([0-9]+)', $this->getConf('page_path_mask_' . $lang));
+        return $test;
     }
 
     private function extractPathParameters(?string $id, string $lang): array {

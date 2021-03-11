@@ -41,7 +41,9 @@ class VyfukRenderer extends AbstractRenderer {
         $form->setHiddenField('task[series]', $data->getSeries());
         $form->setHiddenField('task[problem]', $data->getLabel());
         $form->setHiddenField('task[lang]', $data->getLang());
-        $form->addButton('submit', $this->helper->getLang('edit'))->addClass('btn btn-primary');
+        $form->addButtonHTML('submit', '<i class="fa fa-pencil" aria-hidden="true"></i> ' .
+            $this->helper->getLang('edit'))->addClass('btn btn-primary pull-right');
+        $form->addHTML('<div class="clearfix"></div>');
         return $form->toHTML();
     }
 
@@ -229,13 +231,24 @@ class VyfukRenderer extends AbstractRenderer {
      */
     private function getCategoryIcons(Task $data): string {
         $html = ' <div class="d-inline-block">';
-        $html .= '<div class="category-circle"><span>6</span></div>';
-        $html .= '<div class="category-circle"><span>7</span></div>';
-        if ($data->getNumber() != 1) {
-            $html .= '<div class="category-circle"><span>8</span></div>';
-            $html .= '<div class="category-circle"><span>9</span></div>';
+        $html .= $this->getCatCircle(6);
+        $html .= $this->getCatCircle(7);
+        if ($data->getNumber() != 1 && $data->getSeries() < 7) {
+            $html .= $this->getCatCircle(8);
+            $html .= $this->getCatCircle(9);
         }
         $html .= '</div>';
         return $html;
+    }
+
+    /**
+     * Get category circle
+     * @param int $num
+     * @return string
+     */
+    private function getCatCircle(int $num) {
+        return sprintf('<div class="cat-circle" data-toggle="tooltip" data-placement="top"
+            title="Úloha je určena pro %1$d. třídy ZŠ a odpovídající ročníky gymnázií.">
+            <span class="user-select-none">%1$d</span></div>', $num);
     }
 }

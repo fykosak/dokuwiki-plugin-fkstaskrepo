@@ -26,6 +26,9 @@
     $conf['archive_path_cs']='ulohy:start';
     $conf['archive_path_en']='tasks:start';
 
+    // Used by Vyfuk as static link for newest batches
+    $conf['start_path_cs'] = 'ulohy:zadani';
+
     // Preffered place to save figures and other files
         $conf['attachment_path_cs'] = 'rocnik%1$02d:ulohy:prilohy:%2$d:%3$s';
         $conf['attachment_path_en'] = 'year%1$02d:tasks:attachments:%2$d:%3$s';

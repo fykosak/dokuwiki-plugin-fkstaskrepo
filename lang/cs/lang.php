@@ -17,8 +17,8 @@ $lang['problem'] = 'Úloha';
 $lang['tags'] = 'Štítky';
 $lang['topics'] = $lang['tags'];
 $lang['series'] = 'Série';
-$lang['year'] = 'Ročník';
-$lang['years'] = 'Ročníku';
+$lang['year'] = 'ročník';
+$lang['years'] = 'ročníku';
 $lang['authors'] = 'Autoři';
 $lang['solution-authors'] = 'Autoři rešení';
 $lang['figures'] = 'Přílohy';
@@ -45,7 +45,7 @@ $lang['points-G-PL_vote'] = 'bodů';
 
 $lang['hard_update'] = 'Tvrdý update';
 
-$lang['batch_select'] = 'Výběr série';
+$lang['batch_select'] = 'Rychlá navigace';
 
 $lang['brochure'] = 'Brožurka %2$d. série';
 $lang['solution'] = 'Řešení úlohy';
