@@ -92,7 +92,7 @@ class TexPreproc {
     }
 
     public function preproc(string $text): string {
-        $text = str_replace(['[m]', '[i]', '[o]', '~'], ['{m}', '{i}', '{o}', ' '], $text); // simple solution
+        $text = str_replace(['[m]', '[i]', '[o]'], ['{m}', '{i}', '{o}'], $text); // simple solution
 // units macro
         $text = preg_replace_callback('#"(([+-]?[0-9\\\, ]+(\.[0-9\\\, ]+)?)(e([+-]?[0-9 ]+))?)((\s*)([^"]+))?"#', function ($matches) {
             $mantissa = $matches[2];
