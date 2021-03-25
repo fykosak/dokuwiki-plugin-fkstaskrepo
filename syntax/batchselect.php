@@ -103,7 +103,6 @@ class syntax_plugin_fkstaskrepo_batchselect extends SyntaxPlugin {
             case DOKU_LEXER_SPECIAL:
                 $renderer->nocache();
                 $renderer->doc .= '<div class="task-repo batch-select col-xl-3 col-lg-4 col-md-5 col-sm-12 pull-right">';
-                $renderer->doc .= $this->renderHeadline($lang);
                 $renderer->doc .= $this->renderYearSelect($pages, $lang, $currentYear);
                 $renderer->doc .= $this->renderSeries($pages, $currentYear, $currentSeries);
                 $renderer->doc .= '</div>';
@@ -113,12 +112,8 @@ class syntax_plugin_fkstaskrepo_batchselect extends SyntaxPlugin {
         }
     }
 
-    private function renderHeadline(string $lang): string {
-        return '<h4 class="text-center">' . $this->helper->getSpecLang('batch_select', $lang) . '</h4>';
-    }
-
     private function renderSeries(array $pages, ?int $currentYear = null, ?int $currentSeries = null): string {
-        $html = '<span>Výběr série</span>';
+        $html = '';
         foreach ($pages as $year => $batches) {
             $html .= '<div class="year" ' . ($currentYear == $year ? '' : 'style="display:none"') . ' data-year="' . $year . '">';
 
@@ -149,8 +144,7 @@ class syntax_plugin_fkstaskrepo_batchselect extends SyntaxPlugin {
     }
 
     private function renderYearSelect(array $pages, string $lang, ?int $currentYear = null): string {
-        $html = '<span>Výběr ročníku</span>';
-        $html .= '<select class="form-control mb-2" size="">';
+        $html = '<select class="form-control mb-2" size="">';
         foreach ($pages as $year => $batches) {
             $html .= ' <option value="' . $year . '" ' . ($year == $currentYear ? 'selected' : '') . '>' . $year . '. ' . $this->helper->getSpecLang('year', $lang) . '</option>';
         }
