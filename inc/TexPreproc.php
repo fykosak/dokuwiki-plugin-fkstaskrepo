@@ -11,28 +11,39 @@ class TexPreproc {
 
     const SAFETY_LIMIT = 10000;
 
-    private static $macros = [
+    private static array $macros = [
 // equations
         '\eq m' => "\n\\[\\begin{align*}\n    \\1\n\\end {align*}\\]\n",// NOTE: space as it breaks Dokuwiki parser
         '\eq s' => "\n\\[\\begin{equation*}\n    \\1\n\\end {equation*}\\]\n",
         '\eq' => "\n\\[\\begin{equation*}\n    \\1\n\\end {equation*}\\]\n",
         '\eqref:1' => '\eqref{\1}',
 // lists
+        '\begin enumerate ' => 'f:startOList',
+        '\begin enumerate' => 'f:startOList',
         '\begin compactenum ' => 'f:startOList',
         '\begin compactenum' => 'f:startOList',
+        '\end enumerate' => 'f:endOList',
         '\end compactenum' => 'f:endOList',
-        '\begin compacitem ' => 'f:startUList',
+        '\begin itemize ' => 'f:startUList',
+        '\begin itemize' => 'f:startUList',
+        '\begin compactitem ' => 'f:startUList',
         '\begin compactitem' => 'f:startUList',
+        '\end itemize' => 'f:endUList',
         '\end compactitem' => 'f:endUList',
         '\item' => 'f:listItem',
 // text style & typography
         '\emph' => '//\1//',
         '\footnote' => '((\1))',
+        '\footnotei' => '\1((\2))',
         '\par' => 'f:paragraph',
         '\textit' => '//\1//',
         '\url:1' => '[[\1]]',
         '\uv:1' => '„\1“',
+        '\dots' => '…',
+        '\ldots' => '…',
+        '\" o' => 'ö',
         '\,' => ' ',// Unicode
+        //'~' => '&nbsp;', // possibility of math breakage
         '\\' => '\\\\',
 // figures
         '\illfigi:5 i' => '',
@@ -40,8 +51,16 @@ class TexPreproc {
         '\illfigi:5' => '',
         '\illfig:4' => '',
         '\fullfig:3' => '',
+// fkssugar macros
+        '\micro' => '\mu',
+        '\ohm' => '\Omega',
+        '\Ohm' => '\Omega',
+        '\Kc' => '\mathrm{Kč}',
+        '\jd:1' => '\mathrm{\1}', // will need manual checking because of no implementation of ensuremath
+        '\taskhint:2' => '**\1:** \2',
 // /dev/null
         '\hfill' => '',
+        '\medskip' => '',
         '\mbox:1' => '\1',
         '\noindent' => '',
         '\quad' => ' ',
@@ -49,12 +68,13 @@ class TexPreproc {
         '\smallskip' => '',
         '\vspace:1' => '',
         '\vspace*:1' => '',
-        '\taskhint:2' => '**\1:** \2',
+        '\-' => '',
+        '\linebreak' => '',
     ];
-    private $variantArity = [];
-    private $maxMaskArity = [];
-    private $macroMasks = [];
-    private $macroVariants;
+    private array $variantArity = [];
+    private array $maxMaskArity = [];
+    private array $macroMasks = [];
+    private array $macroVariants;
 
     public function __construct() {
         foreach (self::$macros as $pattern => $replacement) {
@@ -92,9 +112,9 @@ class TexPreproc {
     }
 
     public function preproc(string $text): string {
-        $text = str_replace(['[m]', '[i]', '[o]', '~'], ['{m}', '{i}', '{o}', ' '], $text); // simple solution
+        $text = str_replace(['[m]', '[i]', '[o]'], ['{m}', '{i}', '{o}'], $text); // simple solution
 // units macro
-        $text = preg_replace_callback('#"(([+-]?[0-9\\\, ]+(\.[0-9\\\, ]+)?)(e([+-]?[0-9 ]+))?)((\s*)([^"]+))?"#', function ($matches) {
+        $text = preg_replace_callback('#"(([+-]?[0-9\\\, ]+(\.[0-9\\\, ]+)?)(e([+-]?[0-9 ]+))?)((\s*)([^"]+))?"#', function ($matches) {
             $mantissa = $matches[2];
             $exp = $matches[5];
             $unit = $matches[8];
@@ -104,7 +124,7 @@ class TexPreproc {
             } else {
                 $num = $mantissa;
             }
-            $num = str_replace(['.', ' '], ['{,}', '\;'], $num);
+            $num = str_replace([',', '.', ' '], ['{,}', '{,}', '\;'], $num);
             if ($unit && $space != '') {
                 $unit = '\,\mathrm{' . str_replace('.', '\cdot ', $unit) . '}';
             }
