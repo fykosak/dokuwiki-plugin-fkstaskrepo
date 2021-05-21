@@ -56,7 +56,7 @@ class action_plugin_fkstaskrepo extends ActionPlugin {
      * @param EventHandler $controller DokuWiki's event controller object
      * @return void
      */
-    public function register(EventHandler $controller): void {
+    public function register(\Doku_Event_Handler $controller) {
         $controller->register_hook('TPL_ACT_UNKNOWN', 'BEFORE', $this, 'tplEditForm');
         $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'editTask');
         $controller->register_hook('PARSER_CACHE_USE', 'BEFORE', $this, 'handleParserCacheUse');

@@ -11,7 +11,7 @@ class TexPreproc {
 
     const SAFETY_LIMIT = 10000;
 
-    private static array $macros = [
+    private static $macros = [
 // equations
         '\eq m' => "\n\\[\\begin{align*}\n    \\1\n\\end {align*}\\]\n",// NOTE: space as it breaks Dokuwiki parser
         '\eq s' => "\n\\[\\begin{equation*}\n    \\1\n\\end {equation*}\\]\n",
@@ -71,10 +71,10 @@ class TexPreproc {
         '\-' => '',
         '\linebreak' => '',
     ];
-    private array $variantArity = [];
-    private array $maxMaskArity = [];
-    private array $macroMasks = [];
-    private array $macroVariants;
+    private $variantArity = [];
+    private $maxMaskArity = [];
+    private $macroMasks = [];
+    private $macroVariants;
 
     public function __construct() {
         foreach (self::$macros as $pattern => $replacement) {
