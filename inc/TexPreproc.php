@@ -43,7 +43,7 @@ class TexPreproc {
         '\ldots' => '…',
         '\" o' => 'ö',
         '\,' => ' ',// Unicode
-        //'~' => '&nbsp;', // possibility of math breakage
+        '~' => ' ', // Unicode
         '\\' => '\\\\',
 // figures
         '\illfigi:5 i' => '',
@@ -114,17 +114,17 @@ class TexPreproc {
     public function preproc(string $text): string {
         $text = str_replace(['[m]', '[i]', '[o]'], ['{m}', '{i}', '{o}'], $text); // simple solution
 // units macro
-        $text = preg_replace_callback('#"(([+-]?[0-9\\\, ]+(\.[0-9\\\, ]+)?)(e([+-]?[0-9 ]+))?)((\s*)([^"]+))?"#', function ($matches) {
+        $text = preg_replace_callback('#"(([+-]?[0-9\\\,\.\(\)/]+)(e([+-]?[0-9]+))?)((\s*)([^"]+))?"#', function ($matches) {
             $mantissa = $matches[2];
-            $exp = $matches[5];
-            $unit = $matches[8];
-            $space = $matches[7];
+            $exp = $matches[4];
+            $unit = $matches[7];
+            $space = $matches[6];
             if ($exp) {
                 $num = "$mantissa \cdot 10^{{$exp}}";
             } else {
                 $num = $mantissa;
             }
-            $num = str_replace([',', '.', ' '], ['{,}', '{,}', '\;'], $num);
+            $num = str_replace(['\,', ',', '.', ' '], [' ', '{,}', '{,}', '\,'], $num);
             if ($unit && $space != '') {
                 $unit = '\,\mathrm{' . str_replace('.', '\cdot ', $unit) . '}';
             }
