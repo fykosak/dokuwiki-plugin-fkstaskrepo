@@ -52,7 +52,7 @@ class VyfukRenderer extends AbstractRenderer {
         if (is_array($data->getFigures())) {
             foreach ($data->getFigures() as $figure) {
                 if ($this->isImage(ml($figure['path']))) { // Checks if it is an image
-                    $html .= '<figure class="col-xl-4 col-lg-5 col-md-6 col-sm-12">';
+                    $html .= '<figure class="col-xl-4 col-lg-5 col-md-6 col-sm-12 ms-2">';
                     $html .= '<img src="' . ml($figure['path']) . '" alt="figure" />';
                     $html .= '<figcaption data-lang="' . $data->getLang() . '" >';
                     $html .= $renderer->render_text($figure['caption']);

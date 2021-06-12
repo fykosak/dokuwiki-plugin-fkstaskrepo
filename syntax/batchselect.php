@@ -144,7 +144,7 @@ class syntax_plugin_fkstaskrepo_batchselect extends SyntaxPlugin {
     }
 
     private function renderYearSelect(array $pages, string $lang, ?int $currentYear = null): string {
-        $html = '<select class="form-control mb-2" size="">';
+        $html = '<select class="form-select mb-2">';
         foreach ($pages as $year => $batches) {
             $html .= ' <option value="' . $year . '" ' . ($year == $currentYear ? 'selected' : '') . '>' . $year . '. ' . $this->helper->getSpecLang('year', $lang) . '</option>';
         }
