@@ -117,7 +117,7 @@ class syntax_plugin_fkstaskrepo_batchselect extends SyntaxPlugin {
         foreach ($pages as $year => $batches) {
             $html .= '<div class="year" ' . ($currentYear == $year ? '' : 'style="display:none"') . ' data-year="' . $year . '">';
 
-            $html .= '<ul class="pagination">';
+            $html .= '<ul class="pagination mb-2">';
 
             $pr_batches = [];
             foreach ($batches as $batch => $page) {
@@ -129,7 +129,7 @@ class syntax_plugin_fkstaskrepo_batchselect extends SyntaxPlugin {
             }
             $html .= '</ul>';
             if (count($pr_batches)) {
-                $html .= '<ul class="pagination">';
+                $html .= '<ul class="pagination mb-2">';
                 foreach ($pr_batches as $pr_batch => $page) {
                     $name = (int)$pr_batch + 1;
                     $name = (string)$name . '. pr. série';

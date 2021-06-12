@@ -145,7 +145,7 @@ class VyfukRenderer extends AbstractRenderer {
         $yearLabel = $this->getYearLabel($data);
         $categoryIcons = $this->getCategoryIcons($data);
         $html = '<h3>';
-        $html .= $pointsLabel ? '<small class="pull-right ml-3">(' . $pointsLabel . ')</small>' : '';
+        $html .= $pointsLabel ? '<small class="pull-right ms-3">(' . $pointsLabel . ')</small>' : '';
         $html .= $this->getProblemIcon($data);
         if ($full) {
             $html .= ' ' . $seriesLabel . ' ' . $yearLabel . ' - ' . $problemLabel . ' ' . $problemName . $categoryIcons;
