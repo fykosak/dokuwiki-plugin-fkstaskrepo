@@ -124,16 +124,16 @@ class syntax_plugin_fkstaskrepo_batchselect extends SyntaxPlugin {
                 if ($batch > 6) {
                     $pr_batches[] = $batches[$batch];
                 } else {
-                    $html .= '<li class="page-item ' . ($currentSeries == $batch && $currentYear == $year ? 'active' : '') . '"><a class="page-link" href="' . wl($page) . '" >' . $batch . '</a></li>';
+                    $html .= '<li class="page-item' . ($currentSeries == $batch && $currentYear == $year ? ' active' : '') . '"><a class="page-link" href="' . wl($page) . '" >' . $batch . '</a></li>';
                 }
             }
             $html .= '</ul>';
             if (count($pr_batches)) {
-                $html .= '<ul class="pagination second">';
+                $html .= '<ul class="pagination">';
                 foreach ($pr_batches as $pr_batch => $page) {
                     $name = (int)$pr_batch + 1;
                     $name = (string)$name . '. pr. série';
-                    $html .= '<li class="page-item ' . ($currentSeries == $pr_batch && $currentYear == $year ? 'active' : '') . '"><a class="page-link" href="' . wl($page) . '" >' . $name . '</a></li>';
+                    $html .= '<li class="page-item' . ($currentSeries == $pr_batch + 8 && $currentYear == $year ? ' active' : '') . '"><a class="page-link" href="' . wl($page) . '" >' . $name . '</a></li>';
                 }
 
                 $html .= '</ul>';
