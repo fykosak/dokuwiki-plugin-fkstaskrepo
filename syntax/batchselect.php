@@ -94,18 +94,25 @@ class syntax_plugin_fkstaskrepo_batchselect extends SyntaxPlugin {
         list($state, list($pages, $lang)) = $data;
         [$currentYear, $currentSeries] = $this->extractPathParameters($ID, $lang);
 
+        $renderSelector = true;
         if ($ID == $this->getConf('start_path_cs')) {
-            $currentYear = max(array_keys($pages));
-            $currentSeries = max(array_keys($pages[$currentYear]));
+            $renderSelector = false;
         }
 
         switch ($state) {
             case DOKU_LEXER_SPECIAL:
-                $renderer->nocache();
-                $renderer->doc .= '<div class="task-repo batch-select col-xl-3 col-lg-4 col-md-5 col-sm-12 pull-right">';
-                $renderer->doc .= $this->renderYearSelect($pages, $lang, $currentYear);
-                $renderer->doc .= $this->renderSeries($pages, $currentYear, $currentSeries);
-                $renderer->doc .= '</div>';
+                if ($renderSelector) {
+                    $renderer->nocache();
+                    $renderer->doc .= '<div class="task-repo batch-select col-xl-3 col-lg-4 col-md-5 col-sm-12 pull-right">';
+                    $renderer->doc .= $this->renderYearSelect($pages, $lang, $currentYear);
+                    $renderer->doc .= $this->renderSeries($pages, $currentYear, $currentSeries);
+                    $renderer->doc .= '</div>';
+                } else {
+                    $archive_link = str_replace(':', '/', $this->getConf('archive_path_cs'));
+                    $renderer->nocache();
+                    $renderer->doc .= "<a class='btn btn-primary pull-right' href='/$archive_link'><i class='fa fa-archive'></i>
+                                        &nbsp;Přejít do archivu</a>";
+                }
                 return true;
             default:
                 return false;
