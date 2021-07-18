@@ -144,15 +144,15 @@ class VyfukRenderer extends AbstractRenderer {
         $seriesLabel = $this->getSeriesLabel($data);
         $yearLabel = $this->getYearLabel($data);
         $categoryIcons = $this->getCategoryIcons($data);
-        $html = '<h3>';
-        $html .= $pointsLabel ? '<small class="pull-right ms-3">(' . $pointsLabel . ')</small>' : '';
-        $html .= $this->getProblemIcon($data);
+
+        $html = '<div class="d-flex align-items-center text-primary"><h3>';
+        $html .= $this->getProblemIcon($data) . '&nbsp;';
         if ($full) {
-            $html .= ' ' . $seriesLabel . ' ' . $yearLabel . ' - ' . $problemLabel . ' ' . $problemName . $categoryIcons;
-        } else {
-            $html .= ' ' . $problemLabel . ' ' . $problemName . $categoryIcons;
+            $html .= $seriesLabel . ' ' . $yearLabel . ' - ';
         }
-        $html .= '</h3>';
+        $html .= $problemLabel . ' ' . $problemName . '</h3>' . $categoryIcons;
+        $html .= $pointsLabel ? '<span class="ms-auto ps-2">(' . $pointsLabel . ')</span>' : '';
+        $html .= '</div>';
         return $html;
     }
 
@@ -186,30 +186,30 @@ class VyfukRenderer extends AbstractRenderer {
             // Icons for classic series
             switch ($data->getLabel()) {
                 case '1':
-                    return '<span class="fa fa-question-circle-o"></span>';
+                    return '<i class="fa fa-question-circle-o"></i>';
                 case '2':
-                    return '<span class="fa fa-calculator"></span>';
+                    return '<i class="fa fa-calculator"></i>';
                 case '3':
-                    return '<span class="fa fa-flask"></span>';
+                    return '<i class="fa fa-flask"></i>';
                 default:
-                    return '<span class="fa fa-pencil"></span>';
+                    return '<i class="fa fa-pencil"></i>';
             }
         } else {
             //Icons for holiday series
             switch ($data->getLabel()) {
                 case '1':
-                    return '<span class="fa fa-smile-o"></span>';
+                    return '<i class="fa fa-smile-o"></i>';
                 case '2':
-                    return '<span class="fa fa-calculator"></span>';
+                    return '<i class="fa fa-calculator"></i>';
                 case '5':
-                    return '<span class="fa fa-cogs"></span>';
+                    return '<i class="fa fa-cogs"></i>';
                 case 'E':
-                    return '<span class="fa fa-flask"></span>';
+                    return '<i class="fa fa-flask"></i>';
                 case 'V':
                 case 'C':
-                    return '<span class="fa fa-book"></span>';
+                    return '<i class="fa fa-book"></i>';
                 default:
-                    return '<span class="fa fa-pencil"></span>';
+                    return '<i class="fa fa-pencil"></i>';
             }
         }
     }
@@ -230,7 +230,7 @@ class VyfukRenderer extends AbstractRenderer {
      * @return string html of icons
      */
     private function getCategoryIcons(Task $data): string {
-        $html = ' <div class="d-inline-block">';
+        $html = ' <div class="d-flex ms-1">';
         $html .= $this->getCatCircle(6);
         $html .= $this->getCatCircle(7);
         if ($data->getNumber() != 1 && $data->getSeries() < 7) {
