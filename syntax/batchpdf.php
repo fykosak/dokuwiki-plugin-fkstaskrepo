@@ -13,32 +13,37 @@ use dokuwiki\Extension\SyntaxPlugin;
  * @author Štěpán Stenchlák <stenchlak@fykos.cz>
  * @author Michal Červeňák <miso@fykos.cz> PHP7.4 compatibility
  */
-class syntax_plugin_fkstaskrepo_batchpdf extends SyntaxPlugin {
+class syntax_plugin_fkstaskrepo_batchpdf extends SyntaxPlugin
+{
 
     private helper_plugin_fkstaskrepo $helper;
 
-    function __construct() {
+    function __construct()
+    {
         $this->helper = $this->loadHelper('fkstaskrepo');
     }
 
     /**
      * @return string Syntax mode type
      */
-    public function getType(): string {
+    public function getType(): string
+    {
         return 'substition';
     }
 
     /**
      * @return string Paragraph type
      */
-    public function getPType(): string {
+    public function getPType(): string
+    {
         return 'block';
     }
 
     /**
      * @return int Sort order - Low numbers go before high numbers
      */
-    public function getSort(): int {
+    public function getSort(): int
+    {
         return 164; // whatever
     }
 
@@ -47,7 +52,8 @@ class syntax_plugin_fkstaskrepo_batchpdf extends SyntaxPlugin {
      *
      * @param string $mode Parser mode
      */
-    public function connectTo($mode): void {
+    public function connectTo($mode): void
+    {
         $this->Lexer->addSpecialPattern('<fkstaskrepobatchpdf\s.*?/>', $mode, 'plugin_fkstaskrepo_batchpdf');
     }
 
@@ -60,7 +66,8 @@ class syntax_plugin_fkstaskrepo_batchpdf extends SyntaxPlugin {
      * @param Doku_Handler $handler The handler
      * @return array Data for the renderer
      */
-    public function handle($match, $state, $pos, Doku_Handler $handler): array {
+    public function handle($match, $state, $pos, Doku_Handler $handler): array
+    {
         global $conf;
 
         // Extract attributes from $match to $attr
@@ -106,7 +113,8 @@ class syntax_plugin_fkstaskrepo_batchpdf extends SyntaxPlugin {
      * @param array $data The data from the handler() function
      * @return bool If rendering was successful.
      */
-    public function render($mode, Doku_Renderer $renderer, $data): bool {
+    public function render($mode, Doku_Renderer $renderer, $data): bool
+    {
         switch ($mode) {
             case 'xhtml':
                 // Year book and serial are only in Czech

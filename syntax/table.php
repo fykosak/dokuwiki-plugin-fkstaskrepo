@@ -10,37 +10,45 @@ use dokuwiki\Extension\SyntaxPlugin;
  * @author Michal Červeňák <miso@fykos.cz>
  * @author Štěpán Stenchlák <stenchlak@fykos.cz>
  */
-class syntax_plugin_fkstaskrepo_table extends SyntaxPlugin {
+class syntax_plugin_fkstaskrepo_table extends SyntaxPlugin
+{
 
     private helper_plugin_fkstaskrepo $helper;
 
-    function __construct() {
+    function __construct()
+    {
         $this->helper = $this->loadHelper('fkstaskrepo');
     }
 
-    public function getType(): string {
+    public function getType(): string
+    {
         return 'substition';
     }
 
-    public function getPType(): string {
+    public function getPType(): string
+    {
         return 'block';
     }
 
-    public function getSort(): int {
+    public function getSort(): int
+    {
         return 165;
     }
 
-    public function connectTo($mode): void {
+    public function connectTo($mode): void
+    {
         $this->Lexer->addSpecialPattern('<fkstaskrepotable\b.*?/>', $mode, 'plugin_fkstaskrepo_table');
     }
 
-    public function handle($match, $state, $pos, Doku_Handler $handler): array {
+    public function handle($match, $state, $pos, Doku_Handler $handler): array
+    {
         preg_match('/lang="([a-z]+)"/', substr($match, 18, -2), $m);
         $lang = $m[1];
         return [$state, $lang];
     }
 
-    public function render($mode, Doku_Renderer $renderer, $data): bool {
+    public function render($mode, Doku_Renderer $renderer, $data): bool
+    {
         [$state, $lang] = $data;
         switch ($state) {
             case DOKU_LEXER_SPECIAL:
@@ -81,7 +89,8 @@ class syntax_plugin_fkstaskrepo_table extends SyntaxPlugin {
          // $R->doc .= '</div></form>' . NL;
      }*/
 
-    private function showTagSearch(string $lang): string {
+    private function showTagSearch(string $lang): string
+    {
         global $INPUT;
         $html = '<p class="task-repo tag-cloud">';
         $tags = $this->helper->getTags();
@@ -100,7 +109,8 @@ class syntax_plugin_fkstaskrepo_table extends SyntaxPlugin {
         return $html;
     }
 
-    private function showResults(string $lang): string {
+    private function showResults(string $lang): string
+    {
         global $INPUT, $ID;
         $tag = $INPUT->str(helper_plugin_fkstaskrepo::URL_PARAM);
         $html = '';

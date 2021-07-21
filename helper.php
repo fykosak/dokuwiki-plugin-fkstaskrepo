@@ -17,7 +17,8 @@ require_once __DIR__ . '/inc/Renderer/FYKOSRenderer.php';
  * @author Michal Červeňák <miso@fykos.cz>
  * @author Štěpán Stenchlák <stenchlak@fykos.cz>
  */
-class helper_plugin_fkstaskrepo extends Plugin {
+class helper_plugin_fkstaskrepo extends Plugin
+{
 
     private helper_plugin_fksdownloader $downloader;
 
@@ -27,7 +28,8 @@ class helper_plugin_fkstaskrepo extends Plugin {
 
     const XMLNamespace = 'http://www.w3.org/XML/1998/namespace';
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->downloader = $this->loadHelper('fksdownloader');
 
 // initialize sqlite
@@ -48,17 +50,20 @@ class helper_plugin_fkstaskrepo extends Plugin {
     /* **************
      * XML data
      */
-    private function getPath(int $year, int $series): string {
+    private function getPath(int $year, int $series): string
+    {
         $mask = $this->getConf('remote_path_mask');
         return sprintf($mask, $year, $series);
     }
 
-    public function getSeriesData(int $year, int $series, int $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH) {
+    public function getSeriesData(int $year, int $series, int $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH)
+    {
         $path = $this->getPath($year, $series);
         return $this->downloader->downloadWebServer($expiration, $path);
     }
 
-    public function getSeriesFilename(int $year, int $series): string {
+    public function getSeriesFilename(int $year, int $series): string
+    {
         return $this->downloader->getCacheFilename($this->downloader->getWebServerFilename($this->getPath($year,
             $series)));
     }
@@ -72,7 +77,8 @@ class helper_plugin_fkstaskrepo extends Plugin {
      * @param int $expiration
      * @return false|string
      */
-    public function downloadDocument(int $year, int $series, string $remotePathMask, string $localPathMask, int $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH) {
+    public function downloadDocument(int $year, int $series, string $remotePathMask, string $localPathMask, int $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH)
+    {
         $content = $this->downloader->downloadWebServer($expiration, sprintf($remotePathMask, $year, $series));
 
         $res = io_saveFile(mediaFN($fileID = sprintf($localPathMask, $year, $series)), $content);
@@ -88,7 +94,8 @@ class helper_plugin_fkstaskrepo extends Plugin {
      * @param int $expiration
      * @return bool|string
      */
-    public function downloadSolution(int $year, int $series, string $task, int $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH) {
+    public function downloadSolution(int $year, int $series, string $task, int $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH)
+    {
         $content = $this->downloader->downloadWebServer($expiration, vsprintf($this->getConf('remote_task_solution_path_mask'), [$year, $series, null, null, $this->labelToNumber($task)]));
 
         $res = io_saveFile(
@@ -105,7 +112,8 @@ class helper_plugin_fkstaskrepo extends Plugin {
      * Tags
      */
 
-    public function storeTags(int $year, int $series, string $problem, array $tags): void {
+    public function storeTags(int $year, int $series, string $problem, array $tags): void
+    {
         // const tableProblem="problem";
         // allocate problem ID
         $sql = 'SELECT problem_id FROM problem WHERE year = ? AND series = ? AND problem = ?';
@@ -141,7 +149,8 @@ class helper_plugin_fkstaskrepo extends Plugin {
         $this->sqlite->query('commit transaction');
     }
 
-    public function loadTags(int $year, int $series, string $problem): array {
+    public function loadTags(int $year, int $series, string $problem): array
+    {
         $sql = 'SELECT problem_id FROM problem WHERE year = ? AND series = ? AND problem = ?';
         $res = $this->sqlite->query($sql, $year, $series, $problem);
         $problemId = $this->sqlite->res2single($res);
@@ -159,13 +168,15 @@ class helper_plugin_fkstaskrepo extends Plugin {
         return $result;
     }
 
-    public function getTags(): array {
+    public function getTags(): array
+    {
         $sql = 'SELECT t.tag_cs AS tag, count(pt.problem_id) AS count FROM tag t LEFT JOIN problem_tag pt ON pt.tag_id = t.tag_id GROUP BY t.tag_id ORDER BY 1';
         $res = $this->sqlite->query($sql);
         return $this->sqlite->res2arr($res);
     }
 
-    public function getProblemsByTag(string $tag): array {
+    public function getProblemsByTag(string $tag): array
+    {
         $sql = 'SELECT tag_id FROM tag WHERE tag_cs = ?';
         $res = $this->sqlite->query($sql, $tag);
         $tagId = $this->sqlite->res2single($res);
@@ -182,7 +193,8 @@ class helper_plugin_fkstaskrepo extends Plugin {
         return $result;
     }
 
-    final public function getSpecLang($id, $lang = null) {
+    final public function getSpecLang($id, $lang = null)
+    {
         global $conf;
         if (!$lang || $lang == $conf['lang']) {
             return $this->getLang($id);
@@ -196,7 +208,8 @@ class helper_plugin_fkstaskrepo extends Plugin {
         return $l;
     }
 
-    public function getTagLink(string $tag, ?int $size = 5, string $lang = 'cs', int $count = 0, bool $active = false) {
+    public function getTagLink(string $tag, ?int $size = 5, string $lang = 'cs', int $count = 0, bool $active = false)
+    {
         $page = $this->getConf('archive_path_' . $lang);
         $html = '<a data-tag="' . $tag . '" href="' . wl($page, [self::URL_PARAM => $tag]) . '" class="tag size' .
             $size . ' ' . ($active ? '' : '') . '">';
@@ -212,7 +225,8 @@ class helper_plugin_fkstaskrepo extends Plugin {
     }
 
 
-    public function labelToNumber(string $label): ?int {
+    public function labelToNumber(string $label): ?int
+    {
         $dictionary = explode(',', $this->getConf('label_number_tasks_used'));
         foreach ($dictionary as $pair) {
             $pair = explode('/', $pair);
@@ -223,7 +237,8 @@ class helper_plugin_fkstaskrepo extends Plugin {
         return null;
     }
 
-    public function numberToLabel(int $number): ?string {
+    public function numberToLabel(int $number): ?string
+    {
         $dictionary = explode(',', $this->getConf('label_number_tasks_used'));
         foreach ($dictionary as $pair) {
             $pair = explode('/', $pair);
@@ -234,7 +249,8 @@ class helper_plugin_fkstaskrepo extends Plugin {
         return null;
     }
 
-    public function getSupportedTasks(): array {
+    public function getSupportedTasks(): array
+    {
         $dictionary = explode(',', $this->getConf('label_number_tasks_used'));
         $list = [];
         foreach ($dictionary as $pair) {
@@ -244,20 +260,23 @@ class helper_plugin_fkstaskrepo extends Plugin {
         return $list;
     }
 
-    public function getSupportedLanguages(): array {
+    public function getSupportedLanguages(): array
+    {
         return explode(',', $this->getConf('languages_used'));
     }
 
-    public function getDefaultLanguage(): string {
+    public function getDefaultLanguage(): string
+    {
         return $this->getSupportedLanguages()[0];
     }
 
     /**
      * Creates table, where you can select specific tasks to download
      * @param Form $form
-     * @param array $languages Preferred languages
+     * @param array|null $languages Preferred languages
      */
-    public function addTaskSelectTable(Form $form, array $languages = null): void {
+    public function addTaskSelectTable(Form $form, array $languages = null): void
+    {
         $form->addTagOpen('table')->addClass('table');
         $form->addTagOpen('thead');
         $form->addTagOpen('tr');
@@ -290,7 +309,8 @@ class helper_plugin_fkstaskrepo extends Plugin {
      * @param string $pageNumberParamName
      * @return string
      */
-    public function renderSimplePaginator(int $total, string $page, array $urlParameters, string $pageNumberParamName = 'p'): ?string {
+    public function renderSimplePaginator(int $total, string $page, array $urlParameters, string $pageNumberParamName = 'p'): ?string
+    {
         global $INPUT;
         if ($total < 2) {
             return null;

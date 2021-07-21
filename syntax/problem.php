@@ -10,13 +10,15 @@ use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\Task;
  * @author Michal Červeňák <miso@fykos.cz>
  * @author Štěpán Stenchlák <stenchlak@fykos.cz>
  */
-class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
+class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin
+{
 
     private helper_plugin_fkstaskrepo $helper;
 
     private AbstractRenderer $problemRenderer;
 
-    function __construct() {
+    function __construct()
+    {
         $this->helper = $this->loadHelper('fkstaskrepo');
         $this->problemRenderer = new FYKOSRenderer($this->helper);
     }
@@ -24,21 +26,24 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
     /**
      * @return string Syntax mode type
      */
-    public function getType(): string {
+    public function getType(): string
+    {
         return 'substition';
     }
 
     /**
      * @return string Paragraph type
      */
-    public function getPType(): string {
+    public function getPType(): string
+    {
         return 'block';
     }
 
     /**
      * @return int Sort order - Low numbers go before high numbers
      */
-    public function getSort(): int {
+    public function getSort(): int
+    {
         return 166; // whatever
     }
 
@@ -47,7 +52,8 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
      *
      * @param string $mode Parser mode
      */
-    public function connectTo($mode): void {
+    public function connectTo($mode): void
+    {
         $this->Lexer->addSpecialPattern('<fkstaskrepo\b.*?/>', $mode, 'plugin_fkstaskrepo_problem');
     }
 
@@ -60,7 +66,8 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
      * @param Doku_Handler $handler The handler
      * @return array Data for the renderer
      */
-    public function handle($match, $state, $pos, Doku_Handler $handler): array {
+    public function handle($match, $state, $pos, Doku_Handler $handler): array
+    {
         $parameters = $this->extractParameters($match);
         return [
             'state' => $state,
@@ -76,7 +83,8 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
      * @param array $data The data from the handler() function
      * @return bool If rendering was successful.
      */
-    public function render($mode, Doku_Renderer $renderer, $data): bool {
+    public function render($mode, Doku_Renderer $renderer, $data): bool
+    {
         $parameters = $data['parameters'];
         $state = $data['state'];
         switch ($state) {
@@ -105,9 +113,9 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
                             $parameters['problem'],
                             $parameters['lang']);
                         if ($problemData->load()) {
-                            $renderer->doc .= $problemData->getName();
+                            $renderer->doc .= $problemData->name;
                             $renderer->doc .= "\n";
-                            $renderer->doc .= $problemData->getTask();
+                            $renderer->doc .= $problemData->task;
                         }
                         break;
                     default:
@@ -127,16 +135,19 @@ class syntax_plugin_fkstaskrepo_problem extends DokuWiki_Syntax_Plugin {
      * @param Task $data Task data
      * @param bool $full If the header should contain additional information
      */
-    private function renderContent(Doku_Renderer $renderer, Task $data, bool $full = false): void {
+    private function renderContent(Doku_Renderer $renderer, Task $data, bool $full = false): void
+    {
         $this->problemRenderer->render($renderer, $data, $full);
     }
 
-    private function extractParameters(string $match): array {
+    private function extractParameters(string $match): array
+    {
         $parameterString = substr($match, 13, -2); // strip markup (including space after "<fkstaskrepo ")
         return $this->parseParameters($parameterString);
     }
 
-    private function parseParameters(string $parameterString): array {
+    private function parseParameters(string $parameterString): array
+    {
         //----- default parameter settings
         $params = [
             'year' => null,
