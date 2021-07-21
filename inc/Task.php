@@ -9,8 +9,10 @@ use helper_plugin_fkstaskrepo;
  * @author Michal Koutný <michal@fykos.cz>
  * @author Michal Červeňák <miso@fykos.cz>
  * @author Štěpán Stenchlák <stenchlak@fykos.cz>
+ * @property-read string $task
  */
-class Task {
+class Task
+{
 
     public static array $editableFields = [
         'name',
@@ -29,18 +31,19 @@ class Task {
         'label',
         'lang',
     ];
-    private int $number;
-    private string $label;
-    private string $name;
-    private string $lang;
-    private ?string $origin;
-    private string $task;
-    private ?int $points;
-    private ?array $figures;
-    private ?array $authors;
-    private ?array $solutionAuthors;
-    private int $year;
-    private int $series;
+    public int $number;
+    public string $label;
+    public string $name;
+    public string $lang;
+    public int $year;
+    public int $series;
+    public ?string $origin = null;
+    public string $task;
+    public ?int $points = null;
+    public ?array $figures = null;
+    public ?array $authors = null;
+    public ?array $solutionAuthors = null;
+
 
     private TexPreproc $texPreproc;
 
@@ -52,7 +55,8 @@ class Task {
 
     private helper_plugin_fkstaskrepo $helper;
 
-    public function __construct(helper_plugin_fkstaskrepo $helper, int $year, int $series, string $label, string $lang = 'cs') {
+    public function __construct(helper_plugin_fkstaskrepo $helper, int $year, int $series, string $label, string $lang = 'cs')
+    {
         $this->texPreproc = new TexPreproc();
         $this->year = $year;
         $this->series = $series;
@@ -61,7 +65,8 @@ class Task {
         $this->helper = $helper;
     }
 
-    public function saveFiguresRawData(array $figures): void {
+    public function saveFiguresRawData(array $figures): void
+    {
         $this->figures = [];
 
         foreach ($figures as $figure) {
@@ -86,7 +91,8 @@ class Task {
      * @param $type string File type
      * @return string ID
      */
-    private function getAttachmentPath(string $caption, string $type): string {
+    private function getAttachmentPath(string $caption, string $type): string
+    {
         $name = substr(preg_replace("/[^a-zA-Z0-9_-]+/", '-', $caption), 0, 30) . '_' . substr(md5($caption . $type), 0, 5);
         return vsprintf($this->helper->getConf('attachment_path_' . $this->lang), [$this->year, $this->series, $this->label]) . ':' . $name . '.' . $type;
     }
@@ -95,14 +101,16 @@ class Task {
      * Returns the path of .json file with task data.
      * @return string path of file
      */
-    private function getFileName(): string {
+    private function getFileName(): string
+    {
         return MetaFN(vsprintf($this->helper->getConf('task_data_meta_path'), [$this->year, $this->series, $this->label]), null);
     }
 
     /**
      * Saves task
      */
-    public function save(): void {
+    public function save(): void
+    {
         $data = [
             'year' => $this->year,
             'series' => $this->series,
@@ -128,7 +136,8 @@ class Task {
      * Loads task
      * @return bool Success
      */
-    public function load(): bool {
+    public function load(): bool
+    {
         $content = io_readFile($this->getFileName(), false);
         if (!$content) {
             return false;
@@ -153,95 +162,12 @@ class Task {
         return true;
     }
 
-    public function getYear(): int {
-        return $this->year;
-    }
-
-    public function getSeries(): int {
-        return $this->series;
-    }
-
-    public function getLabel(): string {
-        return $this->label;
-    }
-
-    public function getLang(): string {
-        return $this->lang;
-    }
-
-    /**
-     * Number is not an ID of the task
-     * @return int
-     */
-    public function getNumber(): int {
-        return $this->number;
-    }
-
-    /**
-     * Number is readonly field, but it is editable during XML import
-     * @param int $number
-     */
-    public function setNumber(int $number): void {
-        $this->number = $number;
-    }
-
-    public function getPoints(): ?int {
-        return $this->points;
-    }
-
-    public function setPoints(?int $points): void {
-        $this->points = $points;
-    }
-
-    public function getAuthors(): ?array {
-        return $this->authors;
-    }
-
-    public function setAuthors(array $authors): void {
-        $this->authors = $authors;
-    }
-
-    public function getSolutionAuthors(): ?array {
-        return $this->solutionAuthors;
-    }
-
-    public function setSolutionAuthors(array $solutionAuthors): void {
-        $this->solutionAuthors = $solutionAuthors;
-    }
-
-    public function getName(): string {
-        return $this->name;
-    }
-
-    public function setName(string $name): void {
-        $this->name = $name;
-    }
-
-    public function getOrigin(): ?string {
-        return $this->origin;
-    }
-
-    public function setOrigin(string $origin): void {
-        $this->origin = $origin;
-    }
-
-    public function getTask(): string {
-        return $this->task;
-    }
-
-    public function setTask(string $task, bool $preProc = true): void {
+    public function setTask(string $task, bool $preProc = true): void
+    {
         if ($preProc) {
             $this->task = $this->texPreproc->preproc($task);
         } else {
             $this->task = $task;
         }
-    }
-
-    public function getFigures(): ?array {
-        return $this->figures;
-    }
-
-    public function setFigures(array $figures): void {
-        $this->figures = $figures;
     }
 }

@@ -10,7 +10,8 @@ use helper_plugin_fkstaskrepo;
  * @author Michal Červeňák <miso@fykos.cz>
  * @author Štěpán Stenchlák <stenchlak@fykos.cz>
  */
-abstract class AbstractRenderer {
+abstract class AbstractRenderer
+{
 
     protected const SUPPORTED_IMAGES = [
         'gif',
@@ -23,7 +24,8 @@ abstract class AbstractRenderer {
 
     protected helper_plugin_fkstaskrepo $helper;
 
-    public function __construct(helper_plugin_fkstaskrepo $helper) {
+    public function __construct(helper_plugin_fkstaskrepo $helper)
+    {
         $this->helper = $helper;
     }
 

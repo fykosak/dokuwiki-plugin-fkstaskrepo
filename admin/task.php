@@ -11,21 +11,25 @@ use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\Task;
  * @author Štěpán Stenchlák <stenchlak@fykos.cz>
  * @author Michal Červeňák <miso@fykos.cz> PHP7.4 compatiblity
  */
-class admin_plugin_fkstaskrepo_task extends AdminPlugin {
+class admin_plugin_fkstaskrepo_task extends AdminPlugin
+{
 
     static array $availableVersions = [1];
 
     private helper_plugin_fkstaskrepo $helper;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->helper = $this->loadHelper('fkstaskrepo');
     }
 
-    public function getMenuText($language): string {
+    public function getMenuText($language): string
+    {
         return 'Stáhnout zadání série z Astrid';
     }
 
-    public function getMenuIcon(): string {
+    public function getMenuIcon(): string
+    {
         $plugin = $this->getPluginName();
         return DOKU_PLUGIN . $plugin . '/task.svg';
     }
@@ -33,21 +37,24 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
     /**
      * @return int sort number in admin menu
      */
-    public function getMenuSort(): int {
+    public function getMenuSort(): int
+    {
         return 10;
     }
 
     /**
      * @return bool true if only access for superuser, false is for superusers and moderators
      */
-    public function forAdminOnly(): bool {
+    public function forAdminOnly(): bool
+    {
         return false;
     }
 
     /**
      * Should carry out any processing required by the plugin.
      */
-    public function handle(): void {
+    public function handle(): void
+    {
         global $INPUT;
         $year = $INPUT->int('year', null);
         $series = $INPUT->int('series', null);
@@ -95,7 +102,8 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
         }
     }
 
-    public function html(): void {
+    public function html(): void
+    {
         ptln('<h1>' . $this->getMenuText('cs') . '</h1>');
         $form = new Form();
         $form->addClass('task-repo-edit');
@@ -152,7 +160,8 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
      * @param $hard bool overwrite existing tasks
      * @param $taskSelect @see $this->helper->addTaskSelectTable()
      */
-    private function processSeries(string $content, bool $hard, $taskSelect): void {
+    private function processSeries(string $content, bool $hard, $taskSelect): void
+    {
         $seriesXML = simplexml_load_string($content);
 
         $deadline = $seriesXML->deadline;
@@ -218,7 +227,8 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
      * @param $taskSelect @see $this->helper->addTaskSelectTable()
      * @return bool
      */
-    private function createTask(SimpleXMLElement $problem, int $year, int $series, string $lang, bool $hard, $taskSelect): bool {
+    private function createTask(SimpleXMLElement $problem, int $year, int $series, string $lang, bool $hard, $taskSelect): bool
+    {
         // Test, if the task is selected
         if (!$taskSelect[$lang][$this->helper->labelToNumber($problem->label)]) {
             return true;
@@ -228,7 +238,7 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
         $exists = $task->load();
 
         if (!$hard && $exists) {
-            msg("{$task->getName()} ($year-$series-{$task->getLabel()}-$lang) byla přeskočena.", 0);
+            msg("{$task->name} ($year-$series-{$task->label}-$lang) byla přeskočena.", 0);
             return true;
         }
 
@@ -239,38 +249,30 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
             if ($this->hasLang($child, $lang)) {
                 switch ($k) {
                     case 'number':
-                        $task->setNumber((int)$child);
+                        $task->number = (int)$child;
                         break;
                     case'name':
-                        $task->setName((string)$child);
+                        $task->name = (string)$child;
                         break;
                     case 'origin':
-                        $task->setOrigin((string)$child);
+                        $task->origin = (string)$child;
                         break;
                     case'points':
-                        $task->setPoints((int)$child);
+                        $task->points = (int)$child;
                         break;
                     case 'task':
                         $task->setTask((string)$child);
                         break;
                     case 'authors':
                         $authors = (array)$child->children();
-                        if ($authors['author']) {
-                            if (is_scalar($authors['author'])) {
-                                $task->setAuthors([$authors['author']]);
-                            } else {
-                                $task->setAuthors($authors['author']);
-                            }
+                        if (isset($authors['author'])) {
+                            $task->authors = is_scalar($authors['author']) ? [$authors['author']] : $authors['author'];
                         }
                         break;
                     case 'solution-authors':
                         $solutionAuthors = (array)$child->children();
                         if ($solutionAuthors['solution-author']) {
-                            if (is_scalar($solutionAuthors['solution-author'])) {
-                                $task->setSolutionAuthors([$solutionAuthors['solution-author']]);
-                            } else {
-                                $task->setSolutionAuthors($solutionAuthors['solution-author']);
-                            }
+                            $task->solutionAuthors = is_scalar($solutionAuthors['solution-author']) ? [$solutionAuthors['solution-author']] : $solutionAuthors['solution-author'];
                         }
                         break;
                 }
@@ -278,9 +280,9 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
         }
         $task->save();
 
-        msg("{$task->getName()} ($year-$series-{$task->getLabel()}-$lang)", 1);
+        msg("{$task->name} ($year-$series-{$task->label}-$lang)", 1);
 
-        $this->helper->storeTags($task->getYear(), $task->getSeries(), $task->getLabel(), (array)$problem->topics->topic);
+        $this->helper->storeTags($task->year, $task->series, $task->label, (array)$problem->topics->topic);
         return true;
     }
 
@@ -290,7 +292,8 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
      * @param string $lang
      * @return bool
      */
-    private function hasLang(SimpleXMLElement $e, string $lang): bool {
+    private function hasLang(SimpleXMLElement $e, string $lang): bool
+    {
         return (($lang == (string)$e->attributes(helper_plugin_fkstaskrepo::XMLNamespace)->lang) ||
             (string)$e->attributes(helper_plugin_fkstaskrepo::XMLNamespace)->lang == "");
     }
@@ -301,7 +304,8 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
      * @return array
      * @todo Solve languages
      */
-    private function extractFigures(SimpleXMLElement $problem, string $lang): array {
+    private function extractFigures(SimpleXMLElement $problem, string $lang): array
+    {
         $figuresData = [];
         if ((string)$problem->figures != "") {
             foreach ($problem->figures->figure as $figure) {
@@ -326,7 +330,8 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
      * @param string $template
      * @return string
      */
-    private function replaceVariables(array $parameters, string $template): string {
+    private function replaceVariables(array $parameters, string $template): string
+    {
         $that = $this;
 
         return preg_replace_callback('/@([^@]+)@/',
@@ -342,7 +347,8 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
             $template);
     }
 
-    private function addDocumentSelectList(Form $form): void {
+    private function addDocumentSelectList(Form $form): void
+    {
         foreach ($this->getSupportedDocuments() as $ID => $document) {
             $form->addTagOpen('div');
             $form->addCheckbox('documentselect[' . $ID . ']', $document['name'])->attr('checked', 'checked');
@@ -350,7 +356,8 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
         }
     }
 
-    private function getSupportedDocuments(): array {
+    private function getSupportedDocuments(): array
+    {
         return [
             [
                 'name' => 'Brožurka série v PDF',

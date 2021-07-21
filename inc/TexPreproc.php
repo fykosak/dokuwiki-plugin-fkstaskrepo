@@ -7,7 +7,8 @@ namespace FYKOS\dokuwiki\Extenstion\PluginTaskRepo;
  * Variant -- control sequence with particular no. of arguments
  * @author Michal Koutný <michal@fykos.cz>
  */
-class TexPreproc {
+class TexPreproc
+{
 
     const SAFETY_LIMIT = 10000;
 
@@ -56,7 +57,8 @@ class TexPreproc {
     private array $macroMasks = [];
     private array $macroVariants;
 
-    public function __construct() {
+    public function __construct()
+    {
         foreach (self::$macros as $pattern => $replacement) {
             $variant = $pattern;
             $parts = explode(' ', $pattern);
@@ -91,7 +93,8 @@ class TexPreproc {
         $this->macroVariants = self::$macros;
     }
 
-    public function preproc(string $text): string {
+    public function preproc(string $text): string
+    {
         $text = str_replace(['[m]', '[i]', '[o]'], ['{m}', '{i}', '{o}'], $text); // simple solution
 // units macro
         $text = preg_replace_callback('#"(([+-]?[0-9\\\, ]+(\.[0-9\\\, ]+)?)(e([+-]?[0-9 ]+))?)((\s*)([^"]+))?"#', function ($matches) {
@@ -116,7 +119,8 @@ class TexPreproc {
         return $this->process($ast);
     }
 
-    private function chooseVariant($sequence, $toMatch) {
+    private function chooseVariant($sequence, $toMatch)
+    {
         foreach ($this->macroMasks[$sequence] as $variant => $mask) { //assert: must be sorted in decreasing mask length
             $matching = true;
             $matchLength = 0;
@@ -136,7 +140,8 @@ class TexPreproc {
         return [null, 0];
     }
 
-    private function process($ast) {
+    private function process($ast)
+    {
         $safety_counter = 0;
         $result = '';
         reset($ast);
@@ -184,7 +189,8 @@ class TexPreproc {
         return $result;
     }
 
-    private function nodeToText($node) {
+    private function nodeToText($node)
+    {
         if (is_array($node)) {
             $result = '';
             foreach ($node as $it) {
@@ -196,11 +202,13 @@ class TexPreproc {
         }
     }
 
-    private function processText($text) {
+    private function processText($text)
+    {
         return $text;
     }
 
-    private function parse($text): array {
+    private function parse($text): array
+    {
         $stack = [[]];
         $current = &$stack[0];
         $lexer = new TexLexer($text);
@@ -234,33 +242,39 @@ class TexPreproc {
 
     private $listStack = [];
 
-    private function startOList() {
+    private function startOList()
+    {
         array_push($this->listStack, 'O');
         return "\n";
     }
 
-    private function endOList() {
+    private function endOList()
+    {
         array_pop($this->listStack);
         return "\n";
     }
 
-    private function startUList() {
+    private function startUList()
+    {
         array_push($this->listStack, 'U');
         return "\n";
     }
 
-    private function endUList() {
+    private function endUList()
+    {
         array_pop($this->listStack);
         return "\n";
     }
 
-    private function listItem() {
+    private function listItem()
+    {
         $char = end($this->listStack) == 'U' ? '*' : '-';
         $level = count($this->listStack);
         return "\n" . str_repeat('  ', $level) . $char . ' ';
     }
 
-    private function paragraph() {
+    private function paragraph()
+    {
         if (count($this->listStack)) {
             return '\\\\ ';
         } else {
