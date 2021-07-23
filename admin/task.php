@@ -75,6 +75,11 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin
                 );
             }
         }
+        if ($INPUT->bool('fssu') && $year && $series) {
+            foreach ($this->helper->getSupportedLanguages() as $lang) {
+                $this->helper->fssuConnector->downloadTask($this->getConf('contest'), $year, $series, $lang);
+            }
+        }
 
         // Process Astrid download XML
         if ($INPUT->bool('download') && $year && $series) {
@@ -125,6 +130,7 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin
 
         // List of tasks to download
         $this->helper->addTaskSelectTable($form);
+        $form->addHTML('<hr/>');
 
         $form->addHTML('<hr/>');
 
@@ -150,7 +156,9 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin
         $form->addElement((new InputElement('file', 'xml_file'))->addClass('d-block mt-3'));
 
         $form->addHTML('<small class="form-text">Tuto možnost používejte pouze tehdy, pokud není možné automaticky importovat z Astrid. Vyberte prosím pouze z tabulky příklady, které chcete importovat.</small>');
+        $form->addHTML('<hr/>');
 
+        $form->addButton('fssu', 'Nahrát z FSSU')->addClass('btn btn-info d-block mb-3');
         echo $form->toHTML();
     }
 

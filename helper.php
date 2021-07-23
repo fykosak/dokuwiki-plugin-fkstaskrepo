@@ -23,6 +23,7 @@ class helper_plugin_fkstaskrepo extends Plugin
 {
 
     private helper_plugin_fksdownloader $downloader;
+    public FSSUConnector $fssuConnector;
 
     private helper_plugin_sqlite $sqlite;
 
@@ -33,8 +34,14 @@ class helper_plugin_fkstaskrepo extends Plugin
     public function __construct()
     {
         $this->downloader = $this->loadHelper('fksdownloader');
-        // $fssu = new FSSUConnector($this,'dns','login','pswd','dbname');
-        // $fssu->downloadTask('fykos', 34, 1);
+        $this->fssuConnector = new FSSUConnector(
+            $this,
+            $this->getConf('fssu_dns'),
+            $this->getConf('fssu_login'),
+            $this->getConf('fssu_password'),
+            $this->getConf('fssu_dbname')
+        );
+
 // initialize sqlite
         $this->sqlite = $this->loadHelper('sqlite', false);
         $pluginName = $this->getPluginName();
@@ -263,6 +270,9 @@ class helper_plugin_fkstaskrepo extends Plugin
         return $list;
     }
 
+    /**
+     * @return string[]
+     */
     public function getSupportedLanguages(): array
     {
         return explode(',', $this->getConf('languages_used'));
