@@ -2,12 +2,14 @@
 
 use dokuwiki\Extension\Plugin;
 use dokuwiki\Form\Form;
+use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\FSSUConnector;
 
 require_once __DIR__ . '/inc/TexLexer.php';
 require_once __DIR__ . '/inc/TexPreproc.php';
 require_once __DIR__ . '/inc/Task.php';
 require_once __DIR__ . '/inc/Renderer/AbstractRenderer.php';
 require_once __DIR__ . '/inc/Renderer/FYKOSRenderer.php';
+require_once __DIR__ . '/inc/FSSUConnector.php';
 
 /**
  * DokuWiki Plugin fkstaskrepo (Helper Component)
@@ -31,7 +33,8 @@ class helper_plugin_fkstaskrepo extends Plugin
     public function __construct()
     {
         $this->downloader = $this->loadHelper('fksdownloader');
-
+        // $fssu = new FSSUConnector($this,'dns','login','pswd','dbname');
+        // $fssu->downloadTask('fykos', 34, 1);
 // initialize sqlite
         $this->sqlite = $this->loadHelper('sqlite', false);
         $pluginName = $this->getPluginName();
