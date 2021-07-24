@@ -154,16 +154,16 @@ class FYKOSRenderer extends AbstractRenderer
     {
         $pointsLabel = $this->getPointsLabel($data);
         $problemLabel = $data->label . '. ';//. $this->helper->getSpecLang('label', $data['lang']);
-        $problemName = $data->name;
+
         $seriesLabel = $this->getSeriesLabel($data);
         $yearLabel = $this->getYearLabel($data);
         $html = '<h3 class="task-headline task-headline-' . $this->getHeadlineClass($data) . '">';
         $html .= $pointsLabel ? '<small class="pull-right ml-3">(' . $pointsLabel . ')</small>' : '';
         $html .= $this->getProblemIcon($data);
         if ($full) {
-            $html .= $seriesLabel . ' ' . $yearLabel . ' - ' . $problemLabel . ' ' . $problemName;
+            $html .= $seriesLabel . ' ' . $yearLabel . ' - ' . $problemLabel . ' ' . $data->name;
         } else {
-            $html .= $problemLabel . ' ' . $problemName;
+            $html .= $problemLabel . ' ' . $data->name;
         }
         $html .= '</h3>';
         return $html;

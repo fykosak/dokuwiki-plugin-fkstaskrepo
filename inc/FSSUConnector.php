@@ -34,11 +34,6 @@ SELECT *
 FROM problem 
 LEFT JOIN problem_localized_data pld on problem.id = pld.problem_id and pld.language = ?
 LEFT JOIN problem_tag pt on problem.id = pt.problem_id
-LEFT JOIN tag t on t.id = pt.tag_id
-LEFT JOIN tag_localized_data tld on t.id = tld.tag_id and tld.language = pld.language
-LEFT JOIN problem_topic p on problem.id = p.problem_id
-LEFT JOIN topic t2 on p.topic_id = t2.id
-LEFT JOIN topic_localized_data d on t2.id = d.topic_id and d.language = pld.language
 where directory_id=?');
         var_dump($query);
         $query->bind_param('si', $lang, $dirId);
@@ -58,6 +53,12 @@ where directory_id=?');
         }
         return null;
     }
+
+    /* TODO LEFT JOIN tag t on t.id = pt.tag_id
+    LEFT JOIN tag_localized_data tld on t.id = tld.tag_id and tld.language = pld.language
+    LEFT JOIN problem_topic p on problem.id = p.problem_id
+    LEFT JOIN topic t2 on p.topic_id = t2.id
+    LEFT JOIN topic_localized_data d on t2.id = d.topic_id and d.language = pld.language */
 
     private function findDir(string $contestName, int $year, int $series): ?int
     {

@@ -37,7 +37,7 @@ jQuery(function () {
 
         element.innerHTML += html;
 
-        $(element).on('input', '', function(){
+        $(element).on('input', '', function () {
             let hasValue = false;
             $figureContainer.find('.row').last().find('input').each(function () {
                 hasValue = hasValue || (!!$(this).val());
@@ -51,15 +51,15 @@ jQuery(function () {
     });
 
     const addMediaEl = document.getElementById('addmedia');
-    if(addMediaEl){
-        addMediaEl.addEventListener('click',(event)=>{
+    if (addMediaEl) {
+        addMediaEl.addEventListener('click', (event) => {
             window.DWMediaSelector.execute((url) => {
                 $('.figures .row:last input:first').val(url).trigger('input');
             }, addMediaEl.getAttribute('data-folder-id'));
         });
     }
 
-    $('.dwmediaselector-open').click((event)=>{
+    $('.dwmediaselector-open').click((event) => {
         window.DWMediaSelector.execute(null, event.target.getAttribute('data-media-path'));
         return false;
     });
