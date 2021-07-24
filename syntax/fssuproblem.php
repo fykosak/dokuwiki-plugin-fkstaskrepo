@@ -2,13 +2,7 @@
 
 use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\Task;
 
-/**
- * Class syntax_plugin_fkstaskrepo_problem
- * @author Michal Koutný <michal@fykos.cz>
- * @author Michal Červeňák <miso@fykos.cz>
- * @author Štěpán Stenchlák <stenchlak@fykos.cz>
- */
-class syntax_plugin_fkstaskrepo_problem extends AbstractProblem
+class syntax_plugin_fkstaskrepo_fssuproblem extends AbstractProblem
 {
 
     /**
@@ -16,7 +10,7 @@ class syntax_plugin_fkstaskrepo_problem extends AbstractProblem
      */
     public function getSort(): int
     {
-        return 166;
+        return 165; // whatever
     }
 
     /**
@@ -26,7 +20,7 @@ class syntax_plugin_fkstaskrepo_problem extends AbstractProblem
      */
     public function connectTo($mode): void
     {
-        $this->Lexer->addSpecialPattern('<fkstaskrepo\b.*?/>', $mode, 'plugin_fkstaskrepo_problem');
+        $this->Lexer->addSpecialPattern('<fssu-task\b.*?/>', $mode, 'plugin_fkstaskrepo_fssuproblem');
     }
 
     /**
@@ -46,46 +40,25 @@ class syntax_plugin_fkstaskrepo_problem extends AbstractProblem
                 // $seriesFile = $this->helper->getSeriesFilename($parameters['year'], $parameters['series']);
                 switch ($mode) {
                     case 'xhtml':
-                        $renderer->nocache();
-                        $problemData = new Task(
-                            $this->helper,
-                            $parameters['year'],
-                            $parameters['series'],
-                            $parameters['problem'],
-                            $parameters['lang']);
-                        if ($problemData->load()) {
+                        $problemData = $this->helper->fssuConnector->downloadTask('fykos', $parameters['year'], $parameters['series'], $parameters['problem'], $parameters['lang']);
+                        if ($problemData) {
                             $renderer->doc .= '<div class="task-repo task">';
                             $this->problemRenderer->render($renderer, $problemData, !!$parameters['full']);
                             $renderer->doc .= '</div>';
                         }
                         return false;
-                    case 'text':
-                        $problemData = new Task(
-                            $this->helper,
-                            $parameters['year'],
-                            $parameters['series'],
-                            $parameters['problem'],
-                            $parameters['lang']);
-                        if ($problemData->load()) {
-                            $renderer->doc .= $problemData->name;
-                            $renderer->doc .= "\n";
-                            $renderer->doc .= $problemData->task;
-                        }
-                        break;
                     default:
                         return false;
                 }
-                break;
             default:
                 return false;
-
         }
         return false;
     }
 
     protected function extractParameters(string $match): array
     {
-        $parameterString = substr($match, 13, -2); // strip markup (including space after "<fkstaskrepo ")
+        $parameterString = substr($match, 10, -2); // strip markup (including space after "<fkstaskrepo ")
         return $this->parseParameters($parameterString);
     }
 }

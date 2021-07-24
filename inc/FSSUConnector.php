@@ -25,43 +25,38 @@ class FSSUConnector
         return $this->mySQL;
     }
 
-    /**
-     * @param string $contestName
-     * @param int $year
-     * @param int $series
-     * @param string $lang
-     * @return Task[]
-     */
-    public function downloadTask(string $contestName, int $year, int $series, string $lang = 'cs'): array
+    public function downloadTask(string $contestName, int $year, int $series, string $label, string $lang = 'cs'): ?Task
     {
         $dirId = $this->findDir($contestName, $year, $series);
 
         $query = $this->getMySQLConnector()->prepare('
 SELECT *
-FROM problem
+FROM problem 
 LEFT JOIN problem_localized_data pld on problem.id = pld.problem_id and pld.language = ?
 LEFT JOIN problem_tag pt on problem.id = pt.problem_id
 LEFT JOIN tag t on t.id = pt.tag_id
-LEFT JOIN tag_localized_data tld on t.id = tld.tag_id and tld.language = ?
+LEFT JOIN tag_localized_data tld on t.id = tld.tag_id and tld.language = pld.language
 LEFT JOIN problem_topic p on problem.id = p.problem_id
 LEFT JOIN topic t2 on p.topic_id = t2.id
-LEFT JOIN topic_localized_data d on t2.id = d.topic_id and d.language = ?
+LEFT JOIN topic_localized_data d on t2.id = d.topic_id and d.language = pld.language
 where directory_id=?');
-        $query->bind_param('sssi', $lang, $lang, $lang, $dirId);
-
+        var_dump($query);
+        $query->bind_param('si', $lang, $dirId);
         $query->execute();
-        while (($res = $query->get_result()) !== false) {
+        $res = $query->get_result();
+
+        if ($res) {
             $data = $res->fetch_assoc();
-            $task = new Task($this->helper, $year, $series, $data['label']);
+            var_dump($data);
+            $task = new Task($this->helper, $year, $series, $label);
             $task->name = $data['title'] ?? '';
-            $task->origin = $data['origin'];
+            $task->origin = $data['origin'] ?? '';
             $task->points = $data['points'];
             $task->setTask($data['task']);
             // TODO authors
-
+            return $task;
         }
-
-        return [];
+        return null;
     }
 
     private function findDir(string $contestName, int $year, int $series): ?int

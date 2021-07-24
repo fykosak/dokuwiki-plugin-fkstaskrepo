@@ -10,6 +10,7 @@ require_once __DIR__ . '/inc/Task.php';
 require_once __DIR__ . '/inc/Renderer/AbstractRenderer.php';
 require_once __DIR__ . '/inc/Renderer/FYKOSRenderer.php';
 require_once __DIR__ . '/inc/FSSUConnector.php';
+require_once __DIR__ . '/inc/AbstractProblem.php';
 
 /**
  * DokuWiki Plugin fkstaskrepo (Helper Component)
