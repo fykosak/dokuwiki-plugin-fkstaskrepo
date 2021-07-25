@@ -23,6 +23,10 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin
         $this->helper = $this->loadHelper('fkstaskrepo');
     }
 
+    /**
+     * @param string $language
+     * @return string
+     */
     public function getMenuText($language): string
     {
         return 'Stáhnout zadání série z Astrid';
@@ -80,7 +84,7 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin
             // Tasks
             if ($INPUT->bool('downloadtasks')) {
                 // Task XML
-                $data = $this->helper->getSeriesData($year, $series, helper_plugin_fksdownloader::EXPIRATION_FRESH);
+                $data = $this->helper->getSeriesData($year, $series);
 
                 if ($data) {
                     $this->processSeries(
@@ -156,8 +160,8 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin
 
     /**
      * Process XML and creates tasks
-     * @param $content string XML content
-     * @param $hard bool overwrite existing tasks
+     * @param string $content XML content
+     * @param bool $hard overwrite existing tasks
      * @param $taskSelect @see $this->helper->addTaskSelectTable()
      */
     private function processSeries(string $content, bool $hard, $taskSelect): void
@@ -165,7 +169,7 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin
         $seriesXML = simplexml_load_string($content);
 
         $deadline = $seriesXML->deadline;
-        $deadline_post = $seriesXML->{'deadline-post'};
+        $deadlinePost = $seriesXML->{'deadline-post'};
 
         $m = [];
         preg_match('/[0-9]+/', $seriesXML->contest, $m);
@@ -198,7 +202,7 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin
             // Replace data in template
             $pageContent = $this->replaceVariables([
                 'human-deadline' => date($this->helper->getSpecLang('deadline-format', $lang), strtotime($deadline)),
-                'human-deadline-post' => date($this->helper->getSpecLang('deadline-post-format', $lang), strtotime($deadline_post)),
+                'human-deadline-post' => date($this->helper->getSpecLang('deadline-post-format', $lang), strtotime($deadlinePost)),
                 'lang' => $lang,
                 'year' => $year,
                 'series' => $series,
@@ -234,16 +238,16 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin
             return true;
         }
 
-        $task = new Task($this->helper, $year, $series, (string)$problem->label, $lang);
-        $exists = $task->load();
+        $task = new Task($year, $series, (string)$problem->label, $lang);
+        $exists = $this->helper->loadTask($task);
 
         if (!$hard && $exists) {
-            msg("{$task->name} ($year-$series-{$task->label}-$lang) byla přeskočena.", 0);
+            msg("{$task->name} ($year-$series-{$task->label}-$lang) byla přeskočena.");
             return true;
         }
 
         // Save figures
-        $task->saveFiguresRawData($this->extractFigures($problem, $lang));
+        $this->helper->saveFiguresRawData($task, $this->extractFigures($problem, $lang));
 
         foreach ($problem->children() as $k => $child) {
             if ($this->hasLang($child, $lang)) {
@@ -278,7 +282,7 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin
                 }
             }
         }
-        $task->save();
+        $this->helper->saveTask($task);
 
         msg("{$task->name} ($year-$series-{$task->label}-$lang)", 1);
 

@@ -17,67 +17,69 @@ class FYKOSRenderer extends AbstractRenderer
     /**
      * Renders content of the task
      * @param Doku_Renderer $renderer
-     * @param Task $data Task data
+     * @param Task $task Task data
      * @param bool $full If the header should contain additional information
      */
-    public function render(Doku_Renderer $renderer, Task $data, bool $full = false): void
+    public function render(Doku_Renderer $renderer, Task $task, bool $full = false): void
     {
-        $renderer->doc .= '<div class="mb-3" data-label="' . $data->label . '">';
-        $renderer->doc .= $this->renderHeader($data, $full);
-        $renderer->doc .= $this->renderImageFigures($renderer, $data);
-        $renderer->doc .= $this->renderTask($renderer, $data);
-        $this->renderFileAttachments($renderer, $data);
+        $renderer->doc .= '<div class="mb-3" data-label="' . $task->label . '">';
+        $renderer->doc .= $this->renderHeader($task, $full);
+        $renderer->doc .= $this->renderImageFigures($renderer, $task);
+        $renderer->doc .= $this->renderTask($renderer, $task);
+        $this->renderFileAttachments($renderer, $task);
         $renderer->doc .= '<div class="mb-3 d-inline-block">';
-        $hasSolution = $this->renderSolutions($renderer, $data);
-        $renderer->doc .= $this->renderTags($data);
+        $hasSolution = $this->renderSolutions($renderer, $task);
+        $renderer->doc .= $this->renderTags($task);
+        $renderer->doc .= $this->renderTopics($task);
         $renderer->doc .= '</div>';
         if ($hasSolution) {
-            $renderer->doc .= $this->renderOrigin($renderer, $data);
+            $renderer->doc .= $this->renderOrigin($renderer, $task);
         }
         global $ID;
-        if (auth_quickaclcheck($ID) >= AUTH_EDIT) {
-            $renderer->doc .= $this->renderEditButton($data);
+        if (auth_quickaclcheck($ID) >= AUTH_EDIT && !$task instanceof FSSUTask) {
+            $renderer->doc .= $this->renderEditButton($task);
         }
         $renderer->doc .= '</div>';
     }
 
-    private function renderEditButton(Task $data): string
+    private function renderEditButton(Task $task): string
     {
         $form = new Form();
         $form->setHiddenField('do', 'plugin_fkstaskrepo');
         $form->setHiddenField('task[do]', 'edit');
-        $form->setHiddenField('task[year]', $data->year);
-        $form->setHiddenField('task[series]', $data->series);
-        $form->setHiddenField('task[problem]', $data->label);
-        $form->setHiddenField('task[lang]', $data->lang);
+        $form->setHiddenField('task[year]', $task->year);
+        $form->setHiddenField('task[series]', $task->series);
+        $form->setHiddenField('task[problem]', $task->label);
+        $form->setHiddenField('task[lang]', $task->lang);
         $form->addButton('submit', $this->helper->getLang('edit'))->addClass('btn btn-warning');
         return $form->toHTML();
     }
 
-    private function renderImageFigures(Doku_Renderer $renderer, Task $data): string
+    private function renderImageFigures(Doku_Renderer $renderer, Task $task): string
     {
         $html = '';
-        if (isset($data->figures)) {
-            foreach ($data->figures as $figure) {
+        if (isset($task->figures)) {
+            foreach ($task->figures as $figure) {
                 if ($this->isImage(ml($figure['path']))) { // Checks if it is an image
-                    $html .= '<figure class="col-xl-4 col-lg-5 col-md-6 col-sm-12">';
-                    $html .= '<img src="' . ml($figure['path']) . '" alt="figure" />';
-                    $html .= '<figcaption data-lang="' . $data->lang . '" >';
-                    $html .= $renderer->render_text($figure['caption']);
-                    $html .= '</figcaption>';
-                    $html .= '</figure>';
+                    $html .= '
+<figure class="col-xl-4 col-lg-5 col-md-6 col-sm-12">
+    <img src="' . ml($figure['path']) . '" alt="figure" />
+    <figcaption data-lang="' . $task->lang . '" >' .
+                        $renderer->render_text($figure['caption']) . '
+    </figcaption>
+</figure>';
                 }
             }
         }
         return $html;
     }
 
-    private function renderFileAttachments(Doku_Renderer $renderer, Task $data): void
+    private function renderFileAttachments(Doku_Renderer $renderer, Task $task): void
     {
         $wrapperRendered = false;
-        if (isset($data->figures)) {
+        if (isset($task->figures)) {
 
-            foreach ($data->figures as $figure) {
+            foreach ($task->figures as $figure) {
                 if (!$this->isImage(ml($figure['path']))) { // Checks if it is an image
                     if (!$wrapperRendered) {
                         $renderer->doc .= '<div class="task-fileattachments mb-3">';
@@ -94,26 +96,30 @@ class FYKOSRenderer extends AbstractRenderer
         }
     }
 
-    private function renderTags(Task $data): string
+    private function renderTags(Task $task): string
     {
-        $tags = $this->helper->loadTags($data->year, $data->series, $data->label);
-        $html = '';
-        foreach ($tags as $tag) {
-            $html .= $this->helper->getTagLink($tag, null, $data->lang);
+        return join('', array_map(fn($tag) => $this->helper->getTagLink($tag, null, $task->lang), $this->helper->loadTags($task)));
+    }
+
+// TODO
+    private function renderTopics(Task $task): string
+    {
+        if ($task instanceof FSSUTask) {
+            return join('', array_map(fn($tag) => $this->helper->getTagLink($tag, null, $task->lang), $task->topics));
         }
-        return $html;
+        return '';
     }
 
-    private function renderOrigin(Doku_Renderer $renderer, Task $data): string
+    private function renderOrigin(Doku_Renderer $renderer, Task $task): string
     {
-        return '<div class="font-italic pull-right">' . $renderer->render_text($data->origin) . '</div>';
+        return '<div class="font-italic pull-right">' . $renderer->render_text($task->origin) . '</div>';
     }
 
-    private function renderTask(Doku_Renderer $renderer, Task $data): string
+    private function renderTask(Doku_Renderer $renderer, Task $task): string
     {
         global $conf;
-        if ($data->task) {
-            return '<div>' . $renderer->render_text($data->task) . '</div>';
+        if ($task->task) {
+            return '<div>' . $renderer->render_text($task->task) . '</div>';
         } else {
             return '<div>' . $renderer->render_text($this->helper->getSpecLang('no_translation', $conf['lang'])) . '</div>';
         }
@@ -122,18 +128,18 @@ class FYKOSRenderer extends AbstractRenderer
     /**
      * Renders links to PDF with solution to specific task. Czech PDF is rendered always though it is on english site.
      * @param Doku_Renderer $renderer
-     * @param Task $data
+     * @param Task $task
      * @return bool If solution exists
      */
-    private function renderSolutions(Doku_Renderer $renderer, Task $data): bool
+    private function renderSolutions(Doku_Renderer $renderer, Task $task): bool
     {
         global $conf;
 
-        $path = vsprintf($this->helper->getConf('solution_path_' . $conf['lang']), [$data->year, $data->series, $data->label]); // Add path
+        $path = vsprintf($this->helper->getConf('solution_path_' . $conf['lang']), [$task->year, $task->series, $task->label]); // Add path
         $path = file_exists(mediaFN($path)) ? $path : null;
 
         // Include original cs PDF to en (if exists obviously)
-        $original = vsprintf($this->helper->getConf('solution_path_cs'), [$data->year, $data->series, $data->label]); // Add path
+        $original = vsprintf($this->helper->getConf('solution_path_cs'), [$task->year, $task->series, $task->label]); // Add path
         $original = file_exists(mediaFN($original)) && $conf['lang'] !== 'cs' ? $original : null;
 
         if ($original) {
@@ -150,28 +156,28 @@ class FYKOSRenderer extends AbstractRenderer
         return $original || $path;
     }
 
-    private function renderHeader(Task $data, bool $full = false): string
+    private function renderHeader(Task $task, bool $full = false): string
     {
-        $pointsLabel = $this->getPointsLabel($data);
-        $problemLabel = $data->label . '. ';//. $this->helper->getSpecLang('label', $data['lang']);
+        $pointsLabel = $this->getPointsLabel($task);
+        $problemLabel = $task->label . '. ';//. $this->helper->getSpecLang('label', $task['lang']);
 
-        $seriesLabel = $this->getSeriesLabel($data);
-        $yearLabel = $this->getYearLabel($data);
-        $html = '<h3 class="task-headline task-headline-' . $this->getHeadlineClass($data) . '">';
+        $seriesLabel = $this->getSeriesLabel($task);
+        $yearLabel = $this->getYearLabel($task);
+        $html = '<h3 class="task-headline task-headline-' . $this->getHeadlineClass($task) . '">';
         $html .= $pointsLabel ? '<small class="pull-right ml-3">(' . $pointsLabel . ')</small>' : '';
-        $html .= $this->getProblemIcon($data);
+        $html .= $this->getProblemIcon($task);
         if ($full) {
-            $html .= $seriesLabel . ' ' . $yearLabel . ' - ' . $problemLabel . ' ' . $data->name;
+            $html .= $seriesLabel . ' ' . $yearLabel . ' - ' . $problemLabel . ' ' . $task->name;
         } else {
-            $html .= $problemLabel . ' ' . $data->name;
+            $html .= $problemLabel . ' ' . $task->name;
         }
         $html .= '</h3>';
         return $html;
     }
 
-    private function getHeadlineClass(Task $data): string
+    private function getHeadlineClass(Task $task): string
     {
-        switch ($data->label) {
+        switch ($task->label) {
             case '1':
             case '2':
                 return 'easy';
@@ -206,19 +212,19 @@ class FYKOSRenderer extends AbstractRenderer
 
     }
 
-    private function getSeriesLabel(Task $data): string
+    private function getSeriesLabel(Task $task): string
     {
-        return $data->series . '. ' . $this->helper->getSpecLang('series', $data->lang);
+        return $task->series . '. ' . $this->helper->getSpecLang('series', $task->lang);
     }
 
-    private function getYearLabel(Task $data): string
+    private function getYearLabel(Task $task): string
     {
-        return $data->year . '. ' . $this->helper->getSpecLang('years', $data->lang);
+        return $task->year . '. ' . $this->helper->getSpecLang('years', $task->lang);
     }
 
-    private function getProblemIcon(Task $data): string
+    private function getProblemIcon(Task $task): string
     {
-        switch ($data->label) {
+        switch ($task->label) {
             case '1':
             case '2':
                 return '<span class="fa fa-smile-o"></span>';
@@ -232,16 +238,5 @@ class FYKOSRenderer extends AbstractRenderer
             default:
                 return '<span class="fa fa-pencil-square-o"></span>';
         }
-    }
-
-    /**
-     * Decides whether the file is a picture.
-     * @param $file
-     * @return bool is image
-     */
-    private function isImage($file): bool
-    {
-        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION)); // Using strtolower to overcome case sensitive
-        return in_array($ext, self::SUPPORTED_IMAGES);
     }
 }

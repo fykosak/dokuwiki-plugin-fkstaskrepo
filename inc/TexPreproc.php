@@ -10,7 +10,7 @@ namespace FYKOS\dokuwiki\Extenstion\PluginTaskRepo;
 class TexPreproc
 {
 
-    const SAFETY_LIMIT = 10000;
+    private const SAFETY_LIMIT = 10000;
 
     private static array $macros = [
 // equations
@@ -119,7 +119,12 @@ class TexPreproc
         return $this->process($ast);
     }
 
-    private function chooseVariant($sequence, $toMatch)
+    /**
+     * @param mixed $sequence
+     * @param mixed $toMatch
+     * @return array
+     */
+    private function chooseVariant($sequence, $toMatch): array
     {
         foreach ($this->macroMasks[$sequence] as $variant => $mask) { //assert: must be sorted in decreasing mask length
             $matching = true;
@@ -140,13 +145,17 @@ class TexPreproc
         return [null, 0];
     }
 
-    private function process($ast)
+    /**
+     * @param mixed $ast
+     * @return string
+     */
+    private function process($ast): string
     {
-        $safety_counter = 0;
+        $safetyCounter = 0;
         $result = '';
         reset($ast);
         while (($it = current($ast)) !== false) {
-            if (++$safety_counter > self::SAFETY_LIMIT) {
+            if (++$safetyCounter > self::SAFETY_LIMIT) {
                 throw new \Error('Infinite loop in parser.', -1);
             }
 
@@ -189,7 +198,7 @@ class TexPreproc
         return $result;
     }
 
-    private function nodeToText($node)
+    private function nodeToText($node): string
     {
         if (is_array($node)) {
             $result = '';
@@ -202,11 +211,15 @@ class TexPreproc
         }
     }
 
-    private function processText($text)
+    private function processText(string $text): string
     {
         return $text;
     }
 
+    /**
+     * @param mixed $text
+     * @return array
+     */
     private function parse($text): array
     {
         $stack = [[]];
@@ -240,40 +253,40 @@ class TexPreproc
     * Replacement callbacks
     */
 
-    private $listStack = [];
+    private array $listStack = [];
 
-    private function startOList()
+    private function startOList(): string
     {
         array_push($this->listStack, 'O');
         return "\n";
     }
 
-    private function endOList()
+    private function endOList(): string
     {
         array_pop($this->listStack);
         return "\n";
     }
 
-    private function startUList()
+    private function startUList(): string
     {
         array_push($this->listStack, 'U');
         return "\n";
     }
 
-    private function endUList()
+    private function endUList(): string
     {
         array_pop($this->listStack);
         return "\n";
     }
 
-    private function listItem()
+    private function listItem(): string
     {
         $char = end($this->listStack) == 'U' ? '*' : '-';
         $level = count($this->listStack);
         return "\n" . str_repeat('  ', $level) . $char . ' ';
     }
 
-    private function paragraph()
+    private function paragraph(): string
     {
         if (count($this->listStack)) {
             return '\\\\ ';

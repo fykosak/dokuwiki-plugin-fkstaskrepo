@@ -18,7 +18,7 @@ class syntax_plugin_fkstaskrepo_batchpdf extends SyntaxPlugin
 
     private helper_plugin_fkstaskrepo $helper;
 
-    function __construct()
+    public function __construct()
     {
         $this->helper = $this->loadHelper('fkstaskrepo');
     }
@@ -108,14 +108,14 @@ class syntax_plugin_fkstaskrepo_batchpdf extends SyntaxPlugin
     /**
      * Render xhtml output or metadata
      *
-     * @param string $mode Renderer mode (supported modes: xhtml)
+     * @param string $format Renderer mode (supported modes: xhtml)
      * @param Doku_Renderer $renderer The renderer
      * @param array $data The data from the handler() function
      * @return bool If rendering was successful.
      */
-    public function render($mode, Doku_Renderer $renderer, $data): bool
+    public function render($format, Doku_Renderer $renderer, $data): bool
     {
-        switch ($mode) {
+        switch ($format) {
             case 'xhtml':
                 // Year book and serial are only in Czech
                 if ($data['yearbook_original']) {

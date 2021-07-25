@@ -15,7 +15,7 @@ class syntax_plugin_fkstaskrepo_table extends SyntaxPlugin
 
     private helper_plugin_fkstaskrepo $helper;
 
-    function __construct()
+    public function __construct()
     {
         $this->helper = $this->loadHelper('fkstaskrepo');
     }
@@ -35,11 +35,21 @@ class syntax_plugin_fkstaskrepo_table extends SyntaxPlugin
         return 165;
     }
 
+    /**
+     * @param string $mode
+     */
     public function connectTo($mode): void
     {
         $this->Lexer->addSpecialPattern('<fkstaskrepotable\b.*?/>', $mode, 'plugin_fkstaskrepo_table');
     }
 
+    /**
+     * @param string $match
+     * @param int $state
+     * @param int $pos
+     * @param Doku_Handler $handler
+     * @return array
+     */
     public function handle($match, $state, $pos, Doku_Handler $handler): array
     {
         preg_match('/lang="([a-z]+)"/', substr($match, 18, -2), $m);
@@ -47,18 +57,24 @@ class syntax_plugin_fkstaskrepo_table extends SyntaxPlugin
         return [$state, $lang];
     }
 
-    public function render($mode, Doku_Renderer $renderer, $data): bool
+    /**
+     * @param string $format
+     * @param Doku_Renderer $renderer
+     * @param array $data
+     * @return bool
+     */
+    public function render($format, Doku_Renderer $renderer, $data): bool
     {
         [$state, $lang] = $data;
         switch ($state) {
             case DOKU_LEXER_SPECIAL:
-                if ($mode == 'xhtml') {
+                if ($format == 'xhtml') {
                     $renderer->nocache();
                     // $this->showMainSearch($renderer, null, $lang);
                     $renderer->doc .= $this->showTagSearch($lang);
                     $renderer->doc .= $this->showResults($lang);
                     return true;
-                } elseif ($mode == 'metadata') {
+                } elseif ($format == 'metadata') {
                     return true;
                 }
                 break;

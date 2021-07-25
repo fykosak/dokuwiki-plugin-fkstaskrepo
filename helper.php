@@ -3,12 +3,15 @@
 use dokuwiki\Extension\Plugin;
 use dokuwiki\Form\Form;
 use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\FSSUConnector;
+use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\FSSUTask;
+use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\Task;
 
 require_once __DIR__ . '/inc/TexLexer.php';
 require_once __DIR__ . '/inc/TexPreproc.php';
 require_once __DIR__ . '/inc/Task.php';
 require_once __DIR__ . '/inc/Renderer/AbstractRenderer.php';
 require_once __DIR__ . '/inc/Renderer/FYKOSRenderer.php';
+require_once __DIR__ . '/inc/FSSUTask.php';
 require_once __DIR__ . '/inc/FSSUConnector.php';
 require_once __DIR__ . '/inc/AbstractProblem.php';
 
@@ -28,9 +31,9 @@ class helper_plugin_fkstaskrepo extends Plugin
 
     private helper_plugin_sqlite $sqlite;
 
-    const URL_PARAM = 'tasktag';
+    public const URL_PARAM = 'tasktag';
 
-    const XMLNamespace = 'http://www.w3.org/XML/1998/namespace';
+    public const XMLNamespace = 'http://www.w3.org/XML/1998/namespace';
 
     public function __construct()
     {
@@ -67,7 +70,40 @@ class helper_plugin_fkstaskrepo extends Plugin
         return sprintf($mask, $year, $series);
     }
 
-    public function getSeriesData(int $year, int $series, int $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH)
+    public function saveFiguresRawData(Task $task, array $figures): void
+    {
+        $task->figures = [];
+
+        foreach ($figures as $figure) {
+            $figureGoodForm = []; // TODO only write
+            $figureGoodForm['caption'] = $figure['caption']; // TODO never used!!!
+
+            foreach ($figure as $ext => $data) {
+                $name = $this->getTaskAttachmentPath($task, $figure['caption'], $ext);
+                if (io_saveFile(mediaFN($name), (string)trim($data))) {
+                    msg('Figure "' . $figure['caption'] . '" for language ' . $task->lang . ' has been saved', 1);
+                } else {
+                    msg('Figure "' . $figure['caption'] . '" for language ' . $task->lang . ' has not saved properly!', -1);
+                }
+                $task->figures[] = ['path' => $name, 'caption' => $figure['caption']];
+            }
+        }
+    }
+
+    /**
+     * Returns ID path of the Attachment based on its caption
+     * @param Task $task
+     * @param string $caption Attachment Caption
+     * @param string $type File type
+     * @return string ID
+     */
+    public function getTaskAttachmentPath(Task $task, string $caption, string $type): string
+    {
+        $name = substr(preg_replace('/[^a-zA-Z0-9_-]+/', '-', $caption), 0, 30) . '_' . substr(md5($caption . $type), 0, 5);
+        return vsprintf($this->getConf('attachment_path_' . $task->lang), [$task->year, $task->series, $task->label]) . ':' . $name . '.' . $type;
+    }
+
+    public function getSeriesData(int $year, int $series, int $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH): ?string
     {
         $path = $this->getPath($year, $series);
         return $this->downloader->downloadWebServer($expiration, $path);
@@ -119,6 +155,71 @@ class helper_plugin_fkstaskrepo extends Plugin
         return ($content && $res) ? $fileID : false;
     }
 
+    public function saveTask(Task $task): void
+    {
+        $data = [
+            'year' => $task->year,
+            'series' => $task->series,
+            'label' => $task->label,
+            'number' => $task->number,
+            'points' => $task->points,
+            'authors' => $task->authors,
+            'solution-authors' => $task->solutionAuthors,
+            'localization' => $task->taskLocalizedData, // Includes old data
+        ];
+
+        $data['localization'][$task->lang] = [
+            'name' => $task->name,
+            'origin' => $task->origin,
+            'task' => $task->task,
+            'figures' => $task->figures,
+        ];
+
+        io_saveFile($this->getTaskFileName($task), json_encode($data, JSON_PRETTY_PRINT));
+    }
+
+
+    /**
+     * Loads task
+     * @param Task $task
+     * @return bool Success
+     */
+    public function loadTask(Task $task): bool
+    {
+        $content = io_readFile($this->getTaskFileName($task), false);
+        if (!$content) {
+            return false;
+        }
+        $data = json_decode($content, true);
+
+        $task->taskLocalizedData = $data['localization'];
+
+        if (!key_exists($this->lang, $data['localization'])) {
+            return false;
+        }
+
+        $task->number = $data['number'];
+        $task->name = $data['localization'][$task->lang]['name'];
+        $task->origin = $data['localization'][$task->lang]['origin'];
+        $task->setTask($data['localization'][$task->lang]['task'], false);
+        $task->points = $data['points'];
+        $task->figures = $data['localization'][$task->lang]['figures'];
+        $task->authors = $data['authors'];
+        $task->solutionAuthors = $data['solution-authors'];
+
+        return true;
+    }
+
+    /**
+     * Returns the path of .json file with task data.
+     * @param Task $task
+     * @return string path of file
+     */
+    public function getTaskFileName(Task $task): string
+    {
+        return metaFN(vsprintf($this->getConf('task_data_meta_path'), [$task->year, $task->series, $task->label]), null);
+    }
+
     /*
      * Tags
      */
@@ -160,10 +261,13 @@ class helper_plugin_fkstaskrepo extends Plugin
         $this->sqlite->query('commit transaction');
     }
 
-    public function loadTags(int $year, int $series, string $problem): array
+    public function loadTags(Task $task): array
     {
+        if ($task instanceof FSSUTask) {
+            return $task->tags;
+        }
         $sql = 'SELECT problem_id FROM problem WHERE year = ? AND series = ? AND problem = ?';
-        $res = $this->sqlite->query($sql, $year, $series, $problem);
+        $res = $this->sqlite->query($sql, $task->year, $task->series, $task->label);
         $problemId = $this->sqlite->res2single($res);
 
         if (!$problemId) {
@@ -204,7 +308,7 @@ class helper_plugin_fkstaskrepo extends Plugin
         return $result;
     }
 
-    final public function getSpecLang($id, $lang = null)
+    final public function getSpecLang(?string $id, ?string $lang = null): ?string
     {
         global $conf;
         if (!$lang || $lang == $conf['lang']) {
@@ -219,11 +323,10 @@ class helper_plugin_fkstaskrepo extends Plugin
         return $l;
     }
 
-    public function getTagLink(string $tag, ?int $size = 5, string $lang = 'cs', int $count = 0, bool $active = false)
+    public function getTagLink(string $tag, ?int $size = 5, string $lang = 'cs', int $count = 0, bool $active = false): string
     {
         $page = $this->getConf('archive_path_' . $lang);
-        $html = '<a data-tag="' . $tag . '" href="' . wl($page, [self::URL_PARAM => $tag]) . '" class="tag size' .
-            $size . ' ' . ($active ? '' : '') . '">';
+        $html = '<a data-tag="' . $tag . '" href="' . wl($page, [self::URL_PARAM => $tag]) . '" class="tag size">';
         $html .= '<span class="fa fa-tag"></span>';
         $html .= hsc($this->getSpecLang('tag__' . $tag, $lang));
         if ($count) {
@@ -316,13 +419,6 @@ class helper_plugin_fkstaskrepo extends Plugin
         $form->addTagClose('table');
     }
 
-    /**
-     * @param int $total
-     * @param string $page
-     * @param array $urlParameters
-     * @param string $pageNumberParamName
-     * @return string
-     */
     public function renderSimplePaginator(int $total, string $page, array $urlParameters, string $pageNumberParamName = 'p'): ?string
     {
         global $INPUT;

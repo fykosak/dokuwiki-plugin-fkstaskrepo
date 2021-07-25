@@ -25,7 +25,7 @@ class FSSUConnector
         return $this->mySQL;
     }
 
-    public function downloadTask(string $contestName, int $year, int $series, string $label, string $lang = 'cs'): ?Task
+    public function downloadTask(string $contestName, int $year, int $series, string $label, string $lang = 'cs'): ?FSSUTask
     {
         $dirId = $this->findDir($contestName, $year, $series);
 
@@ -33,32 +33,67 @@ class FSSUConnector
 SELECT *
 FROM problem 
 LEFT JOIN problem_localized_data pld on problem.id = pld.problem_id and pld.language = ?
-LEFT JOIN problem_tag pt on problem.id = pt.problem_id
+
 where directory_id=?');
-        var_dump($query);
         $query->bind_param('si', $lang, $dirId);
         $query->execute();
         $res = $query->get_result();
 
         if ($res) {
             $data = $res->fetch_assoc();
-            var_dump($data);
-            $task = new Task($this->helper, $year, $series, $label);
+            $task = new FSSUTask($year, $series, $label);
             $task->name = $data['title'] ?? '';
             $task->origin = $data['origin'] ?? '';
             $task->points = $data['points'];
             $task->setTask($data['task']);
-            // TODO authors
+            $this->getTags($task, $data['id'], $lang);
+            $this->getTopics($task, $data['id'], $lang);
+            // TODO authors + others shits
             return $task;
         }
         return null;
     }
 
-    /* TODO LEFT JOIN tag t on t.id = pt.tag_id
-    LEFT JOIN tag_localized_data tld on t.id = tld.tag_id and tld.language = pld.language
-    LEFT JOIN problem_topic p on problem.id = p.problem_id
-    LEFT JOIN topic t2 on p.topic_id = t2.id
-    LEFT JOIN topic_localized_data d on t2.id = d.topic_id and d.language = pld.language */
+    private function getTags(FSSUTask $task, int $problemId, string $lang): array
+    {
+        $query = $this->getMySQLConnector()->prepare('
+SELECT *
+FROM problem_tag
+    LEFT JOIN tag t on problem_tag.tag_id = t.id
+    LEFT JOIN tag_localized_data tld on t.id = tld.tag_id and tld.language = ?
+       WHERE problem_id = ?
+    ');
+        $query->bind_param('si', $lang, $problemId);
+        $query->execute();
+        while (($res = $query->get_result()) !== false) {
+            $data = $res->fetch_assoc();
+            if ($data) {
+                $task->tags[] = $data['title'];
+            }
+        }
+        return [];
+    }
+
+    private function getTopics(FSSUTask $task, int $problemId, string $lang): array
+    {
+        $query = $this->getMySQLConnector()->prepare('
+SELECT *
+FROM problem_topic
+    LEFT JOIN topic t2 on problem_topic.topic_id = t2.id
+    LEFT JOIN topic_localized_data d on t2.id = d.topic_id and d.language = ? 
+    WHERE problem_id = ?
+    ');
+        $query->bind_param('si', $lang, $problemId);
+        $query->execute();
+
+        while (($res = $query->get_result()) !== false) {
+            $data = $res->fetch_assoc();
+            if ($data) {
+                $task->topics[] = $data['title'];
+            }
+        }
+        return [];
+    }
 
     private function findDir(string $contestName, int $year, int $series): ?int
     {

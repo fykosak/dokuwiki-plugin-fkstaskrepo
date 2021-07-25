@@ -32,53 +32,45 @@ class syntax_plugin_fkstaskrepo_problem extends AbstractProblem
     /**
      * Render xhtml output or metadata
      *
-     * @param string $mode Renderer mode (supported modes: xhtml)
+     * @param string $format Renderer mode (supported modes: xhtml)
      * @param Doku_Renderer $renderer The renderer
      * @param array $data The data from the handler() function
      * @return bool If rendering was successful.
      */
-    public function render($mode, Doku_Renderer $renderer, $data): bool
+    public function render($format, Doku_Renderer $renderer, $data): bool
     {
         $parameters = $data['parameters'];
         $state = $data['state'];
-        switch ($state) {
-            case DOKU_LEXER_SPECIAL:
-                // $seriesFile = $this->helper->getSeriesFilename($parameters['year'], $parameters['series']);
-                switch ($mode) {
-                    case 'xhtml':
-                        $renderer->nocache();
-                        $problemData = new Task(
-                            $this->helper,
-                            $parameters['year'],
-                            $parameters['series'],
-                            $parameters['problem'],
-                            $parameters['lang']);
-                        if ($problemData->load()) {
-                            $renderer->doc .= '<div class="task-repo task">';
-                            $this->problemRenderer->render($renderer, $problemData, !!$parameters['full']);
-                            $renderer->doc .= '</div>';
-                        }
-                        return false;
-                    case 'text':
-                        $problemData = new Task(
-                            $this->helper,
-                            $parameters['year'],
-                            $parameters['series'],
-                            $parameters['problem'],
-                            $parameters['lang']);
-                        if ($problemData->load()) {
-                            $renderer->doc .= $problemData->name;
-                            $renderer->doc .= "\n";
-                            $renderer->doc .= $problemData->task;
-                        }
-                        break;
-                    default:
-                        return false;
-                }
-                break;
-            default:
-                return false;
-
+        if ($state === DOKU_LEXER_SPECIAL) {
+            switch ($format) {
+                case 'xhtml':
+                    $renderer->nocache();
+                    $problemData = new Task(
+                        $parameters['year'],
+                        $parameters['series'],
+                        $parameters['problem'],
+                        $parameters['lang']);
+                    if ($this->helper->loadTask($problemData)) {
+                        $renderer->doc .= '<div class="task-repo task">';
+                        $this->problemRenderer->render($renderer, $problemData, !!$parameters['full']);
+                        $renderer->doc .= '</div>';
+                    }
+                    return false;
+                case 'text':
+                    $problemData = new Task(
+                        $parameters['year'],
+                        $parameters['series'],
+                        $parameters['problem'],
+                        $parameters['lang']);
+                    if ($this->helper->loadTask($problemData)) {
+                        $renderer->doc .= $problemData->name;
+                        $renderer->doc .= "\n";
+                        $renderer->doc .= $problemData->task;
+                    }
+                    break;
+                default:
+                    return false;
+            }
         }
         return false;
     }

@@ -13,30 +13,38 @@ use Iterator;
 class TexLexer implements Iterator
 {
 
-    const TOKEN_LBRACE = 0;
-    const TOKEN_RBRACE = 1;
-    const TOKEN_SEQ = 2;
-    const TOKEN_TEXT = 3;
+    public const TOKEN_LBRACE = 0;
+    public const TOKEN_RBRACE = 1;
+    public const TOKEN_SEQ = 2;
+    public const TOKEN_TEXT = 3;
 
-    private $text;
+    private string $text;
+    /** @var mixed */
     private $offset;
+    /** @var mixed */
     private $current;
-    static private $patterns = [
+    private static array $patterns = [
         self::TOKEN_SEQ => '\\\([a-z]+|[^\s])\s*\*?',
         self::TOKEN_LBRACE => '{',
         self::TOKEN_RBRACE => '}',
     ];
 
-    public function __construct($text)
+    public function __construct(string $text)
     {
         $this->text = $text;
     }
 
+    /**
+     * @return mixed
+     */
     public function current()
     {
         return $this->current;
     }
 
+    /**
+     * @return bool|float|int|string|null
+     */
     public function key()
     {
         return $this->offset;

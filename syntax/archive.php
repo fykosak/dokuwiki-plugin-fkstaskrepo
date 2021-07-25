@@ -14,7 +14,7 @@ class syntax_plugin_fkstaskrepo_archive extends SyntaxPlugin
 
     private helper_plugin_fkstaskrepo $helper;
 
-    function __construct()
+    public function __construct()
     {
         $this->helper = $this->loadHelper('fkstaskrepo');
     }
@@ -94,12 +94,12 @@ class syntax_plugin_fkstaskrepo_archive extends SyntaxPlugin
     /**
      * Render xhtml output or metadata
      *
-     * @param string $mode Renderer mode (supported modes: xhtml)
+     * @param string $format Renderer mode (supported modes: xhtml)
      * @param Doku_Renderer $renderer The renderer
      * @param array $data The data from the handler() function
      * @return bool If rendering was successful.
      */
-    public function render($mode, Doku_Renderer $renderer, $data): bool
+    public function render($format, Doku_Renderer $renderer, $data): bool
     {
         $renderer->nocache();
         global $ID;
@@ -119,7 +119,7 @@ class syntax_plugin_fkstaskrepo_archive extends SyntaxPlugin
     }
 
 // TODO $currentYear and $currentSeries is never used
-    private function renderSeries(Doku_Renderer $renderer, array $pages, string $lang, $currentYear = null, $currentSeries = null)
+    private function renderSeries(Doku_Renderer $renderer, array $pages, string $lang, ?int $currentYear = null, ?int $currentSeries = null): void
     {
         foreach ($pages as $year => $batches) {
             $renderer->doc .= '<div class="mb-3 col-lg-3 col-md-4 col-sm-6 col-xs-12">';

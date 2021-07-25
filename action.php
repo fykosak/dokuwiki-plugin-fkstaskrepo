@@ -75,13 +75,12 @@ class action_plugin_fkstaskrepo extends ActionPlugin
         echo '<h1>Úprava úlohy</h1>';
 
         $problem = new Task(
-            $this->helper,
             $INPUT->param('task')['year'],
             $INPUT->param('task')['series'],
             $INPUT->param('task')['problem'],
             $INPUT->param('task')['lang']
         );
-        $problem->load();
+        $this->helper->loadTask($problem);
 
         $form = new Form();
         $form->addClass('task-repo-edit');
@@ -181,18 +180,23 @@ class action_plugin_fkstaskrepo extends ActionPlugin
         echo $form->toHTML();
     }
 
+    /**
+     * @param Form $form
+     * @param string $field
+     * @param mixed $value
+     */
     private function addStaticField(Form $form, string $field, $value): void
     {
         $form->addTextInput('problem[' . $field . ']', $this->helper->getSpecLang($field, 'cs'))
             ->attrs(['class' => 'form-control', 'readonly' => 'readonly'])->val($value);
     }
 
-    private function addTagsField(Form $form, Task $data): void
+    private function addTagsField(Form $form, Task $task): void
     {
         $form->addFieldsetOpen($this->helper->getSpecLang('tags', 'cs'));
 
         $form->addTagOpen('div')->addClass('row');
-        $topics = $this->helper->loadTags($data->year, $data->series, $data->label);
+        $topics = $this->helper->loadTags($task);
         foreach (self::$tags as $tag) {
             $form->addTagOpen('div')->addClass('form-check col-lg-4 col-md-6 col-sm-12');
             $isIn = false;
@@ -236,9 +240,9 @@ class action_plugin_fkstaskrepo extends ActionPlugin
 
         $problemData = $INPUT->param('problem');
 
-        $problem = new Task($this->helper, (int)$problemData['year'], (int)$problemData['series'], (string)$problemData['label'], $problemData['lang']);
+        $problem = new Task((int)$problemData['year'], (int)$problemData['series'], (string)$problemData['label'], $problemData['lang']);
 
-        $problem->load();
+        $this->helper->loadTask($problem);
 
         //$problem->setNumber((int)$INPUT->param('problem')['number']);
         $problem->points = (int)$INPUT->param('problem')['points'] ?: null;
@@ -249,7 +253,7 @@ class action_plugin_fkstaskrepo extends ActionPlugin
         $problem->origin = trim($INPUT->param('problem')['origin']);
         $problem->setTask(cleanText($INPUT->param('problem')['task']), false);
         $problem->figures = $this->processFigures($INPUT->param('problem')['figures']);
-        $problem->save();
+        $this->helper->saveTask($problem);
         $this->helper->storeTags($problem->year, $problem->series, $problem->label, $INPUT->param('problem')['topics']);
         $event->data = 'show';
     }

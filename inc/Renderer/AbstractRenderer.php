@@ -29,5 +29,16 @@ abstract class AbstractRenderer
         $this->helper = $helper;
     }
 
-    abstract public function render(\Doku_Renderer $renderer, Task $data, bool $full = false): void;
+    abstract public function render(\Doku_Renderer $renderer, Task $task, bool $full = false): void;
+
+    /**
+     * Decides whether the file is a picture.
+     * @param string $file
+     * @return bool is image
+     */
+    protected function isImage(string $file): bool
+    {
+        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION)); // Using strtolower to overcome case sensitive
+        return in_array($ext, self::SUPPORTED_IMAGES);
+    }
 }

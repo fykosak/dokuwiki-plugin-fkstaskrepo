@@ -22,6 +22,10 @@ class admin_plugin_fkstaskrepo_solution extends AdminPlugin
         $this->helper = $this->loadHelper('fkstaskrepo');
     }
 
+    /**
+     * @param string $language
+     * @return string
+     */
     public function getMenuText($language): string
     {
         return 'Stáhnout vzorová řešení z Astrid';
