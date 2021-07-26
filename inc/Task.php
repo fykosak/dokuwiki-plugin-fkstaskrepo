@@ -7,40 +7,23 @@ namespace FYKOS\dokuwiki\Extenstion\PluginTaskRepo;
  * @author Michal Koutný <michal@fykos.cz>
  * @author Michal Červeňák <miso@fykos.cz>
  * @author Štěpán Stenchlák <stenchlak@fykos.cz>
- * @property-read string $task
+ * @property int $number
+ * @property string $label
+ * @property string $name
+ * @property string $lang
+ * @property int $year
+ * @property int $series
+ * @property string|null $origin
+ * @property string $task
+ * @property int|null $points
+ * @property array|null $figures
+ * @property array|null $authors
+ * @property array|null $solutionAuthors
  */
 class Task
 {
+    private array $data = [];
 
-    public static array $editableFields = [
-        'name',
-        'points',
-        'origin',
-        'task',
-        'authors',
-        'solution-authors',
-        'figures',
-    ];
-
-    public static array $readonlyFields = [
-        'year',
-        'number',
-        'series',
-        'label',
-        'lang',
-    ];
-    public int $number;
-    public string $label;
-    public string $name;
-    public string $lang;
-    public int $year;
-    public int $series;
-    public ?string $origin = null;
-    public string $task;
-    public ?int $points = null;
-    public ?array $figures = null;
-    public ?array $authors = null;
-    public ?array $solutionAuthors = null;
 
     /**
      * name, origin, task, figures
@@ -50,18 +33,50 @@ class Task
 
     public function __construct(int $year, int $series, string $label, string $lang = 'cs')
     {
-        $this->year = $year;
-        $this->series = $series;
-        $this->label = strtoupper($label);
-        $this->lang = $lang;
+        $this->data['year'] = $year;
+        $this->data['series'] = $series;
+        $this->data['label'] = strtoupper($label);
+        $this->data['lang'] = $lang;
     }
 
-    public function setTask(string $task, bool $preProc = true): void
+    public function __get(string $name)
     {
-        if ($preProc) {
-            $this->task = (new TexPreproc())->preproc($task);
-        } else {
-            $this->task = $task;
+        if (in_array($name, [...static::getEditableFields(), ...static::getReadonlyFields()])) {
+            return $this->data[$name] ?? null;
         }
+        throw new \InvalidArgumentException(sprintf('Property %s does not exists', $name));
+    }
+
+    public function __set(string $name, $value): void
+    {
+        if (in_array($name, [...static::getEditableFields()])) {
+            $this->data[$name] = $value;
+            return;
+        }
+        throw new \InvalidArgumentException();
+    }
+
+    public static function getEditableFields(): array
+    {
+        return [
+            'name',
+            'points',
+            'origin',
+            'task',
+            'authors',
+            'solution-authors',
+            'figures',
+        ];
+    }
+
+    public static function getReadonlyFields(): array
+    {
+        return [
+            'year',
+            'number',
+            'series',
+            'label',
+            'lang',
+        ];
     }
 }

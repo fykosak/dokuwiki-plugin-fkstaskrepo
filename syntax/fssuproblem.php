@@ -38,10 +38,10 @@ class syntax_plugin_fkstaskrepo_fssuproblem extends AbstractProblem
                 $problemData = $this->helper->fssuConnector->downloadTask('fykos', $parameters['year'], $parameters['series'], $parameters['problem'], $parameters['lang']);
                 if ($problemData) {
                     $renderer->doc .= '<div class="task-repo task">';
-                    $this->problemRenderer->render($renderer, $problemData, !!$parameters['full']);
+                    $this->renderTask($renderer, $problemData, !!$parameters['full']);
                     $renderer->doc .= '</div>';
                 }
-                return false;
+                return true;
             }
         }
         return false;

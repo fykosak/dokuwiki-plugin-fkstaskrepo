@@ -52,10 +52,10 @@ class syntax_plugin_fkstaskrepo_problem extends AbstractProblem
                         $parameters['lang']);
                     if ($this->helper->loadTask($problemData)) {
                         $renderer->doc .= '<div class="task-repo task">';
-                        $this->problemRenderer->render($renderer, $problemData, !!$parameters['full']);
+                        $this->renderTask($renderer, $problemData, !!$parameters['full']);
                         $renderer->doc .= '</div>';
                     }
-                    return false;
+                    return true;
                 case 'text':
                     $problemData = new Task(
                         $parameters['year'],
@@ -67,7 +67,7 @@ class syntax_plugin_fkstaskrepo_problem extends AbstractProblem
                         $renderer->doc .= "\n";
                         $renderer->doc .= $problemData->task;
                     }
-                    break;
+                    return true;
                 default:
                     return false;
             }

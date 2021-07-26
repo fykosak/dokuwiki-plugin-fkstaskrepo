@@ -31,7 +31,7 @@ class FSSUConnector
 
         $query = $this->getMySQLConnector()->prepare('
 SELECT *
-FROM problem 
+FROM problem
 LEFT JOIN problem_localized_data pld on problem.id = pld.problem_id and pld.language = ?
 
 where directory_id=?');
@@ -45,7 +45,7 @@ where directory_id=?');
             $task->name = $data['title'] ?? '';
             $task->origin = $data['origin'] ?? '';
             $task->points = $data['points'];
-            $task->setTask($data['task']);
+            $task->task = (new TexPreproc())->preproc($data['task']);
             $this->getTags($task, $data['id'], $lang);
             $this->getTopics($task, $data['id'], $lang);
             // TODO authors + others shits
@@ -80,7 +80,7 @@ FROM problem_tag
 SELECT *
 FROM problem_topic
     LEFT JOIN topic t2 on problem_topic.topic_id = t2.id
-    LEFT JOIN topic_localized_data d on t2.id = d.topic_id and d.language = ? 
+    LEFT JOIN topic_localized_data d on t2.id = d.topic_id and d.language = ?
     WHERE problem_id = ?
     ');
         $query->bind_param('si', $lang, $problemId);

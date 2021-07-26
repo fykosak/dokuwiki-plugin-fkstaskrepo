@@ -4,6 +4,7 @@ use dokuwiki\Extension\AdminPlugin;
 use dokuwiki\Form\Form;
 use dokuwiki\Form\InputElement;
 use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\Task;
+use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\TexPreproc;
 
 /**
  * Class admin_plugin_fkstaskrepo_task
@@ -265,7 +266,7 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin
                         $task->points = (int)$child;
                         break;
                     case 'task':
-                        $task->setTask((string)$child);
+                        $task->task = (new TexPreproc())->preproc((string)$child);
                         break;
                     case 'authors':
                         $authors = (array)$child->children();

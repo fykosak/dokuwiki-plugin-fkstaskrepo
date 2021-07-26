@@ -66,20 +66,16 @@ class syntax_plugin_fkstaskrepo_table extends SyntaxPlugin
     public function render($format, Doku_Renderer $renderer, $data): bool
     {
         [$state, $lang] = $data;
-        switch ($state) {
-            case DOKU_LEXER_SPECIAL:
-                if ($format == 'xhtml') {
-                    $renderer->nocache();
-                    // $this->showMainSearch($renderer, null, $lang);
-                    $renderer->doc .= $this->showTagSearch($lang);
-                    $renderer->doc .= $this->showResults($lang);
-                    return true;
-                } elseif ($format == 'metadata') {
-                    return true;
-                }
-                break;
-            default:
-                return false;
+        if ($state === DOKU_LEXER_SPECIAL) {
+            if ($format == 'xhtml') {
+                $renderer->nocache();
+                // $this->showMainSearch($renderer, null, $lang);
+                $renderer->doc .= $this->showTagSearch($lang);
+                $renderer->doc .= $this->showResults($lang);
+                return true;
+            } elseif ($format == 'metadata') {
+                return true;
+            }
         }
         return false;
     }

@@ -9,8 +9,6 @@ use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\Task;
 require_once __DIR__ . '/inc/TexLexer.php';
 require_once __DIR__ . '/inc/TexPreproc.php';
 require_once __DIR__ . '/inc/Task.php';
-require_once __DIR__ . '/inc/Renderer/AbstractRenderer.php';
-require_once __DIR__ . '/inc/Renderer/FYKOSRenderer.php';
 require_once __DIR__ . '/inc/FSSUTask.php';
 require_once __DIR__ . '/inc/FSSUConnector.php';
 require_once __DIR__ . '/inc/AbstractProblem.php';
@@ -111,8 +109,7 @@ class helper_plugin_fkstaskrepo extends Plugin
 
     public function getSeriesFilename(int $year, int $series): string
     {
-        return $this->downloader->getCacheFilename($this->downloader->getWebServerFilename($this->getPath($year,
-            $series)));
+        return $this->downloader->getCacheFilename($this->downloader->getWebServerFilename($this->getPath($year, $series)));
     }
 
     /**
@@ -122,15 +119,15 @@ class helper_plugin_fkstaskrepo extends Plugin
      * @param string $remotePathMask
      * @param string $localPathMask
      * @param int $expiration
-     * @return false|string
+     * @return string|null
      */
-    public function downloadDocument(int $year, int $series, string $remotePathMask, string $localPathMask, int $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH)
+    public function downloadDocument(int $year, int $series, string $remotePathMask, string $localPathMask, int $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH): ?string
     {
         $content = $this->downloader->downloadWebServer($expiration, sprintf($remotePathMask, $year, $series));
 
         $res = io_saveFile(mediaFN($fileID = sprintf($localPathMask, $year, $series)), $content);
 
-        return ($content && $res) ? $fileID : false;
+        return ($content && $res) ? $fileID : null;
     }
 
     /**
@@ -139,9 +136,9 @@ class helper_plugin_fkstaskrepo extends Plugin
      * @param int $series
      * @param string $task IT IS LABEL, NOT A NUMBER
      * @param int $expiration
-     * @return bool|string
+     * @return string|null
      */
-    public function downloadSolution(int $year, int $series, string $task, int $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH)
+    public function downloadSolution(int $year, int $series, string $task, int $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH): ?string
     {
         $content = $this->downloader->downloadWebServer($expiration, vsprintf($this->getConf('remote_task_solution_path_mask'), [$year, $series, null, null, $this->labelToNumber($task)]));
 
@@ -152,7 +149,7 @@ class helper_plugin_fkstaskrepo extends Plugin
             )), $content
         );
 
-        return ($content && $res) ? $fileID : false;
+        return ($content && $res) ? $fileID : null;
     }
 
     public function saveTask(Task $task): void
@@ -201,7 +198,7 @@ class helper_plugin_fkstaskrepo extends Plugin
         $task->number = $data['number'];
         $task->name = $data['localization'][$task->lang]['name'];
         $task->origin = $data['localization'][$task->lang]['origin'];
-        $task->setTask($data['localization'][$task->lang]['task'], false);
+        $task->task = $data['localization'][$task->lang]['task'];
         $task->points = $data['points'];
         $task->figures = $data['localization'][$task->lang]['figures'];
         $task->authors = $data['authors'];
@@ -264,7 +261,7 @@ class helper_plugin_fkstaskrepo extends Plugin
     public function loadTags(Task $task): array
     {
         if ($task instanceof FSSUTask) {
-            return $task->tags;
+            return $task->tags ?? [];
         }
         $sql = 'SELECT problem_id FROM problem WHERE year = ? AND series = ? AND problem = ?';
         $res = $this->sqlite->query($sql, $task->year, $task->series, $task->label);

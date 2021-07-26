@@ -87,7 +87,7 @@ class action_plugin_fkstaskrepo extends ActionPlugin
         $form->setHiddenField('task[do]', 'update');
         $form->setHiddenField('do', 'plugin_fkstaskrepo');
 
-        foreach (Task::$readonlyFields as $field) {
+        foreach (Task::getReadonlyFields() as $field) {
             $form->addTagOpen('div')->addClass('form-group');
             switch ($field) {
                 case 'year':
@@ -108,7 +108,7 @@ class action_plugin_fkstaskrepo extends ActionPlugin
             }
             $form->addTagClose('div');
         }
-        foreach (Task::$editableFields as $field) {
+        foreach (Task::getEditableFields() as $field) {
             $form->addTagOpen('div')->addClass('form-group');
             switch ($field) {
                 case 'task':
@@ -251,7 +251,7 @@ class action_plugin_fkstaskrepo extends ActionPlugin
 
         $problem->name = trim($INPUT->param('problem')['name']);
         $problem->origin = trim($INPUT->param('problem')['origin']);
-        $problem->setTask(cleanText($INPUT->param('problem')['task']), false);
+        $problem->task = cleanText($INPUT->param('problem')['task']);
         $problem->figures = $this->processFigures($INPUT->param('problem')['figures']);
         $this->helper->saveTask($problem);
         $this->helper->storeTags($problem->year, $problem->series, $problem->label, $INPUT->param('problem')['topics']);
