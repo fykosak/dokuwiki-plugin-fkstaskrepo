@@ -214,7 +214,7 @@ abstract class AbstractProblem extends SyntaxPlugin
 
     private function renderHeader(Doku_Renderer $renderer, Task $task, bool $full = false): void
     {
-
+        $label = $task->label;
         switch ($task->label) {
             case '1':
             case '2':
@@ -223,16 +223,19 @@ abstract class AbstractProblem extends SyntaxPlugin
                 break;
             case 'E':
             case '7':
+                $label = 'E';
                 $class = 'experiment';
                 $icon = '<span class="fa fa-flask"></span>';
                 break;
             case 'S':
             case '8':
+                $label = 'S';
                 $class = 'serial';
                 $icon = '<span class="fa fa-book"></span>';
                 break;
-            case'P':
+            case 'P':
             case '6':
+                $label = 'P';
                 $icon = '<span class="fa fa-lightbulb-o"></span>';
                 $class = 'problem';
                 break;
@@ -264,7 +267,7 @@ abstract class AbstractProblem extends SyntaxPlugin
             ($full
                 ? $task->series . '. ' . $this->helper->getSpecLang('series', $task->lang) . ' ' . $task->year . '. ' . $this->helper->getSpecLang('years', $task->lang) . ' - '
                 : '') .
-            $task->label . '. ' . $task->name .
+            $label . '. ' . $task->name .
             '</h3>';
     }
 
