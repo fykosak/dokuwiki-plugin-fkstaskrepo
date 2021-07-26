@@ -35,7 +35,7 @@ class syntax_plugin_fkstaskrepo_fssuproblem extends AbstractProblem
 
         if ($data['state'] === DOKU_LEXER_SPECIAL) {
             if ($format === 'xhtml') {
-                $problemData = $this->helper->fssuConnector->downloadTask('fykos', $parameters['year'], $parameters['series'], $parameters['problem'], $parameters['lang']);
+                $problemData = $this->helper->fssuConnector->downloadTask('fykos', +$parameters['year'], +$parameters['series'], $parameters['problem'], $parameters['lang']);
                 if ($problemData) {
                     $renderer->doc .= '<div class="task-repo task">';
                     $this->renderTask($renderer, $problemData, !!$parameters['full']);

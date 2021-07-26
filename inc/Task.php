@@ -23,6 +23,11 @@ namespace FYKOS\dokuwiki\Extenstion\PluginTaskRepo;
 class Task
 {
     private array $data = [];
+    public const LABEL_MAP = [
+        'P' => '6',
+        'E' => '7',
+        'S' => '8',
+    ];
 
 
     /**
