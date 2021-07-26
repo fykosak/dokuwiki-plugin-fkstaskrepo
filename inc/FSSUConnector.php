@@ -37,7 +37,7 @@ where directory_id=? AND label=?');
             if ($query === false) {
                 throw new \Exception('Can not connect FSSU DB');
             }
-            $fssuLabel = Task::LABEL_MAP[$label] ?? $label;
+            $fssuLabel = $this->helper->labelToNumber($label);
             $query->bind_param('sis', $lang, $dirId, $fssuLabel);
             $query->execute();
             $res = $query->get_result();

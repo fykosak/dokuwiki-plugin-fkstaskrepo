@@ -33,8 +33,12 @@ class helper_plugin_fkstaskrepo extends Plugin
 
     public const XMLNamespace = 'http://www.w3.org/XML/1998/namespace';
 
+    private array $labelToNumber;
+    private array $numberToLabel;
+
     public function __construct()
     {
+
         $this->downloader = $this->loadHelper('fksdownloader');
         $this->fssuConnector = new FSSUConnector(
             $this,
@@ -57,6 +61,21 @@ class helper_plugin_fkstaskrepo extends Plugin
             msg($pluginName . ': Cannot initialize database.');
             return;
         }
+    }
+
+    private function getLabelMap(): array
+    {
+        if (!isset($this->labelToNumber) || !isset($this->numberToLabel)) {
+            $this->labelToNumber = [];
+            $this->numberToLabel = [];
+            $dictionary = explode(',', $this->getConf('label_number_tasks_used'));
+            foreach ($dictionary as $pair) {
+                [$label, $number] = explode('/', $pair);
+                $this->labelToNumber[$label] = $number;
+                $this->numberToLabel[$number] = $label;
+            }
+        }
+        return [$this->labelToNumber, $this->numberToLabel];
     }
 
     /* **************
@@ -339,26 +358,12 @@ class helper_plugin_fkstaskrepo extends Plugin
 
     public function labelToNumber(string $label): ?int
     {
-        $dictionary = explode(',', $this->getConf('label_number_tasks_used'));
-        foreach ($dictionary as $pair) {
-            $pair = explode('/', $pair);
-            if ($pair[0] == $label) {
-                return (int)$pair[1];
-            }
-        }
-        return null;
+        return $this->getLabelMap()[0][$label] ?? null;
     }
 
     public function numberToLabel(int $number): ?string
     {
-        $dictionary = explode(',', $this->getConf('label_number_tasks_used'));
-        foreach ($dictionary as $pair) {
-            $pair = explode('/', $pair);
-            if ($pair[1] == $number) {
-                return (string)$pair[0];
-            }
-        }
-        return null;
+        return $this->getLabelMap()[1][$number] ?? null;
     }
 
     public function getSupportedTasks(): array

@@ -23,12 +23,6 @@ namespace FYKOS\dokuwiki\Extenstion\PluginTaskRepo;
 class Task
 {
     private array $data = [];
-    public const LABEL_MAP = [
-        'P' => '6',
-        'E' => '7',
-        'S' => '8',
-    ];
-
 
     /**
      * name, origin, task, figures
@@ -44,6 +38,10 @@ class Task
         $this->data['lang'] = $lang;
     }
 
+    /**
+     * @param string $name
+     * @return mixed
+     */
     public function __get(string $name)
     {
         if (in_array($name, [...static::getEditableFields(), ...static::getReadonlyFields()])) {
@@ -52,6 +50,10 @@ class Task
         throw new \InvalidArgumentException(sprintf('Property %s does not exists', $name));
     }
 
+    /**
+     * @param string $name
+     * @param mixed $value
+     */
     public function __set(string $name, $value): void
     {
         if (in_array($name, [...static::getEditableFields()])) {
