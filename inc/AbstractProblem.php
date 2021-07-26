@@ -121,7 +121,7 @@ abstract class AbstractProblem extends SyntaxPlugin
         $renderer->doc .= '</div>';
     }
 
-    private function renderEditButton(Doku_Renderer $renderer, Task $task): string
+    private function renderEditButton(Doku_Renderer $renderer, Task $task): void
     {
         $form = new Form();
         $form->setHiddenField('do', 'plugin_fkstaskrepo');
@@ -241,17 +241,18 @@ abstract class AbstractProblem extends SyntaxPlugin
 
         $pointsLabel = null;
         if (isset($task->points)) {
+            $pointsLabel = $task->points . ' ';
             switch ($task->points) {
                 case 1:
-                    $pointsLabel = $task->points . ' ' . $this->helper->getSpecLang('points-N-SG_vote', $task->lang);
+                    $pointsLabel .= $this->helper->getSpecLang('points-N-SG_vote', $task->lang);
                     break;
                 case 2:
                 case 3:
                 case 4:
-                    $pointsLabel = $task->points . ' ' . $this->helper->getSpecLang('points-N-PL_vote', $task->lang);
+                    $pointsLabel .= $this->helper->getSpecLang('points-N-PL_vote', $task->lang);
                     break;
                 default:
-                    $pointsLabel = $task->points . ' ' . $this->helper->getSpecLang('points-G-PL_vote', $task->lang);
+                    $pointsLabel .= $this->helper->getSpecLang('points-G-PL_vote', $task->lang);
             }
         }
 

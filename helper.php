@@ -184,6 +184,7 @@ class helper_plugin_fkstaskrepo extends Plugin
     public function loadTask(Task $task): bool
     {
         $content = io_readFile($this->getTaskFileName($task), false);
+
         if (!$content) {
             return false;
         }
@@ -191,7 +192,7 @@ class helper_plugin_fkstaskrepo extends Plugin
 
         $task->taskLocalizedData = $data['localization'];
 
-        if (!key_exists($this->lang, $data['localization'])) {
+        if (!key_exists($task->lang, $data['localization'])) {
             return false;
         }
 

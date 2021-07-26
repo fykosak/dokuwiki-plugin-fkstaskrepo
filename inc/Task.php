@@ -53,18 +53,19 @@ class Task
             $this->data[$name] = $value;
             return;
         }
-        throw new \InvalidArgumentException();
+        throw new \InvalidArgumentException(sprintf('Property %s is no editable', $name));
     }
 
     public static function getEditableFields(): array
     {
         return [
+            'number',
             'name',
             'points',
             'origin',
             'task',
             'authors',
-            'solution-authors',
+            'solutionAuthors',
             'figures',
         ];
     }
@@ -73,7 +74,7 @@ class Task
     {
         return [
             'year',
-            'number',
+
             'series',
             'label',
             'lang',
