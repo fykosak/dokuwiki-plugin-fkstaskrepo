@@ -33,9 +33,8 @@ class FSSUConnector
 SELECT *
 FROM problem
 LEFT JOIN problem_localized_data pld on problem.id = pld.problem_id and pld.language = ?
-
-where directory_id=?');
-        $query->bind_param('si', $lang, $dirId);
+where directory_id=? AND label=?');
+        $query->bind_param('sis', $lang, $dirId, $label);
         $query->execute();
         $res = $query->get_result();
 

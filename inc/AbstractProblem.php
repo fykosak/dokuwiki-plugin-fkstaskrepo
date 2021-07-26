@@ -222,15 +222,17 @@ abstract class AbstractProblem extends SyntaxPlugin
                 $icon = '<span class="fa fa-smile-o"></span>';
                 break;
             case 'E':
+            case '7':
                 $class = 'experiment';
                 $icon = '<span class="fa fa-flask"></span>';
                 break;
             case 'S':
-            case 'C':
+            case '8':
                 $class = 'serial';
                 $icon = '<span class="fa fa-book"></span>';
                 break;
             case'P':
+            case '6':
                 $icon = '<span class="fa fa-lightbulb-o"></span>';
                 $class = 'problem';
                 break;
