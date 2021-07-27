@@ -10,21 +10,29 @@ if (!defined('DOKU_INC')) die();
  * @author Štěpán Stenchlák <stenchlak@fykos.cz>
  * @author  Michal Červeňák <miso@fykos.cz> PHP7.4 compatiblity
  */
-class admin_plugin_fkstaskrepo_solution extends AdminPlugin {
+class admin_plugin_fkstaskrepo_solution extends AdminPlugin
+{
 
     static array $availableVersions = [1];
 
     private helper_plugin_fkstaskrepo $helper;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->helper = $this->loadHelper('fkstaskrepo');
     }
 
-    public function getMenuText($language): string {
+    /**
+     * @param string $language
+     * @return string
+     */
+    public function getMenuText($language): string
+    {
         return 'Stáhnout vzorová řešení z Astrid';
     }
 
-    public function getMenuIcon(): string {
+    public function getMenuIcon(): string
+    {
         $plugin = $this->getPluginName();
         return DOKU_PLUGIN . $plugin . '/solution.svg';
     }
@@ -32,21 +40,24 @@ class admin_plugin_fkstaskrepo_solution extends AdminPlugin {
     /**
      * @return int sort number in admin menu
      */
-    public function getMenuSort(): int {
+    public function getMenuSort(): int
+    {
         return 10;
     }
 
     /**
      * @return bool true if only access for superuser, false is for superusers and moderators
      */
-    public function forAdminOnly(): bool {
+    public function forAdminOnly(): bool
+    {
         return false;
     }
 
     /**
      * Should carry out any processing required by the plugin.
      */
-    public function handle(): void {
+    public function handle(): void
+    {
         global $INPUT;
         $year = $INPUT->int('year', null);
         $series = $INPUT->int('series', null);
@@ -67,7 +78,8 @@ class admin_plugin_fkstaskrepo_solution extends AdminPlugin {
         }
     }
 
-    public function html(): void {
+    public function html(): void
+    {
         global $ID;
         ptln('<h1>' . $this->getMenuText('cs') . '</h1>');
         $form = new Form();

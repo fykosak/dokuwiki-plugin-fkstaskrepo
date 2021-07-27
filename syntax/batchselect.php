@@ -10,32 +10,37 @@ use dokuwiki\Extension\SyntaxPlugin;
  * @author Michal Červeňák <miso@fykos.cz>
  * @author Štěpán Stenchlák <stenchlak@fykos.cz>
  */
-class syntax_plugin_fkstaskrepo_batchselect extends SyntaxPlugin {
+class syntax_plugin_fkstaskrepo_batchselect extends SyntaxPlugin
+{
 
     private helper_plugin_fkstaskrepo $helper;
 
-    function __construct() {
+    public function __construct()
+    {
         $this->helper = $this->loadHelper('fkstaskrepo');
     }
 
     /**
      * @return string Syntax mode type
      */
-    public function getType(): string {
+    public function getType(): string
+    {
         return 'substition';
     }
 
     /**
      * @return string Paragraph type
      */
-    public function getPType(): string {
+    public function getPType(): string
+    {
         return 'block';
     }
 
     /**
      * @return int Sort order - Low numbers go before high numbers
      */
-    public function getSort(): int {
+    public function getSort(): int
+    {
         return 164; // whatever
     }
 
@@ -44,7 +49,8 @@ class syntax_plugin_fkstaskrepo_batchselect extends SyntaxPlugin {
      *
      * @param string $mode Parser mode
      */
-    public function connectTo($mode): void {
+    public function connectTo($mode): void
+    {
         $this->Lexer->addSpecialPattern('<fkstaskreposelect\s.*?/>', $mode, 'plugin_fkstaskrepo_batchselect');
     }
 
@@ -57,7 +63,8 @@ class syntax_plugin_fkstaskrepo_batchselect extends SyntaxPlugin {
      * @param Doku_Handler $handler The handler
      * @return array Data for the renderer
      */
-    public function handle($match, $state, $pos, Doku_Handler $handler): array {
+    public function handle($match, $state, $pos, Doku_Handler $handler): array
+    {
         global $conf;
         preg_match('/lang="([a-z]+)"/', substr($match, 19, -2), $m);
         $lang = $m[1];
@@ -83,12 +90,13 @@ class syntax_plugin_fkstaskrepo_batchselect extends SyntaxPlugin {
     /**
      * Render xhtml output or metadata
      *
-     * @param string $mode Renderer mode (supported modes: xhtml)
+     * @param string $format Renderer mode (supported modes: xhtml)
      * @param Doku_Renderer $renderer The renderer
      * @param array $data The data from the handler() function
      * @return bool If rendering was successful.
      */
-    public function render($mode, Doku_Renderer $renderer, $data): bool {
+    public function render($format, Doku_Renderer $renderer, $data): bool
+    {
         $renderer->nocache();
         global $ID;
         list($state, list($pages, $lang)) = $data;
@@ -108,11 +116,13 @@ class syntax_plugin_fkstaskrepo_batchselect extends SyntaxPlugin {
         }
     }
 
-    private function renderHeadline(string $lang): string {
+    private function renderHeadline(string $lang): string
+    {
         return '<h4>' . $this->helper->getSpecLang('batch_select', $lang) . '</h4>';
     }
 
-    private function renderSeries(array $pages, ?int $currentYear = null, ?int $currentSeries = null): string {
+    private function renderSeries(array $pages, ?int $currentYear = null, ?int $currentSeries = null): string
+    {
         $html = '';
         foreach ($pages as $year => $batches) {
             $html .= '<div class="year" ' . ($currentYear == $year ? '' : 'style="display:none"') . ' data-year="' . $year . '">';
@@ -127,7 +137,8 @@ class syntax_plugin_fkstaskrepo_batchselect extends SyntaxPlugin {
         return $html;
     }
 
-    private function renderYearSelect(array $pages, string $lang, ?int $currentYear = null): string {
+    private function renderYearSelect(array $pages, string $lang, ?int $currentYear = null): string
+    {
         $html = '<select class="form-control mb-2" size="">';
         foreach ($pages as $year => $batches) {
             $html .= ' <option value="' . $year . '" ' . ($year == $currentYear ? 'selected' : '') . '>' . $this->helper->getSpecLang('year', $lang) . ' ' . $year . '</option>';
@@ -136,11 +147,13 @@ class syntax_plugin_fkstaskrepo_batchselect extends SyntaxPlugin {
         return $html;
     }
 
-    private function getRegExpPath(string $lang): string {
+    private function getRegExpPath(string $lang): string
+    {
         return preg_replace('/%[0-9]\$s/', '([0-9]+)', $this->getConf('page_path_mask_' . $lang));
     }
 
-    private function extractPathParameters(?string $id, string $lang): array {
+    private function extractPathParameters(?string $id, string $lang): array
+    {
         preg_match('/' . $this->getRegExpPath($lang) . '/', $id, $m);
         $currentYear = $m[1];
         $currentSeries = $m[2];

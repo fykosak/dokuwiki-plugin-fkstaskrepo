@@ -7,9 +7,10 @@ namespace FYKOS\dokuwiki\Extenstion\PluginTaskRepo;
  * Variant -- control sequence with particular no. of arguments
  * @author Michal Koutný <michal@fykos.cz>
  */
-class TexPreproc {
+class TexPreproc
+{
 
-    const SAFETY_LIMIT = 10000;
+    private const SAFETY_LIMIT = 10000;
 
     private static array $macros = [
 // equations
@@ -56,7 +57,8 @@ class TexPreproc {
     private array $macroMasks = [];
     private array $macroVariants;
 
-    public function __construct() {
+    public function __construct()
+    {
         foreach (self::$macros as $pattern => $replacement) {
             $variant = $pattern;
             $parts = explode(' ', $pattern);
@@ -91,7 +93,8 @@ class TexPreproc {
         $this->macroVariants = self::$macros;
     }
 
-    public function preproc(string $text): string {
+    public function preproc(string $text): string
+    {
         $text = str_replace(['[m]', '[i]', '[o]'], ['{m}', '{i}', '{o}'], $text); // simple solution
 // units macro
         $text = preg_replace_callback('#"(([+-]?[0-9\\\, ]+(\.[0-9\\\, ]+)?)(e([+-]?[0-9 ]+))?)((\s*)([^"]+))?"#', function ($matches) {
@@ -116,7 +119,13 @@ class TexPreproc {
         return $this->process($ast);
     }
 
-    private function chooseVariant($sequence, $toMatch) {
+    /**
+     * @param mixed $sequence
+     * @param mixed $toMatch
+     * @return array
+     */
+    private function chooseVariant($sequence, $toMatch): array
+    {
         foreach ($this->macroMasks[$sequence] as $variant => $mask) { //assert: must be sorted in decreasing mask length
             $matching = true;
             $matchLength = 0;
@@ -136,12 +145,17 @@ class TexPreproc {
         return [null, 0];
     }
 
-    private function process($ast) {
-        $safety_counter = 0;
+    /**
+     * @param mixed $ast
+     * @return string
+     */
+    private function process($ast): string
+    {
+        $safetyCounter = 0;
         $result = '';
         reset($ast);
         while (($it = current($ast)) !== false) {
-            if (++$safety_counter > self::SAFETY_LIMIT) {
+            if (++$safetyCounter > self::SAFETY_LIMIT) {
                 throw new \Error('Infinite loop in parser.', -1);
             }
 
@@ -184,7 +198,8 @@ class TexPreproc {
         return $result;
     }
 
-    private function nodeToText($node) {
+    private function nodeToText($node): string
+    {
         if (is_array($node)) {
             $result = '';
             foreach ($node as $it) {
@@ -196,11 +211,17 @@ class TexPreproc {
         }
     }
 
-    private function processText($text) {
+    private function processText(string $text): string
+    {
         return $text;
     }
 
-    private function parse($text): array {
+    /**
+     * @param mixed $text
+     * @return array
+     */
+    private function parse($text): array
+    {
         $stack = [[]];
         $current = &$stack[0];
         $lexer = new TexLexer($text);
@@ -232,35 +253,41 @@ class TexPreproc {
     * Replacement callbacks
     */
 
-    private $listStack = [];
+    private array $listStack = [];
 
-    private function startOList() {
+    private function startOList(): string
+    {
         array_push($this->listStack, 'O');
         return "\n";
     }
 
-    private function endOList() {
+    private function endOList(): string
+    {
         array_pop($this->listStack);
         return "\n";
     }
 
-    private function startUList() {
+    private function startUList(): string
+    {
         array_push($this->listStack, 'U');
         return "\n";
     }
 
-    private function endUList() {
+    private function endUList(): string
+    {
         array_pop($this->listStack);
         return "\n";
     }
 
-    private function listItem() {
+    private function listItem(): string
+    {
         $char = end($this->listStack) == 'U' ? '*' : '-';
         $level = count($this->listStack);
         return "\n" . str_repeat('  ', $level) . $char . ' ';
     }
 
-    private function paragraph() {
+    private function paragraph(): string
+    {
         if (count($this->listStack)) {
             return '\\\\ ';
         } else {

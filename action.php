@@ -16,7 +16,8 @@ use FYKOS\dokuwiki\Extenstion\PluginTaskRepo\Task;
  * @author Michal Červeňák <miso@fykos.cz>
  * @author Štěpán Stenchlák <stenchlak@fykos.cz>
  */
-class action_plugin_fkstaskrepo extends ActionPlugin {
+class action_plugin_fkstaskrepo extends ActionPlugin
+{
 
     private static array $tags = [
         'mechHmBodu',
@@ -46,7 +47,8 @@ class action_plugin_fkstaskrepo extends ActionPlugin {
 
     private helper_plugin_fkstaskrepo $helper;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->helper = $this->loadHelper('fkstaskrepo');
     }
 
@@ -56,13 +58,15 @@ class action_plugin_fkstaskrepo extends ActionPlugin {
      * @param EventHandler $controller DokuWiki's event controller object
      * @return void
      */
-    public function register(EventHandler $controller): void {
+    public function register(EventHandler $controller): void
+    {
         $controller->register_hook('TPL_ACT_UNKNOWN', 'BEFORE', $this, 'tplEditForm');
         $controller->register_hook('ACTION_ACT_PREPROCESS', 'BEFORE', $this, 'editTask');
         $controller->register_hook('PARSER_CACHE_USE', 'BEFORE', $this, 'handleParserCacheUse');
     }
 
-    public function tplEditForm(Event $event): void {
+    public function tplEditForm(Event $event): void
+    {
         global $INPUT;
         if ($event->data !== 'plugin_fkstaskrepo' || !$this->isLogged()) {
             return;
@@ -71,81 +75,80 @@ class action_plugin_fkstaskrepo extends ActionPlugin {
         echo '<h1>Úprava úlohy</h1>';
 
         $problem = new Task(
-            $this->helper,
             $INPUT->param('task')['year'],
             $INPUT->param('task')['series'],
             $INPUT->param('task')['problem'],
             $INPUT->param('task')['lang']
         );
-        $problem->load();
+        $this->helper->loadTask($problem);
 
         $form = new Form();
         $form->addClass('task-repo-edit');
         $form->setHiddenField('task[do]', 'update');
         $form->setHiddenField('do', 'plugin_fkstaskrepo');
 
-        foreach (Task::$readonlyFields as $field) {
+        foreach (Task::getReadonlyFields() as $field) {
             $form->addTagOpen('div')->addClass('form-group');
             switch ($field) {
                 case 'year':
-                    $this->addStaticField($form, $field, $problem->getYear());
+                    $this->addStaticField($form, $field, $problem->year);
                     break;
                 case 'number':
-                    $this->addStaticField($form, $field, $problem->getNumber());
+                    $this->addStaticField($form, $field, $problem->number);
                     break;
                 case 'series':
-                    $this->addStaticField($form, $field, $problem->getSeries());
+                    $this->addStaticField($form, $field, $problem->series);
                     break;
                 case 'label':
-                    $this->addStaticField($form, $field, $problem->getLabel());
+                    $this->addStaticField($form, $field, $problem->label);
                     break;
                 case 'lang':
-                    $this->addStaticField($form, $field, $problem->getlang());
+                    $this->addStaticField($form, $field, $problem->lang);
                     break;
             }
             $form->addTagClose('div');
         }
-        foreach (Task::$editableFields as $field) {
+        foreach (Task::getEditableFields() as $field) {
             $form->addTagOpen('div')->addClass('form-group');
             switch ($field) {
                 case 'task':
                     $form->addTextarea('problem[task]', $this->helper->getSpecLang($field, 'cs'))->attrs(['class' => 'form-control', 'rows' => 15])
-                        ->val($problem->getTask());
+                        ->val($problem->task);
                     $form->addHTML('<small class="form-text">Přílohy přidávejte externě, samy se zobrazí.</small>');
                     break;
                 case 'figures':
                     $form->addFieldsetOpen($this->helper->getSpecLang('figures', 'cs'));
-                    $form->addTag('div')->addClass('figures mb-3')->attr('data-value', json_encode($problem->getFigures()));
+                    $form->addTag('div')->addClass('figures mb-3')->attr('data-value', json_encode($problem->figures));
                     $form->addFieldsetClose();
-                    $mediaLink = vsprintf($this->getConf('attachment_path_' . $problem->getLang()), [$problem->getYear(), $problem->getSeries(), $problem->getLabel()]);
+                    $mediaLink = vsprintf($this->getConf('attachment_path_' . $problem->lang), [$problem->year, $problem->series, $problem->label]);
                     $form->addHTML('<button type="button" class="btn btn-primary btn-small" id="addmedia" data-folder-id="' . $mediaLink . '">Otevřít / Nahrát přílohy</a></button>');
                     $form->addHTML('<small class="form-text">Defaultní adresa pro ukládání je <code>' . $mediaLink . '</code></small>');
                     break;
                 case 'name':
                     $form->addTextInput('problem[name]', $this->helper->getSpecLang($field, 'cs'))
-                        ->attrs(['class' => 'form-control'])->val($problem->getName());
+                        ->attrs(['class' => 'form-control'])->val($problem->name);
                     $form->addHTML('<small class="form-text">Podle konvence začíná název úlohy malým písmenem pokud se nejedná o vlastní jméno. Taktéž nekončí tečkou. Jméno úlohy bude potřeba opravit i ve FKSDB.</small>');
                     break;
                 case 'origin':
                     $form->addTextInput('problem[origin]', $this->helper->getSpecLang($field, 'cs'))
-                        ->attrs(['class' => 'form-control'])->val($problem->getOrigin());
+                        ->attrs(['class' => 'form-control'])->val($problem->origin);
                     break;
                 case 'authors':
-                    $value = implode(', ', $problem->getAuthors());
+                    $value = implode(', ', $problem->authors);
                     $form->addTextInput('problem[authors]', $this->helper->getSpecLang($field, 'cs'))
                         ->attrs(['class' => 'form-control'])->val($value);
                     $form->addHTML('<small class="form-text">Autory oddělujte čárkou.</small>');
                     break;
 
                 case 'solution-authors':
-                    $value = implode(', ', $problem->getSolutionAuthors());
+                    $value = implode(', ', $problem->solutionAuthors);
                     $form->addTextInput('problem[solution-authors]', $this->helper->getSpecLang($field, 'cs'))
                         ->attrs(['class' => 'form-control'])->val($value);
                     $form->addHTML('<small class="form-text">Autory oddělujte čárkou.</small>');
                     break;
                 case 'points':
                     $inputElement = new InputElement('number', 'problem[points]', $this->helper->getSpecLang($field, 'cs'));
-                    $inputElement->val($problem->getPoints() ?: '');
+                    $inputElement->val($problem->points ?? '');
                     $inputElement->attrs(['class' => 'form-control']);
                     $form->addElement($inputElement);
                     $form->addHTML('<small class="form-text">V případě 0 se počet bodů nezobrazí (u starších příkladů se nezachovalo). Body za úlohu budou potřeba opravit i ve FKSDB.</small>');
@@ -156,16 +159,16 @@ class action_plugin_fkstaskrepo extends ActionPlugin {
         $this->addTagsField($form, $problem);
         $form->addHTML('<hr>');
 
-        $solutionFilename = vsprintf($this->getConf('solution_path_' . $problem->getLang()), [$problem->getYear(), $problem->getSeries(), $problem->getLabel()]);
+        $solutionFilename = vsprintf($this->getConf('solution_path_' . $problem->lang), [$problem->year, $problem->series, $problem->label]);
         preg_match('/^(.*):[^:]*/', $solutionFilename, $solutionPath);
         $solutionPath = $solutionPath[1];
 
-        $brochureFilename = vsprintf($this->getConf('brochure_path_' . $problem->getLang()), [$problem->getYear(), $problem->getSeries()]);
+        $brochureFilename = vsprintf($this->getConf('brochure_path_' . $problem->lang), [$problem->year, $problem->series]);
         preg_match('/^(.*):[^:]*/', $brochureFilename, $brochurePath);
         $brochurePath = $brochurePath[1];
 
         // Only in Czech
-        $serialFilename = vsprintf($this->getConf('serial_path_cs'), [$problem->getYear(), $problem->getSeries()]);
+        $serialFilename = vsprintf($this->getConf('serial_path_cs'), [$problem->year, $problem->series]);
         preg_match('/^(.*):[^:]*/', $serialFilename, $serialPath);
         $serialPath = $serialPath[1];
 
@@ -177,16 +180,23 @@ class action_plugin_fkstaskrepo extends ActionPlugin {
         echo $form->toHTML();
     }
 
-    private function addStaticField(Form $form, string $field, $value): void {
+    /**
+     * @param Form $form
+     * @param string $field
+     * @param mixed $value
+     */
+    private function addStaticField(Form $form, string $field, $value): void
+    {
         $form->addTextInput('problem[' . $field . ']', $this->helper->getSpecLang($field, 'cs'))
             ->attrs(['class' => 'form-control', 'readonly' => 'readonly'])->val($value);
     }
 
-    private function addTagsField(Form $form, Task $data): void {
+    private function addTagsField(Form $form, Task $task): void
+    {
         $form->addFieldsetOpen($this->helper->getSpecLang('tags', 'cs'));
 
         $form->addTagOpen('div')->addClass('row');
-        $topics = $this->helper->loadTags($data->getYear(), $data->getSeries(), $data->getLabel());
+        $topics = $this->helper->loadTags($task);
         foreach (self::$tags as $tag) {
             $form->addTagOpen('div')->addClass('form-check col-lg-4 col-md-6 col-sm-12');
             $isIn = false;
@@ -203,7 +213,8 @@ class action_plugin_fkstaskrepo extends ActionPlugin {
         $form->addFieldsetClose();
     }
 
-    public function editTask(Event $event): void {
+    public function editTask(Event $event): void
+    {
         global $INPUT;
         if ($event->data !== 'plugin_fkstaskrepo' || !$this->isLogged()) {
             return;
@@ -219,7 +230,8 @@ class action_plugin_fkstaskrepo extends ActionPlugin {
         }
     }
 
-    private function updateProblem(Event $event): void {
+    private function updateProblem(Event $event): void
+    {
         global $INPUT;
 
         if (!$this->isLogged()) {
@@ -228,26 +240,27 @@ class action_plugin_fkstaskrepo extends ActionPlugin {
 
         $problemData = $INPUT->param('problem');
 
-        $problem = new Task($this->helper, (int)$problemData['year'], (int)$problemData['series'], (string)$problemData['label'], $problemData['lang']);
+        $problem = new Task((int)$problemData['year'], (int)$problemData['series'], (string)$problemData['label'], $problemData['lang']);
 
-        $problem->load();
+        $this->helper->loadTask($problem);
 
         //$problem->setNumber((int)$INPUT->param('problem')['number']);
-        $problem->setPoints((int)$INPUT->param('problem')['points'] ?: null);
-        $problem->setAuthors(array_map('trim', explode(',', $INPUT->param('problem')['authors'])));
-        $problem->setSolutionAuthors(array_map('trim', explode(',', $INPUT->param('problem')['solution-authors'])));
+        $problem->points = (int)$INPUT->param('problem')['points'] ?: null;
+        $problem->authors = array_map('trim', explode(',', $INPUT->param('problem')['authors']));
+        $problem->solutionAuthors = array_map('trim', explode(',', $INPUT->param('problem')['solution-authors']));
 
-        $problem->setName(trim($INPUT->param('problem')['name']));
-        $problem->setOrigin(trim($INPUT->param('problem')['origin']));
-        $problem->setTask(cleanText($INPUT->param('problem')['task']), false);
-        $problem->setFigures($this->processFigures($INPUT->param('problem')['figures']));
-        $problem->save();
-        $this->helper->storeTags($problem->getYear(), $problem->getSeries(), $problem->getLabel(), $INPUT->param('problem')['topics']);
+        $problem->name = trim($INPUT->param('problem')['name']);
+        $problem->origin = trim($INPUT->param('problem')['origin']);
+        $problem->task = cleanText($INPUT->param('problem')['task']);
+        $problem->figures = $this->processFigures($INPUT->param('problem')['figures']);
+        $this->helper->saveTask($problem);
+        $this->helper->storeTags($problem->year, $problem->series, $problem->label, $INPUT->param('problem')['topics']);
         $event->data = 'show';
     }
 
 
-    private function processFigures(iterable $figures): array {
+    private function processFigures(iterable $figures): array
+    {
         $out = [];
         foreach ($figures as $figure) {
             $path = trim($figure['path']);
@@ -262,7 +275,8 @@ class action_plugin_fkstaskrepo extends ActionPlugin {
         return $out;
     }
 
-    public function handleParserCacheUse(Event $event): void {
+    public function handleParserCacheUse(Event $event): void
+    {
         $cache = &$event->data;
 
         // we're only interested in wiki pages
@@ -282,7 +296,8 @@ class action_plugin_fkstaskrepo extends ActionPlugin {
             $depends) : $depends;
     }
 
-    private function isLogged(): bool {
+    private function isLogged(): bool
+    {
         global $ID;
         return auth_quickaclcheck($ID) >= AUTH_EDIT;
     }

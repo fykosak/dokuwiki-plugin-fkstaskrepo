@@ -10,35 +10,48 @@ use Iterator;
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Michal Koutný <michal@fykos.cz>
  */
-class TexLexer implements Iterator {
+class TexLexer implements Iterator
+{
 
-    const TOKEN_LBRACE = 0;
-    const TOKEN_RBRACE = 1;
-    const TOKEN_SEQ = 2;
-    const TOKEN_TEXT = 3;
+    public const TOKEN_LBRACE = 0;
+    public const TOKEN_RBRACE = 1;
+    public const TOKEN_SEQ = 2;
+    public const TOKEN_TEXT = 3;
 
-    private $text;
+    private string $text;
+    /** @var mixed */
     private $offset;
+    /** @var mixed */
     private $current;
-    static private $patterns = [
+    private static array $patterns = [
         self::TOKEN_SEQ => '\\\([a-z]+|[^\s])\s*\*?',
         self::TOKEN_LBRACE => '{',
         self::TOKEN_RBRACE => '}',
     ];
 
-    public function __construct($text) {
+    public function __construct(string $text)
+    {
         $this->text = $text;
     }
 
-    public function current() {
+    /**
+     * @return mixed
+     */
+    public function current()
+    {
         return $this->current;
     }
 
-    public function key() {
+    /**
+     * @return bool|float|int|string|null
+     */
+    public function key()
+    {
         return $this->offset;
     }
 
-    public function next(): void {
+    public function next(): void
+    {
         $text = '';
         while (!($match = $this->findMatch()) && $this->offset < strlen($this->text)) {
             $text .= $this->text[$this->offset++];
@@ -53,15 +66,18 @@ class TexLexer implements Iterator {
         }
     }
 
-    public function rewind(): void {
+    public function rewind(): void
+    {
         $this->offset = 0;
     }
 
-    public function valid(): bool {
+    public function valid(): bool
+    {
         return $this->offset <= strlen($this->text);
     }
 
-    private function findMatch(): ?array {
+    private function findMatch(): ?array
+    {
         $subtext = substr($this->text, $this->offset);
         foreach (self::$patterns as $key => $pattern) {
             if (preg_match('/^(' . $pattern . ')/i', $subtext, $matches)) {

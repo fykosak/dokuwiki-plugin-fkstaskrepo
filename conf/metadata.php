@@ -13,7 +13,7 @@ $meta['solution_path_en'] = ['string'];
 
 $meta['yearbook_path_cs'] = ['string'];
 $meta['serial_path_cs'] = ['string'];
-$meta['serial_path_en']=['string'];
+$meta['serial_path_en'] = ['string'];
 
 $meta['archive_path_cs'] = ['string'];
 $meta['archive_path_en'] = ['string'];
@@ -31,3 +31,8 @@ $meta['remote_task_solution_path_mask'] = ['string'];
 
 $meta['label_number_tasks_used'] = ['string'];
 $meta['languages_used'] = ['string'];
+
+$meta['fssu_dns'] = ['string'];
+$meta['fssu_login'] = ['string'];
+$meta['fssu_password'] = ['password'];
+$meta['fssu_dbname'] = ['string'];
