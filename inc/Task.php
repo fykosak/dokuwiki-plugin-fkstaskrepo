@@ -7,22 +7,26 @@ namespace FYKOS\dokuwiki\Extenstion\PluginTaskRepo;
  * @author Michal Koutný <michal@fykos.cz>
  * @author Michal Červeňák <miso@fykos.cz>
  * @author Štěpán Stenchlák <stenchlak@fykos.cz>
- * @property int $number
- * @property string $label
- * @property string $name
- * @property string $lang
- * @property int $year
- * @property int $series
- * @property string|null $origin
- * @property string $task
- * @property int|null $points
- * @property array|null $figures
- * @property array|null $authors
- * @property array|null $solutionAuthors
+ * @property-read string $label
+ * @property-read string $lang
+ * @property-read int $year
+ * @property-read int $series
  */
 class Task
 {
-    private array $data = [];
+    public int $number;
+    public string $name;
+    public ?string $origin;
+    public string $task;
+    public ?int $points;
+    public ?array $figures;
+    public ?array $authors;
+    public ?array $solutionAuthors;
+
+    private string $label;
+    private string $lang;
+    private int $year;
+    private int $series;
 
     /**
      * name, origin, task, figures
@@ -32,10 +36,10 @@ class Task
 
     public function __construct(int $year, int $series, string $label, string $lang = 'cs')
     {
-        $this->data['year'] = $year;
-        $this->data['series'] = $series;
-        $this->data['label'] = strtoupper($label);
-        $this->data['lang'] = $lang;
+        $this->year = $year;
+        $this->series = $series;
+        $this->label = strtoupper($label);
+        $this->lang = $lang;
     }
 
     /**
@@ -44,23 +48,10 @@ class Task
      */
     public function __get(string $name)
     {
-        if (in_array($name, [...static::getEditableFields(), ...static::getReadonlyFields()])) {
-            return $this->data[$name] ?? null;
+        if (in_array($name, static::getReadonlyFields())) {
+            return $this->$name;
         }
         throw new \InvalidArgumentException(sprintf('Property %s does not exists', $name));
-    }
-
-    /**
-     * @param string $name
-     * @param mixed $value
-     */
-    public function __set(string $name, $value): void
-    {
-        if (in_array($name, [...static::getEditableFields()])) {
-            $this->data[$name] = $value;
-            return;
-        }
-        throw new \InvalidArgumentException(sprintf('Property %s is no editable', $name));
     }
 
     public static function getEditableFields(): array
@@ -81,7 +72,6 @@ class Task
     {
         return [
             'year',
-
             'series',
             'label',
             'lang',

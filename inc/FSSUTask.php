@@ -7,8 +7,6 @@ namespace FYKOS\dokuwiki\Extenstion\PluginTaskRepo;
  */
 class FSSUTask extends Task
 {
-    public static function getEditableFields(): array
-    {
-        return [...parent::getEditableFields(), 'tags', 'topics'];
-    }
+    public array $tags=[];
+    public array $topics=[];
 }
