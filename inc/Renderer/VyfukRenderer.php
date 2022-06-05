@@ -233,7 +233,9 @@ class VyfukRenderer extends AbstractRenderer {
         $html = ' <div class="d-flex ms-1">';
         $html .= $this->getCatCircle(6);
         $html .= $this->getCatCircle(7);
-        if ($data->getNumber() != 1 && $data->getSeries() < 7) {
+        // Add 8th and 9th grade icon on all tasks except for
+        // 1st task of classic series
+        if (!($data->getNumber() == 1 && $data->getSeries() < 7)) {
             $html .= $this->getCatCircle(8);
             $html .= $this->getCatCircle(9);
         }
