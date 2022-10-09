@@ -66,12 +66,12 @@ class admin_plugin_fkstaskrepo_solution extends AdminPlugin
 
         // Process solution download
         if ($INPUT->bool('downloadsolutions') && $year && $series) {
-            foreach (['cs'] as $language) { // For now, only czech language is supported
+            foreach (['cs','en'] as $language) {
                 foreach ($this->helper->getSupportedTasks() as $taskNumber => $task) {
                     // Test, if the task is selected
                     if ($taskSelect[$language][$taskNumber]) {
                         $st = $this->helper->downloadSolution($year, $series, $task);
-                        msg(($st ? '<a href="' . ml($st) . '">' : null) . 'Řešení úlohy ' . $task . ($st ? '</a>' : null), $st ? 1 : -1);
+                        msg(($st ? '<a href="' . ml($st) . '">' : null) . ($language=='cs' ? 'Řešení úlohy ' : 'Solution ') . $task . ($st ? '</a>' : null), $st ? 1 : -1);
                     }
                 }
             }
@@ -100,7 +100,9 @@ class admin_plugin_fkstaskrepo_solution extends AdminPlugin
         $form->addElement($inputElement);
         $form->addTagClose('div');
 
-        $this->helper->addTaskSelectTable($form, ['cs']); // For now, only czech language is supported
+        $this->helper->addTaskSelectTable($form, ['cs']);
+        $this->helper->addTaskSelectTable($form, ['en']);
+
 
         $form->addHTML('<hr/>');
 
