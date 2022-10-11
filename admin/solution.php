@@ -70,7 +70,7 @@ class admin_plugin_fkstaskrepo_solution extends AdminPlugin
                 foreach ($this->helper->getSupportedTasks() as $taskNumber => $task) {
                     // Test, if the task is selected
                     if ($taskSelect[$language][$taskNumber]) {
-                        $st = $this->helper->downloadSolution($year, $series, $task);
+                        $st = $this->helper->downloadSolution($year, $series, $task, $language);
                         msg(($st ? '<a href="' . ml($st) . '">' : null) . ($language=='cs' ? 'Řešení úlohy ' : 'Solution ') . $task . ($st ? '</a>' : null), $st ? 1 : -1);
                     }
                 }
