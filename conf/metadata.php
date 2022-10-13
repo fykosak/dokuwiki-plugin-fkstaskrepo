@@ -27,7 +27,8 @@ $meta['remote_path_mask'] = ['string'];
 $meta['remote_brochure_path_mask'] = ['string'];
 $meta['remote_serial_path_mask_cs'] = ['string'];
 $meta['remote_serial_path_mask_en'] = ['string'];
-$meta['remote_task_solution_path_mask'] = ['string'];
+$meta['remote_task_solution_path_mask_cs'] = ['string'];
+$meta['remote_task_solution_path_mask_en'] = ['string'];
 
 $meta['label_number_tasks_used'] = ['string'];
 $meta['languages_used'] = ['string'];

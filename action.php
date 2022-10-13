@@ -167,8 +167,7 @@ class action_plugin_fkstaskrepo extends ActionPlugin
         preg_match('/^(.*):[^:]*/', $brochureFilename, $brochurePath);
         $brochurePath = $brochurePath[1];
 
-        // Only in Czech
-        $serialFilename = vsprintf($this->getConf('serial_path_cs'), [$problem->year, $problem->series]);
+        $serialFilename = vsprintf($this->getConf('serial_path_' . $problem->lang), [$problem->year, $problem->series]);
         preg_match('/^(.*):[^:]*/', $serialFilename, $serialPath);
         $serialPath = $serialPath[1];
 

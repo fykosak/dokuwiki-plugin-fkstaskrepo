@@ -150,20 +150,20 @@ class helper_plugin_fkstaskrepo extends Plugin
     }
 
     /**
-     * For now only Czech version is supported.
      * @param int $year
      * @param int $series
      * @param string $task IT IS LABEL, NOT A NUMBER
+     * @param string $lang
      * @param int $expiration
      * @return string|null
      */
-    public function downloadSolution(int $year, int $series, string $task, int $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH): ?string
+    public function downloadSolution(int $year, int $series, string $task, string $lang, int $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH): ?string
     {
-        $content = $this->downloader->downloadWebServer($expiration, vsprintf($this->getConf('remote_task_solution_path_mask'), [$year, $series, null, null, $this->labelToNumber($task)]));
+        $content = $this->downloader->downloadWebServer($expiration, vsprintf($this->getConf('remote_task_solution_path_mask' . $lang), [$year, $series, null, null, $this->labelToNumber($task)]));
 
         $res = io_saveFile(
             mediaFN($fileID = vsprintf(
-                $this->getConf('solution_path_cs'),
+                $this->getConf('solution_path_' . $lang),
                 [$year, $series, strtolower($task)]
             )), $content
         );
