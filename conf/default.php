@@ -16,8 +16,8 @@ $conf['page_path_mask_en'] = 'year%1$02d:tasks:series%2$d';
 $conf['brochure_path_cs'] = 'rocnik%1$02d:ulohy:pdf:%2$d:brozurka_%1$02d_%2$d.pdf';
 $conf['brochure_path_en'] = 'year%1$02d:tasks:pdf:%2$d:brochure_%1$02d_%2$d.pdf';
 
-$conf['solution_path_cs'] = 'rocnik%1$02d:ulohy:pdf:%2$d:uloha%1$02d_%2$d_%3$s.pdf';
-$conf['solution_path_en'] = 'year%1$02d:tasks:pdf:%2$d:task%1$02d_%2$d_%3$s.pdf';
+$conf['solution_path_cs'] = 'rocnik%1$02d:ulohy:pdf:uloha%1$02d_%2$d_%3$s.pdf';
+$conf['solution_path_en'] = 'year%1$02d:tasks:pdf:task%1$02d_%2$d_%3$s.pdf';
 
 $conf['yearbook_path_cs'] = 'rocnik%1$02d:ulohy:pdf:rocenka%1$02d.pdf';
 $conf['serial_path_cs'] = 'rocnik%1$02d:ulohy:pdf:serial%1$02d_%2$d.pdf';
