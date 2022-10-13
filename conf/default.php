@@ -16,8 +16,8 @@ $conf['page_path_mask_en'] = 'year%1$02d:tasks:series%2$d';
 $conf['brochure_path_cs'] = 'rocnik%1$02d:ulohy:pdf:%2$d:brozurka_%1$02d_%2$d.pdf';
 $conf['brochure_path_en'] = 'year%1$02d:tasks:pdf:%2$d:brochure_%1$02d_%2$d.pdf';
 
-$conf['solution_path_cs'] = 'rocnik%1$02d:ulohy:pdf:%2$d:priklad_%1$02d_%2$d_%3$s.pdf';
-$conf['solution_path_en'] = 'year%1$02d:tasks:pdf:%2$d:task_%1$02d_%2$d_%3$s.pdf';
+$conf['solution_path_cs'] = 'rocnik%1$02d:ulohy:pdf:%2$d:uloha%1$02d_%2$d_%3$s.pdf';
+$conf['solution_path_en'] = 'year%1$02d:tasks:pdf:%2$d:task%1$02d_%2$d_%3$s.pdf';
 
 $conf['yearbook_path_cs'] = 'rocnik%1$02d:ulohy:pdf:rocenka%1$02d.pdf';
 $conf['serial_path_cs'] = 'rocnik%1$02d:ulohy:pdf:serial%1$02d_%2$d.pdf';
@@ -38,8 +38,8 @@ $conf['remote_path_mask'] = '/fykos%1$s/batch%2$s/out/zadaniWeb%2$s-new.xml';
 $conf['remote_brochure_path_mask'] = '/fykos%1$d/batch%2$d/out/serie%2$d.pdf';
 $conf['remote_serial_path_mask_cs'] = '/fykos%1$d/batch%2$d/out/serial%2$d.pdf';
 $conf['remote_serial_path_mask_en'] = '/fykos%1$d/batch%2$d/out/serial%2$d-en.pdf';
-$conf['remote_task_solution_path_mask_cs'] = '/fykos%1$d/batch%2$d/out/solution%2$d-%5$s.pdf';
-$conf['remote_task_solution_path_mask_en'] = '/fykos%1$d/batch%2$d/out/solution%2$d-%5$s.pdf';
+$conf['remote_task_solution_path_mask_cs'] = '/fykos%1$d/batch%2$d/out/solution%2$d-%5$s.cs.pdf';
+$conf['remote_task_solution_path_mask_en'] = '/fykos%1$d/batch%2$d/out/solution%2$d-%5$s.en.pdf';
 
 // List of tasks labels and numbers used in the contest
 $conf['label_number_tasks_used'] = '1/1,2/2,3/3,4/4,5/5,P/6,E/7,S/8';

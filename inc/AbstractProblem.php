@@ -198,16 +198,17 @@ abstract class AbstractProblem extends SyntaxPlugin
         $original = vsprintf($this->helper->getConf('solution_path_cs'), [$task->year, $task->series, $task->label]); // Add path
         $original = file_exists(mediaFN($original)) && $conf['lang'] !== 'cs' ? $original : null;
 
-        if ($original) {
-            $renderer->doc .= '<div class="solution solution-original">';
-            $renderer->internalmedia($original, $this->helper->getSpecLang('solution_original', $conf['lang']), null, null, null, null, 'linkonly');
-            $renderer->doc .= '</div>';
-        }
         if ($path) {
             $renderer->doc .= '<div class="solution solution-default">';
             $renderer->internalmedia($path, $this->helper->getSpecLang('solution', $conf['lang']), null, null, null, null, 'linkonly');
             $renderer->doc .= '</div>';
         }
+        if ($original) {
+            $renderer->doc .= '<div class="solution solution-original">';
+            $renderer->internalmedia($original, $this->helper->getSpecLang('solution_original', $conf['lang']), null, null, null, null, 'linkonly');
+            $renderer->doc .= '</div>';
+        }
+
 
         return $original || $path;
     }
