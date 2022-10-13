@@ -100,8 +100,7 @@ class admin_plugin_fkstaskrepo_solution extends AdminPlugin
         $form->addElement($inputElement);
         $form->addTagClose('div');
 
-        $this->helper->addTaskSelectTable($form, ['cs']);
-        $this->helper->addTaskSelectTable($form, ['en']);
+        $this->helper->addTaskSelectTable($form, ['cs', 'en']);
 
 
         $form->addHTML('<hr/>');
