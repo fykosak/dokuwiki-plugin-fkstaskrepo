@@ -159,7 +159,7 @@ class helper_plugin_fkstaskrepo extends Plugin
      */
     public function downloadSolution(int $year, int $series, string $task, string $lang, int $expiration = helper_plugin_fksdownloader::EXPIRATION_FRESH): ?string
     {
-        $content = $this->downloader->downloadWebServer($expiration, vsprintf($this->getConf('remote_task_solution_path_mask' . $lang), [$year, $series, null, null, $this->labelToNumber($task)]));
+        $content = $this->downloader->downloadWebServer($expiration, vsprintf($this->getConf('remote_task_solution_path_mask_' . $lang), [$year, $series, null, null, $this->labelToNumber($task)]));
 
         $res = io_saveFile(
             mediaFN($fileID = vsprintf(
