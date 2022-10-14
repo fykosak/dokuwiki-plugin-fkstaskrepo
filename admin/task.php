@@ -113,7 +113,7 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin
         $form->addClass('task-repo-edit');
         $form->attrs(['class' => $this->getPluginName(), 'enctype' => 'multipart/form-data']);
 
-        $form->addHTML('<p>Vyberte číslo série a ročníku a klikněte na příslušné tlačítko. Dojde ke stažení, popřípadě aktualizaci, dat na webu z <a href="astrid.fykos.cz">astrid.fykos.cz</a>. Pokud přidáváte novou sérii, nezapomeňte upravit odkazy v hlavním menu jak v české, tak i v anglické verzi. Vše ostatní by mělo být automatické.</p>');
+        $form->addHTML('<p>Vyberte číslo série a ročníku a klikněte na příslušné tlačítko. Dojde ke stažení, popřípadě aktualizaci, dat na webu z <a href="https://astrid.fykos.cz">astrid.fykos.cz</a>. Pokud přidáváte novou sérii, nezapomeňte upravit odkazy v hlavním menu jak v české, tak i v anglické verzi. Vše ostatní by mělo být automatické.</p>');
 
         $form->addTagOpen('div')->addClass('form-group');
         $inputElement = new dokuwiki\Form\InputElement('number', 'year', 'Číslo ročníku');
@@ -133,8 +133,6 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin
 
         $form->addHTML('<hr/>');
 
-        $form->addButton('download', 'Importovat zadání, brožurku a seriál této série.')->addClass('btn btn-primary d-block mb-3');
-
         // Some stuff to decide what do to...
         $form->addTagOpen('div');
         $form->addCheckbox('downloadtasks', 'Stahovat vůbec zadání?')->attr('checked', 'checked');
@@ -146,7 +144,9 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin
 
         $this->addDocumentSelectList($form);
 
-        $form->addHTML('<small class="form-text">Stáhne z Astrid české a anglické zadání, brožurku v PDF a seriál v PDF.</small>');
+        $form->addButton('download', 'Importovat zadání, brožurku a seriál této série.')->addClass('btn btn-primary d-block mb-3');
+
+        $form->addHTML('<small class="form-text">Stáhne z Astrid české a anglické zadání, brožurku v PDF a seriál v PDF, pokud jsou zaškrtnuté.</small>');
 
         $form->addHTML('<hr/>');
 

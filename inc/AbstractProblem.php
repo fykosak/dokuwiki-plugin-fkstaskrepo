@@ -203,7 +203,7 @@ abstract class AbstractProblem extends SyntaxPlugin
             $renderer->internalmedia($path, $this->helper->getSpecLang('solution', $conf['lang']), null, null, null, null, 'linkonly');
             $renderer->doc .= '</div>';
         }
-        if ($original) {
+        if ($original and ! $path) {
             $renderer->doc .= '<div class="solution solution-original">';
             $renderer->internalmedia($original, $this->helper->getSpecLang('solution_original', $conf['lang']), null, null, null, null, 'linkonly');
             $renderer->doc .= '</div>';

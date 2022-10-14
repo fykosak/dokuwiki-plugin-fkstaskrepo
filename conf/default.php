@@ -26,7 +26,7 @@ $conf['serial_path_en'] = 'rocnik%1$02d:ulohy:pdf:serial%1$02d_%2$d-en.pdf';
 $conf['archive_path_cs'] = 'ulohy:start';
 $conf['archive_path_en'] = 'tasks:start';
 
-// Preffered place to save figures and other files
+// Preferred place to save figures and other files
 $conf['attachment_path_cs'] = 'rocnik%1$02d:ulohy:prilohy:%2$d:%3$s';
 $conf['attachment_path_en'] = 'year%1$02d:tasks:attachments:%2$d:%3$s';
 
