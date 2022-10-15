@@ -102,7 +102,7 @@ class admin_plugin_fkstaskrepo_solution extends AdminPlugin
 
         $this->helper->addTaskSelectTable($form, ['cs', 'en']);
 
-        // $form->addHTML('<hr/>');
+         $form->addHTML('<hr/>');
 
         $form->addButton('downloadsolutions', 'Stáhnout a zobrazit na webu řešení této série.')->addClass('btn btn-danger');
         $form->addHTML('<small class="form-text text-danger">Stáhne z Astrid řešení k jednotlivým příkladům v PDF a zobrazí je na webu.</small>');
