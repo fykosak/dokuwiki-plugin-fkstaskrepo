@@ -358,12 +358,12 @@ class admin_plugin_fkstaskrepo_task extends AdminPlugin {
                 'localpathmask' => $this->getConf('brochure_path_cs'),
             ],
             [
-                'name' => 'Český text seriálu v PDF',
+                'name' => 'Český text Výfučtení v PDF',
                 'remotepathmask' => $this->getConf('remote_serial_path_mask_cs'),
                 'localpathmask' => $this->getConf('serial_path_cs'),
             ],
             [
-                'name' => 'Anglický text seriálu v PDF',
+                'name' => 'Anglický text Výfučtení v PDF',
                 'remotepathmask' => $this->getConf('remote_serial_path_mask_en'),
                 'localpathmask' => $this->getConf('serial_path_en'),
             ],

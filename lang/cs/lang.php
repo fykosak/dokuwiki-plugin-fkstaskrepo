@@ -51,7 +51,7 @@ $lang['brochure'] = 'Brožurka %2$d. série';
 $lang['solution'] = 'Řešení úlohy';
 $lang['year_book'] = 'Ročenka %1$d. ročníku';
 $lang['serial_original'] = '%2$d. díl seriálu'; // unused
-$lang['serial'] = '%2$d. díl seriálu';
+$lang['serial'] = '%2$d. Výfučtení';
 
 $lang['archive_year'] = '%d. ročník';
 $lang['archive_series'] = 'Série %d';
