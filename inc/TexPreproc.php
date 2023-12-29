@@ -49,6 +49,10 @@ class TexPreproc {
         '\illfigi:5 o' => '',
         '\illfigi:5' => '',
         '\illfig:4' => '',
+        '\fullfig:5' => '',
+        '\fullfig:4 i' => '',
+        '\fullfig:4 o' => '',
+        '\fullfig:4' => '',
         '\fullfig:3' => '',
 // fkssugar macros
         '\micro' => '\mu',
@@ -68,7 +72,7 @@ class TexPreproc {
         '\vspace:1' => '',
         '\vspace*:1' => '',
         '\-' => '',
-        '\linebreak' => '',
+        '\linebreak' => ''
     ];
     private $variantArity = [];
     private $maxMaskArity = [];
@@ -155,7 +159,7 @@ class TexPreproc {
         return [null, 0];
     }
 
-    private function process($ast) {
+    private function process(array|object $ast) {
         $safety_counter = 0;
         $result = '';
         reset($ast);
@@ -182,7 +186,10 @@ class TexPreproc {
 
                     $arguments = [];
                     for ($i = 0; $i < $this->variantArity[$variant]; ++$i) {
-                        $arguments[] = $this->process(next($ast));
+                        $next = next($ast);
+                        if (!is_string($next)) {
+                            $arguments[] = $this->process($next);
+                        }
                     }
 
                     if (substr($this->macroVariants[$variant], 0, 2) == 'f:') {
